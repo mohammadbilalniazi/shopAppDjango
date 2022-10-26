@@ -22,9 +22,12 @@ from user_requests import request_views
 from chat import views as views_chat
 from chat import views_room
 from user import views_login
+from configuration import views_language
 # from qrapp import views_qr 
     
 urlpatterns = [
+    path('language/translate/<src>/<dest>/',views_language.select_translations,name="select_translations"),
+    path('insert_language_detail/<src>/<dest>/',views_language.save_translations,name='save_translations'),
     path('admin/shopapp/roznamcha/add/',views_roznamcha.roznamcha_form,name='roznamcha_form'), 
     path('roznamcha/save',views_roznamcha.roznamcha_save),
     path('admin/shopapp/selling/add/',views_selling.selling_form,name='selling_form'),
@@ -33,7 +36,7 @@ urlpatterns = [
     path('admin/purchase/purchase_bill/',views_purchase.purchase_show),
     path('purchase_bill/detail/<purchase_bill_id>/',views_purchase.purchase_show),
     path('products/<id>/',views_product.show,name='product_show'),
-    path('products/select_service/<html_id>/',views_product.select_service,name='select_service'),
+    path('products/select_service/<html_id>/<dest>/',views_product.select_service,name='select_service'),
     path('vendors/<id>/',views_vendor.vendors_show,name='vendors_show'),
     path('chat/home/',views_chat.home),
     path('chat/send/',views_chat.send,name='send'),

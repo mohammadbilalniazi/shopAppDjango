@@ -18,12 +18,13 @@ def show(request,id="all"):
 
 
 @api_view(['GET'])
-def select_service(request,html_id="all"):  
+def select_service(request,html_id="all",dest=None):  
     print("########id=",html_id)
     if html_id=="all":
         query_set=Service.objects.all().order_by('-pk')
     else:
-        query_set=Service.objects.filter(html_id=str(html_id))
+        language_obj=Languages.objects.get(language=dest)
+        query_set=Service.objects.filter(html_id=str(html_id),dest=language_obj)
 
     serializer=ServiceSerializer(query_set,many=True)
 

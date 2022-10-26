@@ -1,4 +1,5 @@
 from django.db import models
+from configuration.models import Languages
 from django.contrib.auth.models import User
 # Create your models here.
 
@@ -30,13 +31,15 @@ class Product(models.Model):
 
 
 class Service(models.Model):
-    service_name = models.CharField(max_length=50,null=False, blank=False,unique=True)
+    service_name = models.CharField(max_length=50,null=False, blank=False)
+    dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
     category=models.ForeignKey(Category,on_delete=models.DO_NOTHING,default=None)
     detail=models.TextField(null=True,blank=True)
-    html_id=models.CharField(max_length=50,null=False,unique=True)
+    html_id=models.CharField(max_length=50,null=False)
     service_incharger=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     is_active=models.BooleanField(default=None,null=True)
-     
+    class Meta:
+        unique_together=("dest","html_id")
     def __str__(self): 
         return f"{self.service_name}"  
 
@@ -57,13 +60,15 @@ class Service_Media(models.Model):
 class SubService(models.Model):
     service = models.ForeignKey(Service,on_delete=models.CASCADE,null=False, blank=False)
     # category=models.ForeignKey(Category,on_delete=models.DO_NOTHING,default=None)
+    
+    dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
     sub_service_name = models.CharField(max_length=50,null=True)
     detail=models.TextField(null=True,blank=True)
     html_id=models.CharField(max_length=50,null=False, blank=False,unique=True)
     is_active=models.BooleanField(default=None,null=True)
       
     class Meta:
-        unique_together=("sub_service_name","service",) 
+        unique_together=("sub_service_name","service","dest") 
     def __str__(self): 
         return f"{self.service}"  
     
