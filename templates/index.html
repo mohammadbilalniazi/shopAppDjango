@@ -96,7 +96,7 @@
                         <img src="/static/assets/img/Marketing .svg" alt="Metiew and Smith" id="marketing_services">
                       </div>
                       <p class="slider--item-title" id="marketing_services_label">Marketing  Services</p>
-                      <p class="slider--item-description" id="From_Research_to_Plan_From_Plan_to_Implementation">From Research to Plan, From Plan to Implementation </p>
+                      <p class="slider--item-description" id="From_Research_to_Plan_From_Plan_to_Imple">From Research to Plan, From Plan to Implementation </p>
                     </a>
                   </li>
                   <li class="slider--item slider--item-right">
@@ -151,7 +151,7 @@
                   <h3><span id="internship_label">Internship</span></h3>
                 </a>
                 <a href="#0">
-                  <h3><span id="training_event">Training Event</span></h3>
+                  <h3><span id="training_event_label">Training Event</span></h3>
                 </a>
               </div>
             </div>
@@ -254,7 +254,7 @@
                     <label for="email" id="contact_label2">Contact</label>
                   </div>
                 </div>
-                <input type="submit" value="Send Request" id="submit_form">
+                <input type="submit" value="Send Request" id="submit_form_label">
               </form>
 
               <script>
@@ -278,8 +278,8 @@
 
                 const csrftoken = getCookie('csrftoken');
 
-                submit_form=document.getElementById("submit_form");
-                submit_form.addEventListener("click",e=>{
+                submit_form_label=document.getElementById("submit_form_label");
+                submit_form_label.addEventListener("click",e=>{
                       e.preventDefault();
                       
                       user_name=document.getElementById("user_name");
@@ -361,11 +361,11 @@
     </div>
   </div>
   <ul class="outer-nav">
-    <li class="is-active">Home</li>
-    <li>Services </li>
-    <li>Careers</li>
-    <li>Contact</li>
-    <li>Contact us</li>
+    <li class="is-active" id="home_3_label">Home</li>
+    <li id="Services_3_label">Services </li>
+    <li id="Careers_3_label">Careers</li>
+    <li id="Contact_3_label">Contact</li>
+    <li id="Contact_us_3_label">Contact us</li>
     <!--<li><a href="/admin" style="text-decoration: none; color:white">Login</a></li>-->
   </ul>
 </div>
@@ -472,8 +472,8 @@
   $("#languages").change(function(){
     dest=$(this).val();
     // alert(src + " : " + dest);
-    //select_translation(src,dest) ;
-    insert_language_detail(src,dest);
+    select_translation(src,dest) ;
+    // insert_language_detail(src,dest);
     src=dest;
   });
   //  insert_language_detail('ps','en');

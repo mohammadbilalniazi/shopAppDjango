@@ -17,11 +17,11 @@ class Languages(models.Model):
     
 
 class Language_Detail(models.Model):
-    id_field=models.CharField(max_length=30,null=True,blank=True)
+    id_field=models.CharField(max_length=40,null=True,blank=True)
     src=models.CharField(max_length=15,null=True)
     dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
     text=models.TextField(default=None)
     value=models.TextField(null=True) 
     class Meta:
-        unique_together=(("src","dest","text","value"))
+        unique_together=(("src","dest","id_field","value"))
         verbose_name_plural =("Language Detail")
