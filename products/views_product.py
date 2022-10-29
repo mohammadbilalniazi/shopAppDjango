@@ -25,7 +25,8 @@ def select_service(request,html_id="all",dest=None):
     else:
         language_obj=Languages.objects.get(language=dest)
         query_set=Service.objects.filter(html_id=str(html_id),dest=language_obj)
-
+        
+    print("select service=",query_set)
     serializer=ServiceSerializer(query_set,many=True)
 
     return Response(serializer.data)
