@@ -100,14 +100,14 @@ WSGI_APPLICATION = 'shop.wsgi.application'
 # CORS_ALLOW_HEADERS = default_headers + (
 #     'Access-Control-Allow-Origin',
 # )
-CORS_ALLOW_HEADERS = "*"
-
+# CORS_ALLOW_HEADERS = "*"
+# CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
-     "https://tejaratistan.com",
+     "https://www.tejaratistan.com",
     "https://tejaratistan.herokuapp.com"
 )
 CORS_ALLOWED_ORIGINS = [
-    "https://tejaratistan.com",
+    "https://www.tejaratistan.com",
     "https://tejaratistan.herokuapp.com",
     "https://sub.example.com",
     "http://localhost:5000",
