@@ -84,7 +84,7 @@
                   <li class="slider--item slider--item-left">
                     <a href="#0">
                       <div class="slider--item-image">
-                        <img src="/static/assets/img/Business Solutions .svg" id="business_services" alt="Victory">
+                        <img src="/static/assets/img/Business Solutions .svg" id="business_services" alt="Business Solutions">
                       </div>
                       <p class="slider--item-title" id="business_and_solutions_label">Business  &amp; Solutions</p>
                       <p class="slider--item-description" id="creative_and_innovative_solutions_for_for_you_problems_label">Creative and innovative Solutions For your problems </p>
@@ -93,7 +93,7 @@
                   <li class="slider--item slider--item-center">
                     <a href="#0">
                       <div class="slider--item-image">
-                        <img src="/static/assets/img/Marketing .svg" alt="Metiew and Smith" id="marketing_services">
+                        <img src="/static/assets/img/Marketing .svg" alt="Marketing  Services" id="marketing_services">
                       </div>
                       <p class="slider--item-title" id="marketing_services_label">Marketing  Services</p>
                       <p class="slider--item-description" id="From_Research_to_Plan_From_Plan_to_Imple">From Research to Plan, From Plan to Implementation </p>
@@ -102,7 +102,7 @@
                   <li class="slider--item slider--item-right">
                     <a href="#0">
                       <div class="slider--item-image">
-                        <img src="/static/assets/img/seo.svg" alt="Alex Nowak" id="seo_sem">
+                        <img src="/static/assets/img/seo.svg" alt="seo_sem" id="seo_sem">
                       </div>
                       <p class="slider--item-title" id="seo_sem_label">SEO &amp; SEM</p>
                       <p class="slider--item-description" id="guaranteed_top_spot_on_the_serps_label">A guaranteed top spot on the SERPs </p>
@@ -318,8 +318,8 @@
 
                       console.log("user_request_obj=",user_request_obj);
 
-                      // url="/requests_user/request/save/"
-                      url="https://tejaratistan2.herokuapp.com/requests_user/request/save/";
+                      url="/requests_user/request/save/"
+                      // url="https://tejaratistan.herokuapp.com/requests_user/request/save/";
                         fetch(url, {
                             method: 'POST', // *GET, POST, PUT, DELETE, etc.
                             mode: 'cors', // no-cors, *cors, same-origin
@@ -340,7 +340,7 @@
                               success=document.getElementById("success");
                             //   alert(response.status);
                               if(response.status==201){
-                                // alert("Thanks");
+                                alert("Thanks");
                                 console.log("Thank ", response.status)
                               }
                       })

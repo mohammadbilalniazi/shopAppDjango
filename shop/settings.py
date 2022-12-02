@@ -124,14 +124,25 @@ CORS_ALLOWED_ORIGINS = [
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'shop.sqlite3',
+#         #'NAME':'shop',
+#         #'HOST':'127.0.0.1',
+#         #'USER':'admin',
+#         #'PASSWORD':'Allahisone',
+#     }
+# } 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'shop.sqlite3',
-        #'NAME':'shop',
-        #'HOST':'127.0.0.1',
-        #'USER':'admin',
-        #'PASSWORD':'Allahisone',
+        'ENGINE': 'django.db.backends.mysql',
+        # 'NAME': BASE_DIR / 'shop.sqlite3',
+        'NAME':'u456988861_tejaratistan',
+        'HOST':'tejaratistan.com',
+        'USER':'u456988861_root',
+        'PASSWORD':'Allahisone1',
     }
 } 
 
