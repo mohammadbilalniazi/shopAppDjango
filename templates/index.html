@@ -316,39 +316,66 @@
                         "services_set":list_services
                       }
 
-                      console.log("user_request_obj=",user_request_obj);
-
+                      // console.log("user_request_obj=",user_request_obj);
+                      
+                      alert("Thanks For Requesting ")
                       url="/requests_user/request/save/"
+                      axios({
+                      method:"POST",
+                      url:url,
+                      data:JSON.stringify(user_request_obj),
+                      headers:{"Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
+                  }).then(function(response){
+                      // console.log("response=",response);
+                      if(response.status===201){
+                        console.log(response);
+                      }
+                      // for(key in response['data']){
+                      //     arr=response['data'][key]
+                      //     id=arr[0];
+                      //     value=arr[1];
+                      //     // console.log("id=",id," value ",value)
+                      //     try{
+                      //         element=document.getElementById(id);
+                      //         if(element){     
+                      //             element.textContent=value;   
+                      //         }
+                      //     }
+                      //     catch(err){
+                      //         console.log("err ",err);
+                      //     }
+                      //     // console.log("id=",id," value=",value,arr)
+                      // }
+                      // console.log("response['data']",response['data'])
+                  })
                       // url="https://tejaratistan.herokuapp.com/requests_user/request/save/";
-                        fetch(url, {
-                            method: 'POST', // *GET, POST, PUT, DELETE, etc.
-                            mode: 'cors', // no-cors, *cors, same-origin
-                            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-                            credentials: 'same-origin', // include, *same-origin, omit
-                            
-                            headers: {
-                              'Content-Type': 'application/json',
-                           'X-CSRFToken':getCookie('csrftoken')
-                            },
-                            
-                            redirect: 'follow', // manual, *follow, error
-                            referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                            body:JSON.stringify(user_request_obj),
-                       })
-                       .then(response => {
-                          console.log("response.status=",response.status);
-                              success=document.getElementById("success");
-                            //   alert(response.status);
-                              if(response.status==201){
-                                alert("Thanks");
-                                console.log("Thank ", response.status)
-                              }
-                      })
-                       .then(data => {console.log("data=",data);
-                       })
-                       .catch((error) => {
-                           console.log('Error:', error);
-                       });
+                      //   fetch(url, {
+                      //       method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                      //       mode: 'cors', // no-cors, *cors, same-origin
+                      //       cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                      //       credentials: 'same-origin', // include, *same-origin, omit                    
+                      //       headers: {
+                      //         'Content-Type': 'application/json',
+                      //      'X-CSRFToken':getCookie('csrftoken')
+                      //       },
+                      //       redirect: 'follow', // manual, *follow, error
+                      //       referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                      //       body:JSON.stringify(user_request_obj),
+                      //  })
+                      //  .then(response => {
+                      //     console.log("response.status=",response.status);
+                      //         success=document.getElementById("success");
+                      //       //   alert(response.status);
+                      //         if(response.status===201){
+                      //           alert("Thanks");
+                      //           console.log("Thank ", response.status)
+                      //         }
+                      // })
+                      //  .then(data => {console.log("data=",data);
+                      //  })
+                      //  .catch((error) => {
+                      //      console.log('Error:', error);
+                      //  });
 
                 });
 
@@ -366,7 +393,7 @@
     <li id="Careers_3_label">Careers</li>
     <li id="Contact_3_label">Contact</li>
     <li id="Contact_us_3_label">Contact us</li>
-    <!--<li><a href="/admin" style="text-decoration: none; color:white">Login</a></li>-->
+    <li><a href="/admin" style="text-decoration: none; color:white">Login</a></li>
   </ul>
 </div>
 

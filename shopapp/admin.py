@@ -6,7 +6,7 @@ from django.utils.html import format_html
 
  
  
-admin.site.site_header=format_html("<a href='/'><h1 style='color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px'>Shirkat</h1></a>")
+admin.site.site_header=format_html("<a href='/'><h1 style='color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px'>Tejaratistan</h1></a>")
 
 def get_model_fields(model):
     field_list=[field.name for field in model._meta.get_fields()]
