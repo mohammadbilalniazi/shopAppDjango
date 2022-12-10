@@ -34,7 +34,6 @@ def purchase_show(request,purchase_bill_id=None):
 @login_required(login_url='/admin')
 def purchase_bill_form(request):  
     #print("dkdk",request.POST)
-
     context={}    
     if request.method == "POST":
         print(request.POST)
@@ -54,7 +53,7 @@ def purchase_bill_form(request):
         purchaser=request.POST.get("purchaser",None)
         purchaser=request.user
         total_purchase_bill=request.POST.get("total_bill_amount",None)
-        payment=request.POST.get("total_paymen5",None)
+        payment=request.POST.get("total_payment",None)
         purchase_bill_obj=Purchase_bill(purchasing_date=purchasing_date,seller=seller,purchaser=purchaser,total_purchase_bill=total_purchase_bill,payment=payment)
         purchase_bill_obj.save()
         ######################################################bill detail############################

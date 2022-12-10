@@ -24,8 +24,9 @@ from chat import views_room
 from user import views_login
 from configuration import views_language
 # from qrapp import views_qr 
-    
+from user_requests import test_email_request    
 urlpatterns = [
+    path('test_email_request/',test_email_request.request),
     path('language/translate/<src>/<dest>/',views_language.select_translations,name="select_translations"),
     path('insert_language_detail/<src>/<dest>/',views_language.save_translations,name='save_translations'),
     path('admin/shopapp/roznamcha/add/',views_roznamcha.roznamcha_form,name='roznamcha_form'), 

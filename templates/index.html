@@ -8,7 +8,13 @@
   <meta name="keywords" content="marketing, Research, Business">
   <meta name="author" content="Tejaratistan">
   <link rel="stylesheet" href="/static/assets/css/main.css">
+  <link rel="stylesheet" href="/static/assets/css/toastr.min.css">
   <script src="/static/assets/js/configuration/languages.js"></script>
+  
+<!-- <script src="/static/assets/js/jquery.min.js"></script> -->
+
+<script src="/static/assets/js/jquery.min.js"></script>
+  <script src="/static/assets/js/toastr.min.js"></script>
   <script src="/static/assets/js/axios.min.js"></script>
 </head>
 <body>
@@ -316,9 +322,31 @@
                         "services_set":list_services
                       }
 
-                      // console.log("user_request_obj=",user_request_obj);
+                      msg1=`Thanks Dear ${user_name.value} For Requesting To Tejaratistan! `;
+                      msg2=`We Will Send Further Detail to your Email ${email.value}  `;
+
+                      var options={closeButton: false,
+                      debug: false,
+                      newestOnTop: false,
+                      progressBar: true,
+                      positionClass: "toast-top-center",
+                      preventDuplicates: false,
+                      onclick: null,
+                      showDuration: "300",
+                      hideDuration: "30000",
+                      timeOut: "20000",
+                      extendedTimeOut: "1000",
+                      showEasing: "swing",
+                      hideEasing: "linear",
+                      showMethod: "fadeIn",
+                      hideMethod: "fadeOut"};
+                      toastr.success(msg1,{
+                      options
+                      });
                       
-                      alert("Thanks For Requesting ")
+                      // return;
+                      
+
                       url="/requests_user/request/save/"
                       axios({
                       method:"POST",
@@ -327,8 +355,12 @@
                       headers:{"Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
                   }).then(function(response){
                       // console.log("response=",response);
-                      if(response.status===201){
-                        console.log(response);
+                      if(response.status===201)
+                      {
+                          console.log(response);
+                          toastr.success(msg2,{
+                          options
+                          });
                       }
                       // for(key in response['data']){
                       //     arr=response['data'][key]
@@ -397,7 +429,6 @@
   </ul>
 </div>
 
-<script src="/static/assets/js/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="/static//static/assets/js/vendor/jquery-2.2.4.min.js"><\/script>')</script>
 <script src="/static/assets/js/functions-min.js"></script>
 <script src="/static/assets/js/axios.min.js"></script>
@@ -500,7 +531,7 @@
     dest=$(this).val();
     // alert(src + " : " + dest);
     select_translation(src,dest) ;
-    // insert_language_detail(src,dest);
+    // insert_language_detail(src,'en');
     src=dest;
   });
   //  insert_language_detail('ps','en');

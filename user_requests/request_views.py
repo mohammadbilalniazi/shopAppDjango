@@ -42,9 +42,10 @@ def request(request):
             serializer.save()
             subject="السلام علیکم"
             #from_email=settings.EMAIL_HOST_USER
-            sender=settings.EMAIL_HOST_USER
-            recipient_list=[request.data['requester_email'],]
-            recipient=[clean(request.data['requester_email'])]
+            # sender=settings.EMAIL_HOST_USER
+            sender=clean(request.data['requester_email'])
+            # recipient_list=[request.data['requester_email'],]
+            recipient=['salam1a2b@gmail.com']
             message="Dear Client. Kindly wait untill we call you"
             try:
                 #send_mail(subject=subject,message=message,from_email=from_email,recipient_list=recipient_list)
