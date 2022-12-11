@@ -23,5 +23,5 @@ class Language_Detail(models.Model):
     text=models.TextField(default=None)
     value=models.TextField(null=True) 
     class Meta:
-        unique_together=(("src","dest","id_field","value"))
+        unique_together=(("id_field","src","dest","value"))
         verbose_name_plural =("Language Detail")
