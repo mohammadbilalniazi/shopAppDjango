@@ -1,0 +1,78 @@
+<html>
+    <head>
+        <style>
+            table{
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .top_header{
+                color:red;
+                text-align: center;
+            }
+
+            input,select{
+                padding:5%;
+            }
+
+            #danger{
+                color:white;
+                background-color:darkred;
+            }
+            
+            #success{
+                color:white;
+                background-color:darkgreen;
+            }
+            
+
+        </style>
+    </head>
+
+<body>
+
+<div>   
+     
+    <table> 
+        <tr> <td></td> </tr>   
+    
+        <tr>
+        <td colspan=2>
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                    <div id='danger' class='alert alert-danger'>
+                
+                {% else %}
+                <div id='success' class='alert alert-success'>
+                {%endif%}
+                {{message}}
+                </div>
+            {% endfor %}
+        </td>
+         </tr>
+
+      
+
+        <form action="{{request.META.HTTP_NAME}}/roznamcha/save" method="post">
+            {% csrf_token %}
+            <tr><h1 class="top_header">Add Daily Roznamch</h1></tr>
+        <tr>    
+            <td>Spender</td>
+            <td><select  name="spender" required> {% for user in users%} <option>{{user}}</option> {% endfor %} </select></td>
+        </tr>
+        <tr>
+            <td>Spent Amount</td>
+            <td><input type="text" name="total_spent" required></td>
+        </tr>
+         <tr>
+            <td>Detail</td>
+            <td><input type="text" name="detail" required></td>
+        </tr>
+        <tr>
+            <td><input type="submit" value="save" name="submit" style="padding:8.7px"></td> <td><a href="{{request.META.HTTP_NAME}}/admin/shopapp/roznamcha/"><input type="button" value="Detail" ></a></td>
+        </tr>
+   
+    </table>
+    </form>
+</div>
+</body>
+</html>

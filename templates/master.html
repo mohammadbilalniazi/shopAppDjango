@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <style>
+        #footer {
+            height: 50px; /* the footer's total height */
+          }
+          
+          #footer-content {
+            background-color: #f3e5f5;
+            border: 1px solid #ab47bc;
+            height: 32px; /* height + top/bottom paddding + top/bottom border must add up to footer height */
+            padding: 8px;
+          }
+        </style>
+    </head>
+<body>
+
+<h1>Welcome</h1>
+
+{% block myheader%}
+{% endblock %}
+
+{% block mymessage %}
+{% endblock %}
+
+
+
+{% include 'footer.html'%}

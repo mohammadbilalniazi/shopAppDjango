@@ -1,0 +1,270 @@
+<html lang="en-us" dir="ltr">
+<head>
+<title>Select organization to change | Django site admin</title>
+<link rel="stylesheet" href="/static/admin/css/base.css">
+  <link rel="stylesheet" href="/static/admin/css/dark_mode.css">
+  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
+  <script src="/static/admin/js/nav_sidebar.js" defer></script>
+  <link rel="stylesheet" href="/static/admin/css/changelists.css">
+  <script src="/admin/jsi18n/"></script>
+    <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+    <script src="/static/admin/js/jquery.init.js"></script>
+    <script src="/static/admin/js/core.js"></script>
+    <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+    <script src="/static/admin/js/actions.js"></script>
+    <script src="/static/admin/js/urlify.js"></script>
+    <script src="/static/admin/js/prepopulate.js"></script>
+    <script src="/static/admin/js/vendor/xregexp/xregexp.js"></script>
+    <script src="/static/admin/js/filters.js" defer></script>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="/static/admin/css/responsive.css">
+<meta name="robots" content="NONE,NOARCHIVE">
+</head>
+<body class=" app-configuration model-organization change-list"
+  data-admin-utc-offset="16200" style="background-color:antiquewhite">
+<!-- Container -->
+<div id="container">
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">     
+            <h1 id="site-name"><a href="/admin/"><a href='/admin'><h1 style='color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px'>Shirkat</h1></a></a></h1>
+        </div> 
+        <div id="user-tools">
+                Welcome,
+                 <strong>{{user}}</strong>
+                    <a href="/">View site</a> /
+                <a href="/admin/password_change/">Change password</a> /   
+                <form id="logout-form" method="post" action="/admin/logout/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="7z5DZ109MeT7gesX3tiq1uc2IFumBWbrp9Nl4eMQLGFZ2Xu0iXo38xSIIw1ogB0M">
+                    <button type="submit">Log out</button>
+                </form>       
+        </div>
+    </div>
+    
+    <!-- END Header -->
+    
+<div class="breadcrumbs">
+    <a href="/admin/">Home</a>
+    &rsaquo; <a href="/admin/configuration/">Configuration</a>
+    &rsaquo; Organizations
+</div>
+    <div class="main" id="main">
+    
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
+<nav class="sticky" id="nav-sidebar">
+  <input type="search" id="nav-filter"
+         placeholder="Start typing to filter…"
+         aria-label="Filter navigation items">
+    <div class="app-auth module">
+      <table>
+        <caption>
+          <a href="/admin/auth/" class="section" title="Models in the Authentication and Authorization application">Authentication and Authorization</a>
+        </caption>
+          <tr class="model-group">   
+              <th scope="row"><a href="/admin/auth/group/">Groups</a></th>
+              <td><a href="/admin/auth/group/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-user">
+              <th scope="row"><a href="/admin/auth/user/">Users</a></th>
+              <td><a href="/admin/auth/user/add/" class="addlink">Add</a></td>
+          </tr>
+      </table>
+    </div>
+  
+    <div class="app-bill module">
+      <table>
+        <caption>
+          <a href="/admin/bill/" class="section" title="Models in the Bills application">Bills</a>
+        </caption>
+          <tr class="model-bill_detail">
+              <th scope="row"><a href="/admin/bill/bill_detail/">Bill detail</a></th>
+              <td><a href="/admin/bill/bill_detail/add/" class="addlink">Add</a></td> 
+          </tr>
+        
+          <tr class="model-bill">          
+              <th scope="row"><a href="/admin/bill/bill/">Bills</a></th>
+              <td><a href="/admin/bill/bill/add/" class="addlink">Add</a></td>
+          </tr>
+        
+      </table>
+    </div>
+  
+    <div class="app-chat module">
+      <table>
+        <caption>
+          <a href="/admin/chat/" class="section" title="Models in the Chat application">Chat</a>
+        </caption>
+          <tr class="model-message">
+              <th scope="row"><a href="/admin/chat/message/">Messages</a></th>
+              <td><a href="/admin/chat/message/add/" class="addlink">Add</a></td>
+          </tr>
+        
+          <tr class="model-room">
+              <th scope="row"><a href="/admin/chat/room/">Rooms</a></th>
+              <td><a href="/admin/chat/room/add/" class="addlink">Add</a></td>
+          </tr>
+      </table>
+    </div>
+  
+    <div class="app-configuration module current-app">
+      <table>
+        <caption>
+          <a href="/admin/configuration/" class="section" title="Models in the Configuration application">Configuration</a>
+        </caption>
+        
+          <tr class="model-country">
+              <th scope="row"><a href="/admin/configuration/country/">Countries</a></th>
+              <td><a href="/admin/configuration/country/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-language_detail">
+              <th scope="row"><a href="/admin/configuration/language_detail/">Language Detail</a></th>
+              <td><a href="/admin/configuration/language_detail/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-languages">
+              <th scope="row"><a href="/admin/configuration/languages/">Languages</a></th>
+              <td><a href="/admin/configuration/languages/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-location">          
+              <th scope="row"><a href="/admin/configuration/location/">Locations</a></th>
+              <td><a href="/admin/configuration/location/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-member_user">
+              <th scope="row"><a href="/admin/configuration/member_user/">Member_ users</a></th>
+              <td><a href="/admin/configuration/member_user/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-organization current-model">
+              <th scope="row"><a href="/admin/configuration/organization/" aria-current="page">Organizations</a></th>
+              <td><a href="/admin/configuration/organization/add/" class="addlink">Add</a></td>
+          </tr>
+      </table>
+    </div>
+  
+    <div class="app-products module">
+      <table>
+        <caption>
+          <a href="/admin/products/" class="section" title="Models in the Products application">Products</a>
+        </caption>   
+          <tr class="model-category">
+              <th scope="row"><a href="/admin/products/category/">Categorys</a></th>
+              <td><a href="/admin/products/category/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-product">
+              <th scope="row"><a href="/products/product/">Products</a></th>
+              <td><a href="/products/product/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-service">
+              <th scope="row"><a href="/admin/products/service/">Services</a></th>
+              <td><a href="/admin/products/service/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-store">
+              <th scope="row"><a href="/admin/products/store/">Stores</a></th>
+              <td><a href="/admin/products/store/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-subservice">
+              <th scope="row"><a href="/admin/products/subservice/">Sub services</a></th>
+              <td><a href="/admin/products/subservice/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-unit">
+              <th scope="row"><a href="/admin/products/unit/">Units</a></th>
+              <td><a href="/admin/products/unit/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-vendors">
+              <th scope="row"><a href="/admin/products/vendors/">Vendorss</a></th>
+              <td><a href="/admin/products/vendors/add/" class="addlink">Add</a></td>
+          </tr>
+      </table>
+    </div>
+  
+    <div class="app-shopapp module">
+      <table>
+        <caption>
+          <a href="/admin/shopapp/" class="section" title="Models in the Shopapp application">Shopapp</a>
+        </caption>
+          <tr class="model-asset">
+              <th scope="row"><a href="/admin/shopapp/asset/">Asset</a></th>
+              <td><a href="/admin/shopapp/asset/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-log">
+              <th scope="row"><a href="/admin/shopapp/log/">Log</a></th>
+              <td><a href="/admin/shopapp/log/add/" class="addlink">Add</a></td>
+          </tr>
+      </table>
+    </div>
+  
+    <div class="app-user_requests module">
+      <table>
+        <caption>
+          <a href="/admin/user_requests/" class="section" title="Models in the User_Requests application">User_Requests</a>
+        </caption>
+          <tr class="model-request">
+              <th scope="row"><a href="/admin/user_requests/request/">Requests</a></th>
+              <td><a href="/admin/user_requests/request/add/" class="addlink">Add</a></td>
+          </tr>
+          <tr class="model-services">
+              <th scope="row"><a href="/admin/user_requests/services/">Servicess</a></th>
+              <td><a href="/admin/user_requests/services/add/" class="addlink">Add</a></td>          
+          </tr>       
+      </table>
+    </div>
+</nav>
+
+        
+      
+      <div class="content">
+        
+          
+        
+        <!-- Content -->
+        <div id="content" class="">
+          
+          <h1>Select organization to change</h1>
+          
+          
+  <div id="content-main">
+    
+        <ul class="object-tools">
+          
+            
+
+
+  
+  <li>
+    
+    <a href="/configuration/organization/form/" class="addlink">
+      Add organization
+    </a>
+  </li>
+  
+
+
+          
+        </ul>
+    
+    
+    <div class="module" id="changelist">
+      <div class="changelist-form-container">
+<p class="paginator">
+
+ organizations
+
+
+</p>
+
+      </div>
+      
+        
+      
+    </div>
+  </div>
+
+          
+          <br class="clear">
+        </div>
+        <!-- END Content -->
+        <div id="footer"></div>
+      </div>
+    </div>
+</div>
+<!-- END Container -->
+</body>
+</html>

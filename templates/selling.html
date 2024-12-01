@@ -1,0 +1,102 @@
+<html>
+    <head>
+        <style>
+            table{
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .top_header{
+                color:red;
+                text-align: center;
+            }
+
+            input,select{
+                padding:5%;
+            }
+
+        </style>
+    </head>
+
+<body>
+
+<div>   
+    
+    <table>
+
+        {% if messages %} 
+        <tr>
+        <td colspan=2>
+            {% for message in messages %}
+                {% if message.tag == 'error' %}
+                    <span class="alert alert-danger">
+                {% elif message.tag == 'success' %}
+                    <span class="alert alert-success">
+                {% endif %}
+                    {{message}}
+            {% endfor %}
+         </td>
+         </tr>
+        {% endif %}
+       
+        <form action="{{request.META.HTTP_NAME}}/selling/save" method="post">
+            {% csrf_token %}
+            <tr><h1 class="top_header">Daily Selling </h1></tr>
+        <tr>    
+            <td>customer</td>
+            <td><select  name="customer" required> {% for customer in customers %} <option>{{customer}}</option> {% endfor %} </select></td>
+        </tr>
+      
+        <tr>    
+            <td>Items</td>
+            <td><select  name="item_name" required> {% for item in products %} <option>{{item}}</option> {% endfor %} </select></td>
+        </tr>
+        <tr>    
+            <td>item price</td>
+            <td><input type="number"  id="item_price" name="item_price" required> </td>
+        </tr>
+        <tr>
+            <td>amount</td>
+            <td><input type="number" id="amount" name="amount" required></td>
+        </tr>
+        <tr>
+            <td>discount</td>
+            <td><input type="number" id="discount" name="discount" ></td>
+        </tr>
+         <tr>
+            <td>paid</td>
+            <td><input type="number" id="paid" name="paid" required></td>
+        </tr>
+         <tr>
+            <td>debit</td>
+            <td><input type="number" id="debit" name="debit" ></td>
+        </tr>
+
+       
+        <tr>
+            <td><input type="submit" value="save" name="submit" style="padding:8.7px"></td> <td><a href="{{request.META.HTTP_NAME}}/admin/shopapp/roznamcha/"><input type="button" value="Detail" ></a></td>
+        </tr>
+   
+    </table>
+    </form>
+</div> 
+</body>
+</html>
+
+<script>
+
+
+
+paid.addEventListener('change',(e)=>{
+    var amount=document.getElementById("amount").value;
+    console.log(amount);
+    var item_price=document.getElementById("item_price").value;
+    var discount=document.getElementById("discount").value;
+    console.log(item_price)
+    var total=amount*item_price-discount;
+    var paid=document.getElementById("paid").value;
+    document.getElementById("debit").value=total-paid;
+    //alert(total);
+    //console.log(total)
+    debit=total-paid;
+})
+</script>
