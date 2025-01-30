@@ -14,7 +14,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-function submit_login()
+async function submit_login()
 {
     // alert("test")
     username=document.getElementById("username").value;
@@ -26,26 +26,23 @@ function submit_login()
     }
     // console.log("form ",form);
 
-    url="http://127.0.0.1:8000/host_to_heroku_login_form/submit/"
-    axios({
-        method:"POST",
-        url:url,
-        data:JSON.stringify(form),
-        headers:{'content-type':'application/json','X-CSRFToken':getCookie("csrftoken")}
-    }).then(function(response){
-        new_url=response['data']['base_url'];
-        status=response['data']['status'];
-        message=response['data']['message'];
-        console.log("response['data']['base_url']=",new_url);
-        console.log("response['data']['status']=",status);
-        if(status==200){
-            window.location.replace(new_url);
-        }
-        else{
-            error=document.getElementById("error");
-            error.innerHTML=message
-        }
-    })
+    url="/host_to_heroku_login_form/submit/"
+    
+    // const response=await call_shirkat(url,'POST',JSON.stringify(form));
+    
+    const response=await call_shirkat(url,'POST',form);
+    new_url=response['data']['base_url'];
+    status=response['data']['status'];
+    message=response['data']['message'];
+    console.log("response['data']['base_url']=",new_url);
+    console.log("response['data']['status']=",status);
+    if(status==200){
+        window.location.replace(new_url);
+    }
+    else{
+        error=document.getElementById("error");
+        error.innerHTML=message
+    }
     return;
 }
 

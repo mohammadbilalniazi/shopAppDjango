@@ -1,0 +1,222 @@
+<html lang="en-us" dir="ltr">
+<head>
+    <title>Select product | Django site admin</title>
+    <link rel="stylesheet" href="/static/admin/css/base.css">
+
+    <link rel="stylesheet" href="/static/admin/css/dark_mode.css">
+     <!-- <link rel="stylesheet" type="text/css" href="/static/assets/css/bootstrap.min.css">  -->
+    
+
+    <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
+    <script src="/static/admin/js/nav_sidebar.js" defer=""></script>
+
+  <!-- <script src="/static/assets/js/bootstrap.bundle.min.js" defer=""></script> -->
+
+    
+    <link rel="stylesheet" href="/static/admin/css/changelists.css">
+
+  <script src="/static/assets/js/axios.min.js"></script>
+  <script src="/static/assets/js/cookie.js"></script>
+    <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+    <script src="/static/admin/js/jquery.init.js"></script>
+    <script src="/static/admin/js/core.js"></script>
+    <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+    <script src="/static/admin/js/actions.js"></script>
+    
+    <script src="/static/admin/js/urlify.js"></script>
+    <script src="/static/admin/js/prepopulate.js"></script>
+    <script src="/static/admin/js/vendor/xregexp/xregexp.js"></script>
+    <script src="/static/admin/js/filters.js" defer=""></script>
+        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+        <link rel="stylesheet" href="/static/admin/css/responsive.css">
+    <meta name="robots" content="NONE,NOARCHIVE">
+</head>
+
+<body class=" app-product model-product change-list" data-admin-utc-offset="16200">
+<!-- Container -->
+<div id="container">
+    
+    <!-- Header -->
+    
+    <div id="header">
+        <div id="branding">
+            <h1 id="site-name"><a href="/admin/"></a><a href="/admin"><h1 style="color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px">Shirkat</h1></a></h1>
+        </div>
+        
+        
+        <div id="user-tools">
+            
+                Welcome,
+                <strong>{{user}}</strong>
+                <a href="/">View site</a> /
+                <a href="/admin/password_change/">Change password</a> /
+                <form id="logout-form" method="post" action="/admin/logout/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="K87MXyBkDQAkebZhWettqBOtL0EA61QLMrbXY2aYB1jByzd3qeni2fSbpjzxx0i0">
+                    <button type="submit">Log out</button>
+                </form>
+        </div>
+    </div>
+    
+    <!-- END Header -->
+        
+    <div class="breadcrumbs">
+    <a href="/admin/">Home</a>
+    › <a href="/admin/product/">Products</a>
+    › Products
+    </div>
+
+    
+
+    <div class="main shifted" id="main">  
+        <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
+      <div class="content">
+        <!-- Content -->
+        <div id="content" class="" style="background-color: #f9f1c7;">
+          <h1>Select product to change</h1>
+          <input type="text" name='item_name' id='item_name'>
+            <span style="display:inline;margin:1%;" id="store_span">
+            <select type="text" name="store" class="" required="" id="store">     
+                {% for row in stores %}
+                <option value="{{row.id}}" >{{row}} </option>
+                {% endfor %}
+            </select>
+            </span>                    
+  <div id="content-main">
+        <ul class="object-tools">
+  <li>
+    <a href="/admin/product/product/add/" class="addlink">
+      Add product
+    </a>
+  </li>    
+        </ul>
+    <div class="module filtered" id="changelist">
+      <div class="changelist-form-container">
+        <form id="changelist-form" method="post" novalidate=""><input type="hidden" name="csrfmiddlewaretoken" value="K87MXyBkDQAkebZhWettqBOtL0EA61QLMrbXY2aYB1jByzd3qeni2fSbpjzxx0i0">
+        
+<div class="results">
+<table id="result_list">
+<thead>
+<tr>
+
+<!-- <th scope="col" class="sortable column-organization">
+   <div class="text"><a href="?o=0">Organization</a></div>
+   <div class="clear"></div>
+</th> -->
+<th scope="col" class="sortable column-item_name">
+   
+   <div class="text"><a href="?o=1">Item name</a></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="column-get_detail">
+   
+   <div class="text"><span>Model</span></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="sortable column-category">
+   <div class="text"><a href="?o=3">Category</a></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="column-get_minimum_requirement">
+   
+   <div class="text"><span> minimum requirement</span></div>
+   <div class="clear"></div>
+</th>
+
+<th scope="col" class="column-get_item_amount_available">
+   
+   <div class="text"><span> purchase  amount </span></div>
+   <div class="clear"></div>
+</th>
+
+
+<th scope="col" class="column-get_item_amount_available">
+   
+   <div class="text"><span> selling  amount </span></div>
+   <div class="clear"></div>
+</th>
+
+<th scope="col" class="column-get_item_amount_available">
+   <div class="text"><span> current  amount </span></div>
+   <div class="clear"></div>
+</th>
+
+  
+<!-- <th scope="col" class="column-get_row">
+   
+   <div class="text"><span>Row</span></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="column-get_column">
+   
+   <div class="text"><span>Column</span></div>
+   <div class="clear"></div>
+</th> -->
+<th scope="col" class="column-get_purchased_price">
+   
+   <div class="text"><span> purchased price</span></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="column-get_selling_price">
+   
+   <div class="text"><span> selling price</span></div>
+   <div class="clear"></div>
+</th>
+<!-- <th scope="col" class="column-image_tag">
+   
+   <div class="text"><span>Image</span></div>
+   <div class="clear"></div>
+</th> -->
+</tr>
+<tr ><div id='pagination_id'></div></tr>
+</thead>
+<tbody id="product_body">
+</tbody>
+</table>
+</div>
+
+
+          
+        
+        
+
+<p class="paginator">
+
+{{products_length}} products
+
+</p>
+
+        </form>
+      </div>
+        
+      
+    </div>
+  </div>
+
+          
+          <br class="clear">
+        </div>
+        <!-- END Content -->
+        <div id="footer"></div>
+      </div>
+    </div>
+</div>
+<!-- END Container -->
+
+
+</body></html>
+
+
+<script src="/static/assets/js/common_entities/call_shirkat.js"></script>
+<script src="/static/assets/js/product/product.js"></script>
+<script>
+     const item_name=document.getElementById("item_name");
+     search_product();
+     item_name.addEventListener("input",(e)=>{
+         search_product();
+     });
+     
+     const store=document.getElementById("store");
+     store.addEventListener("input",(e)=>{
+         search_product();
+     });
+</script>

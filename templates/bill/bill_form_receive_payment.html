@@ -1,0 +1,372 @@
+  {% load jalali_tags %}
+{% load static %}
+<html lang="en-us" dir="ltr">
+    <head> 
+        <title>Add Bill | Django site admin</title>
+        <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
+        <link rel="stylesheet" type="text/css" href="/static/admin/css/nav_sidebar.css">
+        <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
+        <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
+        
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/common.css">
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/fontawesome.min.css">
+        <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/fontawesome.min.css"> -->
+        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
+        <link rel="stylesheet" href="/static/assets/css/toastr.min.css">
+        <script src="/static/assets/js/jquery.min.js"></script>
+        
+        <script src="/static/assets/js/common_entities/store.js"></script>
+    
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <style>
+        .danger-btn{
+            font-weight: 900; 
+            font-size: 16px; 
+            background-color: red; 
+            color: black; 
+            padding: 0px; 
+            margin: 0px;
+            padding:0.4%;
+        }
+        .bill_creator{
+            font-size:xx-large;
+            font-weight: 900;
+            color:black
+        }
+        .bill_acceptor{
+            font-size:xx-large;
+            font-weight: 900;
+            color:crimson
+        }
+
+        select{
+            font-weight: 900;
+            /* color:blue */
+        }
+        
+        input[type=number],input[type=text]{
+            font-weight: 900;
+            /* color:blue */
+        }
+    </style>
+    </head>
+
+<body class=" app-shopapp model-Bill change-form" data-admin-utc-offset="0" style="background-color:antiquewhite">
+<!-- Container -->
+<div id="container"> 
+    <!-- Header -->
+    
+    <div id="header">
+        <div id="branding">
+             <h1 id="site-name"><a href='/'><h1 style='color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px'>{{organization}}</h1></a></h1>
+       </div>
+ 
+        <div id="user-tools">
+                Welcome,
+                <strong>{{user}}</strong>.
+                    <a href="/">View site</a> /
+                <a href="/admin/password_change/">Change password</a> /
+                <a href="/admin/logout/">Log out</a>   
+        </div>
+    </div>
+    
+    <!-- END Header -->
+        
+    <div class="breadcrumbs">
+    <a href="/admin/">Home</a>
+    › <a href="/admin/bill/">Bill</a>
+    › <a href="/admin/bill/bill/">Bills</a>
+    
+     › <a href="/receive_payment/bill/">New Bill</a>
+    </div>
+    <div class="main shifted" id="main"> 
+        <!-- <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button> -->
+        <!-- <nav class="sticky" id="nav-sidebar">
+            <input type="search" id="nav-filter" placeholder="Start typing to filter…" aria-label="Filter navigation items">
+             
+            
+                <div class="app-shopapp module current-app">
+                <table>
+                    <caption>
+                    <a href="/admin/shopapp/" class="section" title="Models in the Shirkat application">Shirkat</a>
+                    </caption>
+                    
+                    <tbody>
+                        <tr class="model-initial_asset">
+                            <th scope="row"><a href="/admin/shopapp/initial_asset/">Asset</a></th>
+                            <td><a href="/admin/shopapp/initial_asset/add/" class="addlink">Add</a></td> 
+                        </tr>
+   
+                        <tr class="model-unit">  
+                            <th scope="row"><a href="/admin/products/unit/">Units</a></th>
+                            <td><a href="/admin/products/unit/add/" class="addlink">Add</a></td>    
+                        </tr>
+                        <tr class="model-store">
+                            <th scope="row"><a href="/admin/products/store/">Stores</a></th>
+                            <td><a href="/admin/products/store/add/" class="addlink">Add</a></td>
+                        </tr>
+                        <tr class="model-product">
+                            <th scope="row"><a href="/products/product/">Products</a></th>
+                            <td><a href="/products/product/add/" class="addlink">Add</a></td>   
+                        </tr>
+                        
+                        <tr class="model-Bill current-model">  
+                            <th scope="row"><a href="/admin/purchase/bill/" aria-current="page">bills</a></th>
+                            <td><a href="/admin/purchase/bill/add/" class="addlink">Add</a></td>    
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+        </nav> -->
+
+        <div class="content">
+                    <div class="colM">{% if messages %} {% for message in messages %} {% if message.tags == "error" %} <div class='alert alert-danger' style="background-color:red"> {%  else %} <div class='alert alert-danger' style="background-color:green"> {%endif%}  {{ message}} </div> {% endfor %} {% endif %}</div>
+    
+            <!-- Content -->
+            
+            <div id="content" class="colM">   
+                <input type="hidden" id="detail_or_update" {% if bill %}  value="1"  {% else %} value="0"  {% endif %} >
+                
+                <form method="post" action='{{request.META.HTTP_NAME}}/receive_payment/bill/save/'   id="bill" >                 
+                        {% csrf_token %}       
+                <table>
+                <tr class="bill_creator">
+                     <td>
+                        Bill Creator Organization
+                    </td>
+                    <td>     
+                        <span style="display:inline;margin:3%">
+                                <select type="text" name="organization"  id="organization"> 
+                                    <option {% if bill.organization %}  value="{{bill.organization.id}}" {% else %}  value="{{organization.id}}" {% endif %}>
+                                        {% if bill %}  {{bill.organization}} {% else %}  {{organization}} {% endif %}
+                                    </option>
+                                </select>
+                            </span>  
+                    </td> 
+                </tr> 
+                <tr class="bill_creator">
+                    <td >
+                        Bill type
+                    </td>
+                    <td>
+                        <span  > 
+                            <select type="text" name="bill_type"  value="{{bill.bill_type}}"   required="" id="bill_type">     
+                                <option {% if bill %} {% if bill.bill_type == 'PAYMENT' %} selected {% endif %} {% endif %} value="PAYMENT">PAYMENT</option>
+                                <option {% if bill %} {% if bill.bill_type == 'RECEIVEMENT' %} selected {% endif %} {% endif %} value="RECEIVEMENT">RECEIVEMENT</option>                               
+                            </select>   
+                        </span>
+                    </td>
+                    
+                    <td>Bill Creator User</td>
+                    <td>     
+                        <span style="display:inline;margin:3%">                   
+                            <input type="text" disabled name="creator" {% if bill %} value="{{bill.creator}}" {% else %}  value="{{user.username}}" {% endif %} placeholder="creator"  class="" required="" id="creator">     
+                        </span>  
+                    </td>
+                    <!-- </span>  -->
+                    <td> 
+                        <!-- style="float:right;display:inline;font-size:x-large;font-weight: 900;color:darkred"  -->
+                    <span>System Bill ID 
+                    </span>
+                    </td>
+                    <td>
+                        <input type="number"  value="{{bill.id}}" disabled name="bill_id" id="bill_id" >
+                    </td>
+                </tr>
+            
+                    <tr class="bill_creator">
+                         <td>
+                             bill No 
+                        </td>    
+                        <td>                                       
+                            <span > 
+                            <input type="number"  name="bill_no" id="bill_no"  {% if bill.bill_no %} value="{{bill.bill_no}}" {% else %} value="{{bill_no}}" {% endif %} placeholder="بل شمیره" class="" required="" >                      
+                          
+                            </span> 
+                        </td>
+                        <td>
+                          Bill Creator  Store
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:1%;" id="store_span">
+                                <select type="text" name="store" placeholder="سرای" class="" required="" id="store">     
+                                    {% for row in stores %}
+                                    <option value="{{row.id}}" {% if row == bill.bill_description.store %} selected {% endif %}>{{row}} </option>
+                                    {% endfor %}
+                                </select>
+                                <a href="/admin/products/store/add/" class="addlink"></a>
+                            </span>  
+                        </td>
+                        <td>
+                            Date
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:1%">
+                                        {{form.date}}                              
+                            </span>
+                        </td>
+                        
+                    </tr>  
+                    <tr class="bill_creator">    
+                        
+                        <td>
+                            Bill Status
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:3%">
+                            <input type="checkbox" {% if bill.bill_receiver2.is_approved %} checked {% endif %}  name="is_approved" id="is_approved">
+
+                            <select name="status" placeholder="status"  required id="status">     
+                                <option value="0" {% if bill.bill_description.status == 0 %} selected {% endif %}>CREATED </option>    
+                                <option value="1" {% if bill.bill_description.status == 1 %} selected {% endif %}>APPROVED</option>  
+                                <option value="2" {% if bill.bill_description.status == 2 %} selected {% endif %}>REVERSED</option>
+                                <option value="3" {% if bill.bill_description.status == 3 %} selected {% endif %}>REJECTED</option>
+                            </select>
+                            </span>
+                        </td>
+                         <td>
+                            Total Bill 
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:3%">
+                                <input type="number" id="total" name="total" disabled  value="{{bill.total}}" placeholder="مجموعه پیسی"   >                      
+                            </span>   
+                        </td> 
+                        
+                        
+                        <td>Payment/Receivement</td>
+                        <td>
+                            <span style="display:inline;margin:3%">
+                                        <input type="number" name="total_payment" {% if bill %} value="{{bill.payment}}"  {% else %} value="0" {% endif %} placeholder="مجموعه ادا" required="" id="total_payment"  min="0"  step="0.0001">                      
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="bill_acceptor" >
+                        <td>
+                           Bill Receiver Organization
+                        </td> 
+                        <td>              
+                            <span style="display:inline;margin:1%" id="rcvr_org_span">
+                                <select type="text"  name="bill_rcvr_org" placeholder="مقابل لوری" class="" required="" id="bill_rcvr_org">     
+                                    {% for row in rcvr_orgs %}
+                                    <option  {% if bill.bill_receiver2.bill_rcvr_org == row %} selected  {% endif %} value="{{row.id}}">{{row}}</option>
+                                    {% endfor %}
+                                </select>     
+                                <a href="/admin/configuration/organization/add/" class="addlink"></a>                       
+                            </span>
+                        </td>
+                       
+                    </tr> 
+                    <tr class="bill_acceptor">
+                        <td>
+                          Bill Receiver Organization  Store
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:1%;" id="bill_receiver2_store_span">
+                                <select type="text" name="bill_receiver2_store"  placeholder="سرای" class="" required="" id="bill_receiver2_store">     
+                                    {% for row in bill_rcvr_org_stores %}
+                                    <option value="{{row.id}}" {% if bill.bill_receiver2.store.id == row.id %} selected {% endif %}>{{row}}</option>
+                                    {% endfor %}
+                                </select>
+                                <a href="/admin/product/store/add/" class="addlink"></a>
+                            </span>  
+                        </td>
+                       
+                        <td>
+                            Approval User
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:3%">
+                            <input type="text" name="approval_user" value="{{bill.bill_receiver2.approval_user}}"  placeholder="approval_user " disabled id="approval_user" >                      
+                            </span>
+                        </td>
+                        <td>
+                            Approval Date
+                        </td>
+                        <td>
+                            <span style="display:inline;margin:3%">
+                                <input type="text" name="approval_date"  placeholder="approval_date" value="{{bill.bill_receiver2.approval_date}}" disabled  id="approval_date" >                      
+                            </span>
+                        </td>
+                    </tr>     
+                    </table>
+                    <div id="content-main">
+                                <div>
+                                    
+                                    <div class="submit-row">
+
+                                        {% if bill %}
+                                        
+                                        <input type="submit" value="Update" style="background-color:green; color:white" class="default" name="_save">
+                                        {% else %}
+                                        <input type="submit" value="Save" class="default" name="_save">
+                                        {% endif %}
+                                        <!-- {% if bill %}
+                                        <a href="/bill/delete/{{bill.id}}/" role="button" class="danger-btn" style="background-color:red; color:white" >delete</a>
+                                        {% endif %}     -->
+                                    </div> 
+                            </div>
+                        </form>
+                   
+                </div>  <!--end of div content-main-->
+                    <br class="clear">
+            </div>     <!--end of div colM-->
+            <!-- END Content -->
+            <div id="footer"></div>
+        </div><!-- end of div content-->
+    </div> <!--- end of div main shifted -->
+</div><!-- end of div container -->
+<!-- END Container -->
+
+
+<div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;">
+    <div>
+        <a href="#" class="calendarnav-previous">&lt;</a>
+        <a href="#" class="calendarnav-next">&gt;</a>
+    </div>
+    <div id="calendarin0" class="calendar">
+        <table>
+        <caption>June 2022</caption>
+        <tbody>
+        <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
+        <tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr>
+        <tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr>
+        <tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class="today"><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="nonday"> </td><td class="nonday"> </td>
+        </tr>
+        </tbody>
+        </table>
+    </div>
+   
+    <p class="calendar-cancel"><a href="#">Cancel</a></p>
+</div><!-- end of  calendarbox module div-->
+</body>
+</html>
+ {{ form.media }}
+  <script src="/static/assets/js/toastr.min.js"></script>
+  <script src="/static/assets/js/axios.min.js"></script>
+  <script src="/static/assets/js/cookie.js"></script>
+<script src="/static/assets/js/common_entities/call_shirkat.js"></script>
+<script src="/static/assets/js/configuration/languages.js"></script>
+<script src="/static/assets/js/common_entities/create_element.js"></script>
+
+  <script src="/static/assets/js/show_message.js"></script>
+    <script src="/static/assets/js/bill/bill_delete.js"></script>
+<script src="/static/assets/js/bill/receive_payment_bill.js"></script>
+
+<script src="/static/assets/js/bill/select_bill_no.js"></script>
+
+<script>
+    //   bill_rcvr_org=document.getElementById("bill_rcvr_org");
+    //     bill_rcvr_org.addEventListener("change",e=>{
+    //         console.log("change bill_rcvr_org.value",bill_rcvr_org.value)
+    //         // show_store("all",bill_rcvr_org.value);
+    //     })
+</script>
+
+{% if detail %}
+<script>add_event_to_total()</script>
+
+{% endif %}
+<script>
+</script>

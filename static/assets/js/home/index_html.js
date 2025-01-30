@@ -1,5 +1,5 @@
 function show_chat_func(){
-    alert("show_chat")
+    // alert("show_chat")
     chat_us_div=document.getElementById("chat_us_div");
     chat_us_div.style.display=block;
    

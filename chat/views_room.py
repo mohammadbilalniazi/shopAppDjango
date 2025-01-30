@@ -5,12 +5,12 @@ from datetime import datetime
 from jalali_date import date2jalali
 import pytz
 from rest_framework import status
-from hijri_converter import Hijri,Gregorian
+from hijridate import Hijri,Gregorian
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.template import loader
 import json
-from shopapp.models import Log
+# from shopapp.models import Log
 from .models import Room
 # from .serializer import ServicesSerializer,RequestSerializer
 #from .serializer import ControllerIhsayaSerializer

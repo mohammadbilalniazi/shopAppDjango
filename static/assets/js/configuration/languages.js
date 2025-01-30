@@ -1,23 +1,17 @@
 
-function select_translation(src,dest)
-{   console.log("src=",src)
-    console.log("dest=",dest)
-    let k=0;
-
+async function select_translation(src,dest)
+{   
+    // console.log("src=",src)
+    // console.log("dest=",dest)
     url="/language/translate/"+src+"/"+dest+"/";
-   
-    axios({
-        method:"GET",
-        url:url
-        // data:JSON.stringify(postForm),
-        // headers:{"Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
-    }).then(function(response){
-        // console.log("response=",response);
+    let response=await call_shirkat(
+            url,
+            "GET"
+        );
         for(key in response['data']){
             arr=response['data'][key]
             id=arr[0];
             value=arr[1];
-            // console.log("id=",id," value ",value)
             try{
                 element=document.getElementById(id);
                 if(element){     
@@ -27,10 +21,7 @@ function select_translation(src,dest)
             catch(err){
                 console.log("err ",err);
             }
-            // console.log("id=",id," value=",value,arr)
         }
-        // console.log("response['data']",response['data'])
-    })
  return ;                     
 
 }
@@ -52,7 +43,7 @@ function getCookie(name) {
 }
 
 
-function insert_language_detail(src,dest)
+async function insert_language_detail(src,dest)
 {   
     console.log("src=",src)
     console.log("dest=",dest)
@@ -97,18 +88,15 @@ function insert_language_detail(src,dest)
     "language_insert":list_form_data
     }
     console.log("list_form_data=",JSON.stringify(postForm))
-    axios({
-        method:"POST",
-        url:url,
-        data:JSON.stringify(postForm),
-        headers:{"Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
-    }).then(function(response){
-        // console.log("response=",response);
+    let response=await call_shirkat(
+        url,
+        "POST",
+        JSON.stringify(postForm)
+    )
         for(key in response['data']){
             arr=response['data'][key]
             id=arr[0];
             value=arr[1];
-            // console.log("id=",id," value ",value)
             try{
                 element=document.getElementById(id);
                 if(element){     
@@ -118,10 +106,7 @@ function insert_language_detail(src,dest)
             catch(err){
                 console.log("err ",err);
             }
-            // console.log("id=",id," value=",value,arr)
         }
-        // console.log("response['data']",response['data'])
-    })
  return ;                     
 
 }

@@ -1,0 +1,14 @@
+1 vs code
+2 D:\shop>
+3 D:\shop> .\env\Scripts\activate
+4 (env)D:\shop> python manage.py runserver
+
+
+
+
+Your Jobs:
+1 Products
+2 Vendors
+3 Category
+4 Bills
+

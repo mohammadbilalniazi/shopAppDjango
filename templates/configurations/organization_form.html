@@ -1,0 +1,241 @@
+<html lang="en-us" dir="ltr"><head>
+<title>Add organization | Django site admin</title>
+<link rel="stylesheet" href="/static/admin/css/base.css">
+
+  <link rel="stylesheet" href="/static/admin/css/dark_mode.css">
+
+
+  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
+  <script src="/static/admin/js/nav_sidebar.js" defer=""></script>
+
+<link rel="stylesheet" href="/static/admin/css/forms.css">
+
+
+<!-- <script src="/admin/jsi18n/"></script> -->
+<script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+<script src="/static/admin/js/calendar.js"></script>
+<script src="/static/admin/js/jquery.init.js"></script>
+<!-- <script src="/static/admin/js/admin/DateTimeShortcuts.js"></script> -->
+<!-- <script src="/static/admin/js/core.js"></script> -->
+<!-- <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script> -->
+<!-- <script src="/static/admin/js/actions.js"></script> -->
+<!-- <script src="/static/admin/js/urlify.js"></script>
+<script src="/static/admin/js/prepopulate.js"></script>
+<script src="/static/admin/js/vendor/xregexp/xregexp.js"></script> -->
+
+  <script src="/static/assets/js/toastr.min.js"></script>
+  <script src="/static/assets/js/axios.min.js"></script>
+  <script src="/static/assets/js/cookie.js"></script>
+  <script src="/static/assets/js/common_entities/create_element.js"></script>
+
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="/static/admin/css/responsive.css">
+    
+
+<meta name="robots" content="NONE,NOARCHIVE">
+</head>
+
+<body class=" app-configuration model-organization change-form" data-admin-utc-offset="16200" style="background-color:antiquewhite">
+
+<!-- Container -->
+<div id="container">
+
+    
+    <!-- Header -->
+    
+    <div id="header">
+        <div id="branding">
+        
+<h1 id="site-name"><a href="/admin/"></a><a href="/admin"><h1 style="color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px">Shirkat</h1></a></h1>
+
+        </div>
+        
+        
+        <div id="user-tools">
+            
+                Welcome,
+                 <strong>{{user}}</strong>
+            
+            
+                
+                    <a href="/">View site</a> /
+                
+                
+                    
+                    
+                
+                
+                <a href="/admin/password_change/">Change password</a> /
+                
+                <form id="logout-form" method="post" action="/admin/logout/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="8LP5v6xU4Ej19AeHnMIgx5oG3jZcHtckqlxNAjjB365TVjgKCgOTE84m3awem81F">
+                    <button type="submit">Log out</button>
+                </form>
+            
+        </div>
+        
+        
+        
+    </div>
+    
+    <!-- END Header -->
+    
+<div class="breadcrumbs">
+<a href="/admin/">Home</a>
+› <a href="/admin/configuration/">Configuration</a>
+› <a href="/admin/configuration/organization/">Organizations</a>
+› Add organization
+</div>
+
+    
+
+    <div class="main shifted" id="main">
+      
+        
+          
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
+      <div class="content">
+        <div id="content" class="colM">
+          
+          <h1>Add organization</h1>
+          
+          <div id="content-main">
+   <form method="post" action='{{request.META.HTTP_NAME}}/configuration/organization/form/create/{{id}}'  id="organization" >                  
+  
+    {% csrf_token %}  
+    <div>
+  <fieldset class="module aligned ">
+       
+<table>
+    <tr>
+        <div>
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == "error" %}
+                        <div class='alert alert-danger' style="background-color:red">
+                    
+                    {% else %}
+                    <div class='alert alert-success' dir="ltr"  style="background-color:green">
+                    {%endif%}
+                    {{message}}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </tr>
+    <tr></tr>
+    <tr><td>Id</td><td><input type="number" disabled name="id" id="id" value='{{id}}'></td></tr>
+    <tr><td>Branch Or Customer </td>
+        <td>
+        <select name="parent" id="parent">
+         <option value='None' {% if not organization.parent  %} selected {% endif %}>Customer</option> 
+         <option value="{{parent_organization.id}}" {% if organization.parent.id == parent_organization.id  %}selected {% endif %}> Branch Of {{parent_organization}}</option>
+        </select>
+        </td>
+    </tr>
+  
+    <tr><td>Owner User Name</td><td> <input type="text" name="owner" maxlength="10" required="" value='{{organization.owner}}' id="owner"></td></tr>
+    <tr><td>Organization Type LAST NAME</td>
+        <td>
+        <select name="type" id="type">
+            <option value="SHIRKAT" {% if organization.owner.last_name == 'SHIRKAT' %} selected {% endif %}>SHIRKAT</option>
+            <option value="SHOP" {% if organization.owner.last_name == 'SHOP' %} selected {% endif %}>SHOP </option>
+            <option value="NONE" {% if organization.owner.last_name == 'NONE' %} selected {% endif %}>NONE</option>
+        </select>
+        </td>
+    </tr>
+    <tr><td>Shirkat/Shop Name</td><td> <input type="text" name="name" value='{{organization.name}}'  maxlength="20" required="" value='name_mod' id="name"></td></tr>
+    <tr><td>Email</td><td><input type="text" name="email" required="" value='{{organization.owner.email}}' ></td></tr>
+    <tr><td>Password</td><td><input type="password" {% if not organization %} value="Afghan123" {% endif %} name="password"  required=""></td></tr>
+    <tr><td>Location</td><td><input type="hidden" id="update_location_id" value='{{organization.location.id}}'><select name="location" required=""  id="location"></select></td></tr>
+    <tr><td>Created Date</td><td><input type="date" disabled name="created_date"  value="{{created_date}}" size="10" required="" id="created_date"></td></tr>
+    <tr><td>Is Active</td><td> <input  name="is_active" type="checkbox" id="is_active" {% if organization.is_active %} checked {% endif %}>  <!-- {{form.is_active}} --></td></tr>
+    
+    <tr><td><input  type="submit"  id='form_submit_btn' {% if id %} value="Update" style="background-color:red" {% else %} value="Save" {% endif %} class="" name="save"> </td></tr>
+</table>
+</fieldset>
+</div>
+
+
+
+    <!-- <script id="django-admin-form-add-constants" src="/static/admin/js/change_form.js" data-model-name="organization" async="">
+    </script>
+
+
+
+
+<script id="django-admin-prepopulated-fields-constants" src="/static/admin/js/prepopulate_init.js" data-prepopulated-fields="[]">
+</script> -->
+
+
+</div>
+ </form> 
+</div>
+
+          
+          <br class="clear">
+        </div>
+        <!-- END Content -->
+        <div id="footer"></div>
+      </div>
+    </div>
+</div>
+<!-- END Container -->
+
+
+<div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;"><div><a href="#" class="calendarnav-previous">&lt;</a><a href="#" class="calendarnav-next">&gt;</a></div><div id="calendarin0" class="calendar"><table><caption>March 2023</caption><tbody><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr><tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr><tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr><tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class=""><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="today"><a href="#">31</a></td><td class="nonday"> </td></tr></tbody></table></div><div class="calendar-shortcuts"><a href="#">Yesterday</a>&nbsp;|&nbsp;<a href="#">Today</a>&nbsp;|&nbsp;<a href="#">Tomorrow</a></div><p class="calendar-cancel"><a href="#">Cancel</a></p></div></body></html>
+
+
+
+<script src="/static/assets/js/common_entities/call_shirkat.js"></script>
+<script src="/static/assets/js/configuration/organization.js"></script> 
+
+<script> 
+    // var is_active_field=document.getElementById('is_active_field');
+    // is_active_field.value='jjj';
+    // is_active_field.addEventListener('change',(e)=>{
+    //     console.log("e.value ",e," is_active_field.value ",is_active_field.checked)
+    //     if(is_active_field.checked)
+    //     {
+    //     is_active_field.value='jjj';
+    //     }
+    //     else{
+    //     is_active_field.value='kkk';
+    //     }
+    // });
+function submit()
+{
+     
+    id=document.getElementById("id");
+    parent=document.getElementById("parent");
+    owner=document.getElementById("owner");
+    name=document.getElementById("name");
+    location=document.getElementById("location");
+    created_date=document.getElementById("created_date");
+    is_active=document.getElementById("is_active");
+    var org_obj={
+        "id":id.value,
+        "parent":parent.value,
+        "owner":owner.value,
+        "name":name.value,
+        "location":location.value,
+        "is_active":is_active.value,
+        "created_date":created_date.value
+    }
+    
+    console.log("org_obj ",org_obj);
+    
+    return false;
+}
+
+var organization=document.getElementById('organization');
+organization.addEventListener("submit",async function(e){
+    console.log("organization ",organization)
+    var a=submit_function();
+    alert("after submit")
+    e.preventDefault();
+    // return false;
+});
+    
+
+</script>

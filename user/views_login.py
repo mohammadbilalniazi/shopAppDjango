@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate,login
 from django.http import HttpResponse,JsonResponse
 from rest_framework import status as http_status
+from rest_framework.response import Response
 from django.template.context_processors import csrf
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
@@ -18,8 +19,9 @@ def host_to_heroku_submit(request):
     print("request.body=",request.body)
     raw_data=request.body
     data=raw_data.decode("utf-8")
+    print("data ",data," type(data) ", type(data))
     data=json.loads(data)
-    print("type(data) ",type(data)," data ",data)
+    print("type(data) ",type(data)," data ",data )
     username=str(data['username'])
     password=str(data['password'])
 
@@ -30,13 +32,6 @@ def host_to_heroku_submit(request):
     print(username," ",password)
     user=authenticate(request,username=username,password=password)
     print("authenticate(user) ",user)
-    #user=authenticate(username=username,password=password)
-    # return HttpResponse(user)
-
-    # print("username")
-    #print(user.is_superuser)
-    #print(user.has_perm("hawala.add_hawala"))
-    #print('user.has_perm("hawala.view_hawala") ',user.has_perm("hawala.view_hawala"))
     if user is not None: 
         login(request,user) 
         status=http_status.HTTP_200_OK
@@ -53,5 +48,6 @@ def host_to_heroku_submit(request):
         message="Username {} or Password {} is incorrect ".format(username,password)
     
     return JsonResponse({"status":status,"base_url":base_url_to_admin,"message":message})
+    # return Response(status=status,base_url=base_url_to_admin,message=message)
     
     

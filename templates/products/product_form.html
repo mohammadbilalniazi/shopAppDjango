@@ -1,0 +1,343 @@
+<html lang="en-us" dir="ltr"><head>
+<title>Add Product </title>
+<link rel="stylesheet" href="/static/admin/css/base.css">
+
+  <!-- <link rel="stylesheet" href="/static/admin/css/dark_mode.css"> -->
+
+
+  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
+  <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
+
+<!-- <link rel="stylesheet" href="/static/admin/css/forms.css"> -->
+
+
+<!-- <script src="/admin/jsi18n/"></script> -->
+<!-- <script src="/static/admin/js/vendor/jquery/jquery.js"></script> -->
+<!-- <script src="/static/admin/js/calendar.js"></script> -->
+<!-- <script src="/static/admin/js/jquery.init.js"></script> -->
+<!-- <script src="/static/admin/js/admin/DateTimeShortcuts.js"></script> -->
+<!-- <script src="/static/admin/js/core.js"></script> -->
+<!-- <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script> -->
+<!-- <script src="/static/admin/js/actions.js"></script> -->
+<!-- <script src="/static/admin/js/urlify.js"></script>
+<script src="/static/admin/js/prepopulate.js"></script>
+<script src="/static/admin/js/vendor/xregexp/xregexp.js"></script> -->
+
+  <script src="/static/assets/js/toastr.min.js"></script>
+  <script src="/static/assets/js/axios.min.js"></script>
+  <script src="/static/assets/js/cookie.js"></script>
+  <script src="/static/assets/js/common_entities/create_element.js"></script>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="/static/admin/css/responsive.css">
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <style>
+        .inputs{
+            width:100%;
+
+        }
+
+        select{
+            font-weight: 900;
+            /* color:blue */
+        }
+        
+        input[type=number],input[type=text]{
+            font-weight: 900;
+            /* font-size: large; */
+            /* color:blue */
+        }
+        td{
+              font-weight: 900;
+             font-size:17px; 
+             color:darkred;
+        }
+    </style>
+</head>
+
+<body class=" app-product model-product change-form" data-admin-utc-offset="16200" style="background-color:antiquewhite">
+
+<!-- Container -->
+<div id="container">
+
+
+    
+    <!-- Header -->
+    
+    <div id="header">
+        <div id="branding">
+        
+<h1 id="site-name"><a href="/admin/"></a><a href="/admin"><h1 style="color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px">Shirkat</h1></a></h1>
+
+        </div>
+        
+        
+        <div id="user-tools">
+            
+                Welcome,
+                 <strong>{{user}}</strong>            
+        
+                
+                    <a href="/">View site</a> /
+                
+                
+                    
+                    
+                
+                
+                <a href="/admin/password_change/">Change password</a> /
+                
+                <form id="logout-form" method="post" action="/admin/logout/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="8LP5v6xU4Ej19AeHnMIgx5oG3jZcHtckqlxNAjjB365TVjgKCgOTE84m3awem81F">
+                    <button type="submit">Log out</button>
+                </form>
+            
+        </div>
+        
+        
+        
+    </div>
+    
+    <!-- END Header -->
+    
+<div class="breadcrumbs">
+<a href="/admin/">Home</a>
+› <a href="/product/product/">Products</a>
+› <a href="/product/product/">Product</a>
+›
+  <a href="/admin/product/product/add/" >
+                Add product
+  </a>
+</div>
+
+    
+
+    <div class="main shifted" id="main">
+      
+        
+          
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
+<nav class="sticky" id="nav-sidebar">
+     <div class="app-purchase module">
+        
+       <table style="margin-top:20%">
+             <thead>    
+            <tr ><div id='pagination_id'></div></tr>
+            </thead> 
+        <tbody id='product_body'>
+            
+        </tbody>
+       </table>
+    </div>
+  
+</nav> 
+      <div class="content">
+        <div id="content" class="colM">
+          
+          <!-- <h1>Add Product</h1> -->
+          
+          <div id="content-main">
+  
+    <div>
+  <fieldset class="module aligned ">
+       
+<table>
+     <form method="post" id="product_form" action='{{request.META.HTTP_NAME}}/product/product_form/create/{{id}}' enctype="multipart/form-data"  >                  
+  
+    {% csrf_token %}  
+    <tr>
+        <div>
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == "error" %}
+                        <div class='alert alert-danger' style="background-color:red">
+                    
+                    {% else %}
+                    <div class='alert alert-success' dir="ltr"  style="background-color:green">
+                    {%endif%}
+                    {{message}}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </tr>
+    <!-- <tr><td></td><td></td><td></td></tr>  -->
+        <tr><td>Is Active</td><td> <input  name="is_active" checked type="checkbox" id="is_active">  <!-- {{form.is_active}} --></td> <td><input  type="submit" onclick=""   id='form_submit_btn' {% if product %} value="Update" style="background-color:green;float:right" onclick="confirm()" {% else %} value="Add Product" style="float:right" {% endif %} class="" name="save"> </td></tr>
+
+    <tr><td>System Id</td><td colspan="2">{{product.id}}<input type="hidden" class="inputs" name="id"  disabled id="id" value='{{product.id}}'></td></tr>
+    <tr><td>Item Name</td>
+        <td colspan="2">
+        <input type="text" class="inputs" name="item_name" id="item_name" {% if product %} value="{{product.item_name}}" {% endif %}>
+        </td>
+    </tr>
+  
+    <tr><td>Category</td>
+        <td colspan="2">
+        <select name="category" class="inputs" id="category">
+            {% for category in categories %}
+                <option {% if product.category == category.id %} selected {% endif %} value='{{category.id}}'>{{category}}</option>
+            {% endfor %}
+        </select>
+        </td>
+    </tr>
+    <tr><td>organization</td>
+        <td colspan="2">
+        <input type="text" id="organization" class="inputs" disabled name="organization" value="{{self_organization}}"  maxlength="20" required=""  id="name"></td></tr>
+    <tr><td>Product Image</td><td colspan="2"><input type="file"  name="img" id="img" ></td></tr>
+    <!-- <tr><td>Description</td><td><textarea  name="description" id="description" value="{{product.product_detail.description}}"  required=""></textarea></td></tr> -->
+    <tr><td>Model</td><td colspan="2"><input type="text" class="inputs"  name="model" id="model" value="{{product.model}}"  required=""></td></tr>
+    <tr><td>Minimum Requirement</td><td colspan="2"><input type="number" class="inputs" id="minimum_requirement"  {% if product %} value="{{product.product_detail.minimum_requirement}}" {% else %} value=1 {% endif %} name="minimum_requirement" ></td></tr>
+    <tr><td>Current Amount Available</td><td colspan="2"><input type="number" class="inputs" disabled {% if product %} value="{{current_amount}}" {% else %} value=0 {% endif %}    id="current_amount"  name="current_amount" ></td></tr>
+    <tr><td>Current Purchased Price</td><td colspan="2"><input type="number" step=".001" class="inputs" data-parsley-type="alphanum"   required id="purchased_price" value="{{product.product_detail.purchased_price}}"  name="purchased_price" ></td></tr>
+    <tr><td>Current Selling Price</td><td colspan="2"><input type="number" step=".001" class="inputs"  value='{{product.product_detail.selling_price}}' required id="selling_price" name="selling_price" ></td></tr>
+   
+    
+  
+ </form> 
+</table>
+</fieldset>
+</div>
+
+
+
+    <!-- <script id="django-admin-form-add-constants" src="/static/admin/js/change_form.js" data-model-name="organization" async="">
+    </script>
+
+
+
+
+<script id="django-admin-prepopulated-fields-constants" src="/static/admin/js/prepopulate_init.js" data-prepopulated-fields="[]">
+</script> -->
+
+
+</div>
+
+</div>
+
+          
+          <br class="clear">
+        </div>
+        <!-- END Content -->
+        <div id="footer"></div>
+      </div>
+    </div>
+</div>
+<!-- END Container -->
+
+
+<div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;"><div><a href="#" class="calendarnav-previous">&lt;</a><a href="#" class="calendarnav-next">&gt;</a></div><div id="calendarin0" class="calendar"><table><caption>March 2023</caption><tbody><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr><tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr><tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr><tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class=""><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="today"><a href="#">31</a></td><td class="nonday"> </td></tr></tbody></table></div><div class="calendar-shortcuts"><a href="#">Yesterday</a>&nbsp;|&nbsp;<a href="#">Today</a>&nbsp;|&nbsp;<a href="#">Tomorrow</a></div><p class="calendar-cancel"><a href="#">Cancel</a></p></div></body></html>
+
+  <script src="/static/assets/js/show_message.js"></script>
+  <script src="/static/assets/js/common_entities/call_shirkat.js"></script> 
+ <!-- <script src="/static/assets/js/configuration/organization.js"></script>   -->
+
+<script>
+    // var is_active_field=document.getElementById('is_active_field');
+    // is_active_field.value='jjj';
+    // is_active_field.addEventListener('change',(e)=>{
+    //     console.log("e.value ",e," is_active_field.value ",is_active_field.checked)
+    //     if(is_active_field.checked)
+    //     {
+    //     is_active_field.value='jjj';
+    //     }
+    //     else{
+    //     is_active_field.value='kkk';
+    //     }
+    // });
+
+
+var product_form=document.getElementById('product_form');
+product_form.addEventListener("submit",async function(e){
+    e.preventDefault();
+    id=document.getElementById("id");
+    console.log("product_form ",product_form.action) 
+    if(id.value=="")
+    {
+        id.value=null;
+    }
+    item_name=document.getElementById('item_name');
+    category=document.getElementById("category");
+    organization=document.getElementById("organization");
+    img=document.getElementById("img");
+    console.log("img ",img.files[0])
+    model=document.getElementById("model");
+    minimum_requirement=document.getElementById("minimum_requirement");
+    is_active=document.getElementById("is_active");
+    current_amount=document.getElementById("current_amount");    
+    purchased_price=document.getElementById("purchased_price");
+    // prev_purchased_price=document.getElementById("prev_purchased_price");
+    selling_price=document.getElementById("selling_price");
+    // prev_selling_price=document.getElementById("prev_selling_price");
+    // const product = new FormData();
+    const formData=new FormData();
+    
+    formData.append("id",id.value);
+    formData.append("item_name",item_name.value);
+    formData.append("category",category.value);
+    formData.append("organization",organization.value);
+    formData.append("img",img.files[0]);
+    formData.append("is_active",is_active.value);
+    formData.append("model",model.value);
+    formData.append("minimum_requirement",minimum_requirement.value);
+    formData.append("current_amount",current_amount.value);
+    formData.append("purchased_price",purchased_price.value);
+    // formData.append("prev_purchased_price",prev_purchased_price.value);
+    formData.append("selling_price",selling_price.value);
+    // formData.append("prev_selling_price",prev_selling_price.value);
+    url=product_form.action;
+    headers={'Content-Type': 'multipart/form-data','X-CSRFToken':getCookie('csrftoken')} 
+    const response=await call_shirkat(url,'POST',formData,headers);
+    console.log('res ',response)
+     if(response.status==200 || response.status==201){
+        if(response.data.ok)
+        { 
+            alert("Product Saved")
+            id.value=response.data.id;
+            window.location.href="/products/product/add/"+id.value;
+        }
+        // else
+        // {
+            show_message(response.data.message,"error");   
+            alert(response.data.message);
+        //     id.value=response.data.id;
+        //     window.location.href="/products/product/add/"+id.value;
+        // }
+    }
+    else{
+        show_message("bill Not Created ","error")
+    }
+    return false;
+});
+    
+
+</script>
+<script>
+    document.getElementById("purchased_price").addEventListener("change",(e)=>{
+        let purchased_price= e.target.value;
+        if(purchased_price==null || purchased_price=="" || purchased_price==0){
+            purchased_price=0;
+        }
+        document.getElementById("selling_price").value=parseInt(purchased_price)+50;
+    });
+
+    // document.getElementById("selling_price").addEventListener("change",e=>{
+    //     let form_submit_btn=document.getElementById("form_submit_btn");
+    //     form_submit_btn.click();
+    // })
+
+    document.getElementById("item_name").addEventListener("change",(e)=>{
+        let item_name= e.target.value;
+        if(item_name==null || item_name=="" || item_name==0){
+            item_name="";
+        }
+        document.getElementById("model").value=item_name.split(" ")[0];
+    })
+</script>
+
+<script src="/static/assets/js/product/product.js"></script>
+<script>
+     let item_name=document.getElementById("item_name");
+     item_name.addEventListener("input",(e)=>{
+         search_product();
+     });
+     
+</script>
