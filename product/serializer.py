@@ -35,6 +35,8 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
         return obj.category.name
 
     def get_current_amount(self,obj):
+        if not self.context.get('store_id'):
+            return 0
         store=Store.objects.get(id=int(self.context.get('store_id')))
         stock_query=Stock.objects.filter(store=store,product=obj)
 

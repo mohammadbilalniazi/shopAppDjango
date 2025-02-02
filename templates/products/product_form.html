@@ -231,20 +231,13 @@
  <!-- <script src="/static/assets/js/configuration/organization.js"></script>   -->
 
 <script>
-    // var is_active_field=document.getElementById('is_active_field');
-    // is_active_field.value='jjj';
-    // is_active_field.addEventListener('change',(e)=>{
-    //     console.log("e.value ",e," is_active_field.value ",is_active_field.checked)
-    //     if(is_active_field.checked)
-    //     {
-    //     is_active_field.value='jjj';
-    //     }
-    //     else{
-    //     is_active_field.value='kkk';
-    //     }
-    // });
-
-
+ async function get_products()
+ {
+    url='/products/'+"all"+"/";
+    let response=await call_shirkat(url,'GET');
+    localStorage.setItem("product_data",JSON.stringify(response.data));
+ }
+ get_products();
 var product_form=document.getElementById('product_form');
 product_form.addEventListener("submit",async function(e){
     e.preventDefault();
@@ -294,13 +287,12 @@ product_form.addEventListener("submit",async function(e){
             id.value=response.data.id;
             window.location.href="/products/product/add/"+id.value;
         }
-        // else
-        // {
+        else
+        {
             show_message(response.data.message,"error");   
             alert(response.data.message);
-        //     id.value=response.data.id;
-        //     window.location.href="/products/product/add/"+id.value;
-        // }
+         
+        }
     }
     else{
         show_message("bill Not Created ","error")

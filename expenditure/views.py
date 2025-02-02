@@ -50,7 +50,6 @@ def expense_insert(request):
     ############before request.data  and request.data.getlist
     organization_id=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization_id))
-    (self_organization,parent_organization,store)=findOrganization(request)
     bill_type=request.data.get("bill_type",None)
     expense_type=request.data.get("expense_type")
     # print("expense_type ",expense_type)

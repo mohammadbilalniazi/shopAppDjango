@@ -1,15 +1,12 @@
-from django.db.models import Sum
 from django.http import HttpResponse
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
-from product.models import Product,Unit,Store
-from product.views_product import handle_price_stock_product
+from product.models import Store
 from common.organization import findOrganization
 from common.date import handle_day_out_of_range
 from configuration.models import Organization
 from configuration.models import *
-from django.contrib.auth.models import User
 from datetime import datetime
 from django.contrib import messages
 from .models import Bill,Bill_Description,Bill_Receiver2
@@ -18,8 +15,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q
-import re
-import json
 from .views_bill import get_opposit_bill
 
 @login_required(login_url='/admin')
@@ -79,13 +74,7 @@ def Bill_insert(request):
     if total=='' or total=="" or total==None:
         total=0
     payment=request.data.get("total_payment",0)      
-    ###################bill_detail###############
-    product=request.data.get('item_name',0)        #getlist=> get
-    item_amount=request.data.get('item_amount',0)#getlist=> get
-    unit=request.data.get('unit',None)#getlist=> get
-    item_price=request.data.get('item_price',0)#getlist=> get
-    return_qty=request.data.get('return_qty',0)#getlist=> get
-    bill_detail_id=request.data.get('bill_detail_id',"")#getlist=> get
+    
     ################## bill_receiver2#######################
     bill_rcvr_org=request.data.get("bill_rcvr_org",None) #id
     try:
@@ -147,7 +136,7 @@ def Bill_insert(request):
                 ok=False
                 return Response({"message":message,"ok":ok})
         if hasattr(bill_obj,'bill_receiver2'):
-            if bill_obj.bill_receiver2.approval_user!=None or bill_obj.bill_receiver2.is_approved: # it means approved
+            if  bill_obj.bill_receiver2.approval_user!=None or bill_obj.bill_receiver2.is_approved: # it means approved
                 message="Bill Id {} is can not be updated it is already approved".format(id)
                 ok=False
                 return Response({"message":message,"ok":ok})

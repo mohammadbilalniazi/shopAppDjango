@@ -13,14 +13,17 @@ def findOrganization(request,organization_id=None):
     # A: Find Organization through Organization or Member_User 
     # B: then find if it has parent so find parent through three levels grand father organization (org.org.org)
     if organization_id==None:
-        org=Organization.objects.filter(owner=request.user)
+        if request.user.is_superuser:
+            query=Organization.objects.all()
+        else:
+            query=Organization.objects.filter(owner=request.user)
     else:
-        org=Organization.objects.filter(id=int(organization_id))
+        query=Organization.objects.filter(id=int(organization_id))
     # sub_org=Sub_Organization.objects.filter(user=request.user)
     # member=Member_User.objects.filter(user=request.user)
     # print(" org ",org," member ",member)
-    if org.count()>0:
-        self_organization=org[0] 
+    if query.count()>0:
+        self_organization=query[0] 
         store=Store.objects.get(organization=self_organization)
         parent_organization=top_parent(self_organization)
         # print('(self_organization,parent_organization) ',self_organization,' ',parent_organization)

@@ -198,6 +198,11 @@ async function select_rcvr_orgs(){
         select_rcvr_org_in_div.addEventListener("change",e=>{
             show_store();
             document.getElementById("table_body").innerHTML="";
+        }); 
+        
+        organization=document.getElementById("organization");
+        organization.addEventListener("change",e=>{
+            show_store('organization','store');
         });  
     });
 }

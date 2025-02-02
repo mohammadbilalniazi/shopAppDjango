@@ -95,7 +95,6 @@ async function make_table(data)
         return;
     }
     for(key in data['serializer_data']){     
-        var creator=data['serializer_data'][key]['creator'];
         var bill_rcvr_org="";
         
         if(data['serializer_data'][key]['bill_receiver2']!=undefined && data['serializer_data'][key]['bill_receiver2']!=null )
@@ -160,14 +159,6 @@ async function search_bills(url=null)
 
 document.getElementById("search_kahatha").addEventListener("click",e=>{e.preventDefault();search_bills(); return  false;});
 
-// document.getElementById("opposit_shirkat").addEventListener("input",e=>{search_bills();});
-
-// document.getElementById("creator").addEventListener("input",e=>{search_bills();});
-
-// document.getElementById("bill_type").addEventListener("change",e=>{search_bills();});
-// // document.getElementById("start_date_input").addEventListener("change",e=>{search_bills();});
-
-// document.getElementById("end_date_input").addEventListener("change",e=>{search_bills();});
 function date_change()
 {
     search_bills(); 

@@ -65,7 +65,6 @@ INSTALLED_APPS = [
     'chat',
     'bill',
     'user',
-    'systemadmin',
     'configuration',
     'rest_framework',
      'corsheaders',

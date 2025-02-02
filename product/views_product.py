@@ -26,7 +26,7 @@ def change_prices_product(bill_type,item_price,product_detail):
     return changed
     
 # @login_required()
-def handle_price_stock_product(bill_detail,operation='INSERT',bill_type='PURCHASE',store=None):
+def handle_price_stock_product(bill_detail,operation='INCREASE',bill_type='PURCHASE',store=None):
     # bill_type=bill_detail.bill.bill_type
     # print("")
     organization=bill_detail.bill.organization
@@ -57,7 +57,7 @@ def handle_price_stock_product(bill_detail,operation='INSERT',bill_type='PURCHAS
         product_detail=Product_Detail(product=product,organization=organization,current_amount=0)
 
 
-    if operation=='INSERT':      
+    if operation=='INCREASE':      
         if bill_type=="PURCHASE":
             product_detail.purchased_price=item_price
             current_amount=float(current_amount)+net_amount
@@ -84,40 +84,6 @@ def handle_price_stock_product(bill_detail,operation='INSERT',bill_type='PURCHAS
     return (bill_detail,detail_changed)  
 
 
-# def get_product_bill_rcvr_org(product,bill_rcvr_org):
-#     product_detail_data=model_to_dict(product.product_detail)
-#     try:
-#         del product_detail_data['id']
-#     except Exception as e:
-#         print("del product_detail_data['id'] ",e)
-#     product_detail_data['organization']=bill_rcvr_org
-#     try:
-#         product_detail_query=Product_Detail.objects.filter(product=product,organization=bill_rcvr_org)
-#         if product_detail_query.count()>0:
-#             print("Product_Detail>0")
-#             product_detail_of_bill_rcvr_org=product_detail_query[0]
-#         else:
-#             product_detail_of_bill_rcvr_org=Product_Detail()
-#             product_detail_of_bill_rcvr_org.organization=bill_rcvr_org
-#             product_detail_of_bill_rcvr_org.product=product
-#             product_detail_of_bill_rcvr_org.minimum_requirement=1
-#             product_detail_of_bill_rcvr_org.selling_price=product_detail_data['selling_price']
-#             product_detail_of_bill_rcvr_org.purchased_price=product_detail_data['purchased_price']
-#             stock_query=Stock.objects.filter(store=product_detail_of_bill_rcvr_org.store,product=product)
-#             if stock_query.count()>0:
-#                 current_amount=stock_query[0].current_amount
-#                 stock=stock_query[0]
-#             else:
-#                 current_amount=0
-#                 stock=Stock(store=store,product=product)
-#                 stock.current_amount=current_amount
-#             stock.save()
-#         product_detail_of_bill_rcvr_org.save()
-#         print("product_detail.saved()")
-#     except Exception as e:
-#         print('product_price product_detail exception ',e)
-#     return product_detail_of_bill_rcvr_org
-        
 def show_html(request,id=None):
     context={}
     (self_organization,parent_organization,store)=findOrganization(request)

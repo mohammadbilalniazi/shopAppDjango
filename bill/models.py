@@ -68,7 +68,7 @@ class Bill_detail(models.Model):
     bill=models.ForeignKey(Bill,on_delete=models.CASCADE)
     product=models.ForeignKey(Product,on_delete=models.DO_NOTHING,null=False, blank=False)
     unit=models.ForeignKey(Unit,on_delete=models.DO_NOTHING,null=True, blank=True)
-    item_amount = models.IntegerField() 
+    item_amount =models.DecimalField(default=0.0,max_digits=15,decimal_places=5)
     item_price=models.DecimalField(default=0.0,max_digits=15,decimal_places=5)
     return_qty=models.IntegerField(null=True,blank=True)      
     discount=models.IntegerField(default=0)

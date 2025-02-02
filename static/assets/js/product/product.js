@@ -62,20 +62,28 @@ async function search_product(url=null)
         }
     
         product_detail=data['serializer_data'][key]['product_detail'];
+        let purchased_price=0;
+        let selling_price=0;
+        let minimum_requirement=0;
+        if(product_detail){
+            purchased_price= product_detail['purchased_price'];
+            selling_price=product_detail['selling_price'];
+            minimum_requirement=product_detail['minimum_requirement'];
+        }
         let row=`
             <tr>
                 <td>
                 <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >
-                ${data['serializer_data'][key]['item_name']}  (${product_detail['purchased_price']})
+                ${data['serializer_data'][key]['item_name']}  (${purchased_price})
                 </a>
                 </td>
                 <td>${data['serializer_data'][key]['model']}</td><td>${data['serializer_data'][key]['category']}</td>
-                <td>${product_detail['minimum_requirement']}</td>
+                <td>${minimum_requirement}</td>
                 <td> ${data['serializer_data'][key]['purchase_amount']}</td>
                 
                 <td> ${data['serializer_data'][key]['selling_amount']}</td> 
                 <td> ${data['serializer_data'][key]['current_amount']}</td>
-                <td>${product_detail['purchased_price']}</td><td>${product_detail['selling_price']}</td>
+                <td>${purchased_price}</td><td>${selling_price}</td>
                 <td> <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update</a> </td>
             </tr>`; 
         bill_tbody.insertAdjacentHTML('beforeend', row);

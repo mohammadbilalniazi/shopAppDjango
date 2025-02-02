@@ -1,0 +1,12 @@
+-- Create the `django_admin_log` table
+CREATE TABLE `django_admin_log` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT, -- Primary key with auto-increment
+  `action_time` DATETIME(6) NOT NULL,   -- Action timestamp with microseconds
+  `object_id` LONGTEXT DEFAULT NULL,    -- ID of the object
+  `object_repr` VARCHAR(200) NOT NULL,  -- Representation of the object
+  `action_flag` SMALLINT(5) UNSIGNED NOT NULL, -- Action flag
+  `change_message` JSON NOT NULL,       -- JSON for change details
+  `content_type_id` INT(11) NOT NULL,   -- Foreign key for content type
+  `user_id` INT(11) NOT NULL,           -- Foreign key for user
+  PRIMARY KEY (`id`)                    -- Define the primary key
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
