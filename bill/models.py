@@ -1,10 +1,4 @@
-from email.policy import default
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.utils import timezone
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
-from django.contrib.auth.models import User
 from product.models import Product,Unit,Store
 from configuration.models import Organization,Location
 from django.conf import settings
@@ -30,20 +24,6 @@ class Bill(models.Model):
     # rcvr_org_aprv_usr=models.CharField(max_length=20,null=True,blank=True)
     # class Meta:
     #     unique_together=("organization","year","bill_no","bill_type")
-
-
-# class Bill_Payer(models.Model):
-#     bill=models.ForeignKey(Bill,on_delete=models.CASCADE)
-#     organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,to_field="name",default=None)
-#     user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.DO_NOTHING,null=True,blank=True,to_field="username")
-
-# class Bill_Receiver(models.Model):
-#     bill=models.OneToOneField(Bill,on_delete=models.CASCADE,unique=True)
-#     bill_rcvr_org=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True)
-#     is_approved=models.BooleanField(default=False,null=True,blank=True)
-#     approval_date=models.DateField(default="",null=True,blank=True)
-#     approval_user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.DO_NOTHING,null=True,blank=True,default="",to_field="username")
-#     store=models.ForeignKey(Store,on_delete=models.DO_NOTHING,null=True,blank=True,to_field="name")
 
 
 class Bill_Receiver2(models.Model):

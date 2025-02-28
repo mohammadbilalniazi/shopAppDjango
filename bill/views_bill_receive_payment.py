@@ -190,7 +190,6 @@ def Bill_insert(request):
         print("e ",e)
         return Response({"message":message,"ok":ok})
     ######################## if item_name total_amount is < payment and payment is more then reject ############ 
-   
     if ok==False:
         messages.error(request,message)
     else:  

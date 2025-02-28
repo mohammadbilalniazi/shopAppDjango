@@ -329,7 +329,6 @@ def Bill_insert(request):
     if store_query.count()>0:
         store=store_query[0] 
         #print("store",store)
-        
     if bill_receiver2_store_query.count()>0:
         bill_receiver2_store=bill_receiver2_store_query[0]
         #print("bill_receiver2_store",bill_receiver2_store)
@@ -458,18 +457,16 @@ def Bill_insert(request):
         net_amount=float(item_amount[i])-float(return_qty[i]) 
         if bill_detail_id[i]=='':
             bill_detail=Bill_detail(bill=bill_obj,product=product_obj,unit=unit_obj,item_amount=item_amount[i],item_price=item_price[i],return_qty=return_qty[i])     
-            
             try:    
                 bill_detail.save()
                 if bill_obj.bill_type=='SELLING':
                     purchased_price=product_obj.product_detail.purchased_price
                     if purchased_price==None:
-                        purchased_price=0
+                        purchased_price=item_price[i]-10
                     profit=(float(item_price[i])-float(purchased_price))*net_amount
                     # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
                     ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
                 (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'INCREASE',bill_type) 
-                
             except Exception as e:
                 ok=False
                 message=str(e)

@@ -1,5 +1,3 @@
-from enum import unique
-from unittest.util import _MAX_LENGTH
 from django.db import models
 from django.contrib.auth.models import User,Group
 from django.core.validators import MaxValueValidator,MinValueValidator,FileExtensionValidator
@@ -74,14 +72,7 @@ class Organization(models.Model):
     
     def __str__(self):
         return self.name 
-# class Sub_Organization(models.Model):
-#     organization=models.ForeignKey(Organization,on_delete=models.CASCADE)
-#     name=models.CharField(max_length=20)
-#     user=models.OneToOneField(User,on_delete=models.CASCADE,unique=True)
-#     created_date=models.DateField()
-#     is_active=models.BooleanField(default=True)
-#     class Meta:
-#         unique_together=(("user","organization"),)
+
 
 STATUS=((0,"CANCELLED"),(1,"CREATED"))    
 class Role(models.Model):
@@ -94,20 +85,6 @@ class Role(models.Model):
     is_active=models.BooleanField(default=True)
     class Meta:
         unique_together=(("name","parent","organization"),)
-# class Member_User(models.Model):
-#     organization=models.ForeignKey(Organization,on_delete=models.CASCADE)
-#     first_name=models.CharField(max_length=20)
-#     last_name=models.CharField(max_length=20,null=True,blank=True)
-#     father_name=models.CharField(max_length=20)
-#     user=models.OneToOneField(User,on_delete=models.CASCADE,unique=True,to_field="username")
-#     role=models.ForeignKey(Role,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True,default=None)
-#     group=models.ForeignKey(Group,on_delete=models.DO_NOTHING,to_field="name")
-#     created_date=models.DateField()
-#     created_by=models.ForeignKey('self',on_delete=models.DO_NOTHING)
-#     is_staff=models.BooleanField(default=True)
-#     is_active=models.BooleanField(default=True)
-#     class Meta:
-#         unique_together=(("first_name","father_name","organization"),)
 
 
 

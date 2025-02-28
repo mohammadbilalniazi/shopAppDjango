@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
 from common.file_handle import delete_file
 from common.organization import findOrganization
-import re
+import random
 
 @login_required
 @api_view(('GET','DELETE'))
