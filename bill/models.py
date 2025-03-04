@@ -20,7 +20,9 @@ class Bill(models.Model):
         #related_name="bills_new"    # New field first organization_new then organization 
     )  # New field
 
-    creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,to_field="username")
+    # creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,to_field="username",related_name="bills_old")
+    creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,related_name="creator_set")
+  
     total=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     payment=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     # year=models.SmallIntegerField(default=1401)   
@@ -44,16 +46,15 @@ class Bill_Receiver2(models.Model):
 
 class Bill_Description(models.Model):
     bill=models.OneToOneField(Bill,on_delete=models.CASCADE)
-    store=models.ForeignKey(Store,on_delete=models.PROTECT,null=True,blank=True,to_field="name",related_name="old_store")
-    
-    store_new=models.ForeignKey(Store,on_delete=models.PROTECT,null=True,blank=True,related_name="new_store")
+    # store=models.ForeignKey(Store,on_delete=models.PROTECT,null=True,blank=True,to_field="name",related_name="old_store")
+    # store_new=models.ForeignKey(Store,on_delete=models.PROTECT,null=True,blank=True,related_name="new_store")
+    store=models.ForeignKey(Store,on_delete=models.PROTECT,null=True,blank=True,related_name="new_store")
     status=models.SmallIntegerField(choices=STATUS,default=0) # 0 created 1 approved 2 reversed  3  rejected
     currency=models.CharField(max_length=7,default="afg")
     shipment_location=models.ForeignKey(Location,on_delete=models.PROTECT,null=True,default=None)
     # def __str__(self):
     #     return f"{self.bill}"
 
-    
 class Bill_detail(models.Model):
     bill=models.ForeignKey(Bill,on_delete=models.CASCADE)
     product=models.ForeignKey(Product,on_delete=models.PROTECT,null=False, blank=False)

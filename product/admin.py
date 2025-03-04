@@ -63,7 +63,7 @@ class ProductAdmin(admin.ModelAdmin):
         if obj.product_detail:
             return obj.product_detail.minimum_requirement
         else:
-            return obj.product_detail
+            return 1
     
     def get_purchased_price(self, obj):
         if obj.product_detail:

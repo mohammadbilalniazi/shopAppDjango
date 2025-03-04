@@ -236,6 +236,22 @@
     url='/products/'+"all"+"/";
     let response=await call_shirkat(url,'GET');
     localStorage.setItem("product_data",JSON.stringify(response.data));
+    let product_data=JSON.parse(localStorage.getItem("product_data"));
+    let selling_price_obj={};   
+    let purchasing_price_obj={};
+    for (const key in product_data) {
+        let product = product_data[key];
+        if (product.product_detail) {
+            selling_price_obj[product.id] = product.product_detail.selling_price;
+            purchasing_price_obj[product.id] = product.product_detail.purchased_price;
+        } else {
+            product_data[key]['product_detail'] = { selling_price: 0, purchased_price: 0, minimum_requirement: 0 };
+            selling_price_obj[product.id] = 0;
+            purchasing_price_obj[product.id] = 0;
+        }
+    }
+    localStorage.setItem("selling_price_obj",JSON.stringify(selling_price_obj));
+    localStorage.setItem("purchasing_price_obj",JSON.stringify(purchasing_price_obj));
  }
  get_products();
 var product_form=document.getElementById('product_form');

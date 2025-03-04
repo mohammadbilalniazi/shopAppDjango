@@ -215,14 +215,11 @@ def bill_detail_delete(request,bill_detail_id=None):
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
                 return Response({"Message":message,"is_success":False})
             if bill.bill_receiver2.approval_user!=None: # it means approved
-                return Rdyesponse({"Message":'it is approved',"is_success":False})
+                return Response({"Message":'it is approved',"is_success":False})
             if len(bill.bill_detail_set.all())==1:
                 bill_delete(request,int(bill.id))
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
                 return Response({"Message":message,"is_success":False})
-
-            if bill.bill_type!='EXPENSE':
-                bill_rcvr_org=bill.bill_receiver2.bill_rcvr_org
             previous_item_amount=bill_detail.item_amount
             previous_return_qty=bill_detail.return_qty
             item_price=bill_detail.item_price
@@ -257,13 +254,9 @@ def bill_detail_delete(request,bill_detail_id=None):
 @login_required(login_url='/admin')
 def Bill_form(request):
     template=loader.get_template('bill/bill_form.html')
-    #return HttpResponse(User.objects.all())    
-    # date=pytz.timezone("Asia/Kabul").localize(datetime.now()).strftime('%Y-%m-%d')
     date = date2jalali(datetime.now())
     year=date.strftime('%Y')
     (self_organization,parent_organization,store)=findOrganization(request)
-    # print('self_organization ',self_organization,' parent_organization ',parent_organization)
-    # print('Store.objects.filter(organization=parent_organization) ',Store.objects.filter(organization=parent_organization))
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
@@ -328,10 +321,8 @@ def Bill_insert(request):
     bill_receiver2_store_query=Store.objects.filter(id=bill_receiver2_store)
     if store_query.count()>0:
         store=store_query[0] 
-        #print("store",store)
     if bill_receiver2_store_query.count()>0:
         bill_receiver2_store=bill_receiver2_store_query[0]
-        #print("bill_receiver2_store",bill_receiver2_store)
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
     (self_organization,parent_organization,_)=findOrganization(request)
