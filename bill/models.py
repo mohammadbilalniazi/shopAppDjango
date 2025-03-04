@@ -71,8 +71,60 @@ class Bill_detail(models.Model):
         verbose_name_plural = "Bill detail" 
 
  
+@receiver(post_delete, sender=Bill_detail)
+def update_stock_on_delete(sender, instance, **kwargs):
+    """ Adjust stock when a Bill_detail record is deleted. """
+    bill_type = instance.bill.bill_type  # Get bill type
+
+    
+        # Ensure stock exists or create an empty stock record
+    stock, created = Stock.objects.get_or_create(
+        product=instance.product, 
+        store=instance.bill.store,
+        defaults={"current_amount": 0}  # Default to zero if creating new
+    )
+ 
+    # If Selling: Add back stock
+    if bill_type == "SELLING":
+        stock.current_amount += instance.item_amount
+
+    # If Purchasing: Reduce stock
+    elif bill_type == "PURCHASING":
+        stock.current_amount -= instance.item_amount
+
+    stock.save()
 
 
+@receiver(pre_save, sender=Bill_detail)
+def update_stock_on_save(sender, instance, **kwargs):
+    """ Adjust stock before saving a Bill_detail record. """
+    if not instance.pk:
+        # New Entry (Insert)
+        old_amount = 0
+    else:
+        # Updating existing entry: Get previous amount
+        old_instance = Bill_detail.objects.get(pk=instance.pk)
+        old_amount = old_instance.item_amount
+
+    bill_type = instance.bill.bill_type  # Get bill type
+
+     # Ensure stock exists or create an empty stock record
+    stock, created = Stock.objects.get_or_create(
+        product=instance.product, 
+        store=instance.bill.store,
+        defaults={"current_amount": 0}
+    )
+    # If Selling: Subtract new amount and add back old amount (in case of update)
+    if bill_type == "SELLING":
+        stock.current_amount += old_amount  # Revert old stock deduction
+        stock.current_amount -= instance.item_amount  # Deduct new amount
+
+    # If Purchasing: Add new amount and subtract old amount (in case of update)
+    elif bill_type == "PURCHASING":
+        stock.current_amount -= old_amount  # Revert old stock addition
+        stock.current_amount += instance.item_amount  # Add new amount
+
+    stock.save()
 
 
 
