@@ -166,8 +166,29 @@ async function adding_row() {
             selectItemName.appendChild(option);
         }
     }
-
+    const selectUnit = createElement("select", {
+        className: "unit",
+        name: "unit",
+        required: true
+      });
+    
+      const unitDataStr = localStorage.getItem("unit_data");
+      const unitData = JSON.parse(unitDataStr);
+      for (const key in unitData) {
+        if (Object.hasOwn(unitData, key)) {
+          const unit = unitData[key];
+          const option = createElement("option", {
+            value: unit.id,
+            innerText: unit.name
+          });
+          selectUnit.appendChild(option);
+        }
+      }
+    
+    
     row.appendChild(createElement("td", {}, [selectItemName]));
+    
+    row.appendChild(createElement("td", {}, [selectUnit]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "item_amount", required: true })]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "item_price", min: "0", step: ".001", required: true })]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "return_qty", value: 0, required: true })]));

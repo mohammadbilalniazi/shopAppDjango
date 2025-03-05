@@ -4,7 +4,6 @@ from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
 from product.models import Product,Unit,Store
-from product.views_product import handle_price_stock_product
 from common.organization import findOrganization
 from common.date import handle_day_out_of_range
 from configuration.models import *
@@ -16,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q,Max
+from django.db import transaction
 from .serializer import Bill_search_Serializer
 import re
 from rest_framework.pagination import PageNumberPagination
@@ -166,25 +166,10 @@ def bill_delete(request,id=None):
         bill_query=Bill.objects.filter(id=int(id))
         if bill_query.count()>0:
             bill_obj=bill_query[0]
-            previous_bill_store=bill_obj.bill_description.store
-            previous_bill_type=bill_obj.bill_type
             if bill_obj.organization!=parent_organization:
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
                 messages.error(request,message=message)
                 return bill_show(request,bill_id=id)
-            # if hasattr(bill_obj,'bill_receiver2'):
-                # if bill_obj.bill_receiver2.approval_user!=None or bill_obj.bill_receiver2.is_approved: # it means approved
-                #     message="Bill Id {} is can not be deleted it is already approved".format(id)
-                #     messages.error(request,message=message)
-                #     return bill_show(request,bill_id=id)
-            bill_details=bill_obj.bill_detail_set.all()
-            for bill_detail in bill_details:
-                try: # should be reducred from the opposit here bill_rcvr
-                    if bill_obj.bill_type=='PURCHASE' or bill_obj.bill_type=='SELLING':
-                        bill_rcvr_org=bill_obj.bill_receiver2.bill_rcvr_org
-                        (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'DECREASE',previous_bill_type,previous_bill_store)
-                except Exception as e:
-                    print("product_detail_bill_rcvr_org $ e",e) 
             bill_obj.delete()
             message="Bill Id {} is Successfully deleted".format(id)
             messages.success(request,message=message)
@@ -209,7 +194,6 @@ def bill_detail_delete(request,bill_detail_id=None):
         if bill_detail_query.count()>0:      
             bill_detail=bill_detail_query[0]
             bill=bill_detail.bill
-            previous_bill_store=bill.bill_description.store
             previous_bill_type=bill.bill_type
             if bill.organization!=parent_organization:
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
@@ -233,8 +217,6 @@ def bill_detail_delete(request,bill_detail_id=None):
                 bill_detail.delete()
                 bill.total=remaining
                 bill.save()
-                if bill.bill_type=='PURCHASE' or bill.bill_type=='SELLING':
-                    (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'DECREASE',previous_bill_type,previous_bill_store)
                 message="Bill Detail Id {} is Successfully deleted and deleted amount {} and current total bill amount is {}".format(bill_detail_id,deleted_amount)
             except Exception as e:
                 message=str(e)
@@ -305,6 +287,7 @@ def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
 
 @login_required(login_url='/admin')
 @api_view(['POST','PUT'])
+@transaction.atomic
 def Bill_insert(request):  
     ########################################## Bill input taking############################
     bill_no=int(request.data.get("bill_no",None))  
@@ -382,9 +365,6 @@ def Bill_insert(request):
         bill_query=Bill.objects.filter(id=int(id))
         bill_obj=bill_query[0] 
         print("update with id== something bill_query.count()==0 ",bill_query.count()==0) 
-        previous_bill_store=bill_obj.bill_description.store
-        previous_bill_type =bill_obj.bill_type
-        
         if bill_query.count()==0:
             ok=False
             message="The Bill with Id {} not exist ".format(id)
@@ -457,7 +437,6 @@ def Bill_insert(request):
                     profit=(float(item_price[i])-float(purchased_price))*net_amount
                     # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
                     ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'INCREASE',bill_type) 
             except Exception as e:
                 ok=False
                 message=str(e)
@@ -466,7 +445,6 @@ def Bill_insert(request):
             if bill_detail_query.count()>0:       
                 bill_detail=bill_detail_query[0]
                 purchased_price=bill_detail.product.product_detail.purchased_price
-                (_,detail_changed)=handle_price_stock_product(bill_detail,'DECREASE',previous_bill_type,previous_bill_store) # in updation WE DELETE first previous increased or decreased amount then again insert new
                 bill_detail.bill=bill_obj
                 bill_detail.unit=unit_obj
                 if product_obj.id==bill_detail.product.id:
@@ -482,12 +460,8 @@ def Bill_insert(request):
                     if bill_type=='SELLING':
                         if purchased_price==None:
                             purchased_price=0
-                        # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
                         profit=(float(item_price[i])-float(purchased_price))*net_amount
-                    
                         ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                    
-                    (_,detail_changed)=handle_price_stock_product(bill_detail,'INCREASE',bill_type,store)    
                 except Exception as e:
                     ok=False
                     message=str(e)

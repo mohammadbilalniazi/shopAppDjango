@@ -14,8 +14,6 @@ class Bill_detail_Serializer(serializers.ModelSerializer):
         fields='__all__'
         fields=["id","product","item_amount","item_price","return_qty","profit"]
 
-
-
        
 class Bill_Description_Serializer(serializers.ModelSerializer):
     class Meta:
@@ -52,7 +50,6 @@ class Bill_Create_Serializer(serializers.ModelSerializer):
         model=Bill
         # fields=["id","bill_detail_set","bill_description","payment","date","creator","total"] #month===> kaifyath_haziri
         fields=["id","bill_receiver2","payment","date","creator","total"] #month===> kaifyath_haziri
-
     def create(self, validated_data):
         bill_detail_set = validated_data.pop('bill_detail_set')
         bill_description = validated_data.pop('bill_description')

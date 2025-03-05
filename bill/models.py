@@ -3,7 +3,9 @@ from product.models import Product,Unit,Store
 from configuration.models import Organization,Location
 from django.conf import settings
 from common.date import current_shamsi_date
-
+from django.db.models.signals import post_delete,pre_save,post_save
+from django.dispatch import receiver
+from product.models import Stock,Product_Detail
 STATUS=((0,"CANCELLED"),(1,"CREATED"))
 BILL_TYPES=(("purchase","purchase"),("sell","sell"),("expense","expense"),("payment","payment"))
 
@@ -75,57 +77,64 @@ class Bill_detail(models.Model):
 def update_stock_on_delete(sender, instance, **kwargs):
     """ Adjust stock when a Bill_detail record is deleted. """
     bill_type = instance.bill.bill_type  # Get bill type
-
-    
-        # Ensure stock exists or create an empty stock record
+    # Ensure stock exists or create an empty stock record
     stock, created = Stock.objects.get_or_create(
         product=instance.product, 
-        store=instance.bill.store,
+        store=instance.bill.bill_description.store,
         defaults={"current_amount": 0}  # Default to zero if creating new
     )
  
-    # If Selling: Add back stock
+    # If Selling: Add back stock Because Previoulsy reduced(due to selling)
     if bill_type == "SELLING":
         stock.current_amount += instance.item_amount
 
-    # If Purchasing: Reduce stock
-    elif bill_type == "PURCHASING":
+    # If Purchasing: Reduce stock Because Previously added(due to purchase)
+    elif bill_type == "PURCHASE":
         stock.current_amount -= instance.item_amount
-
     stock.save()
 
+from decimal import Decimal  # ✅ Import Decimal
 
 @receiver(pre_save, sender=Bill_detail)
 def update_stock_on_save(sender, instance, **kwargs):
     """ Adjust stock before saving a Bill_detail record. """
     if not instance.pk:
-        # New Entry (Insert)
-        old_amount = 0
+        old_amount = Decimal(0)  # ✅ Ensure decimal type
     else:
-        # Updating existing entry: Get previous amount
         old_instance = Bill_detail.objects.get(pk=instance.pk)
-        old_amount = old_instance.item_amount
+        old_amount = Decimal(old_instance.item_amount)  # ✅ Convert to Decimal
 
-    bill_type = instance.bill.bill_type  # Get bill type
+    bill_type = instance.bill.bill_type  
 
-     # Ensure stock exists or create an empty stock record
+    # Ensure stock exists or create an empty stock record
     stock, created = Stock.objects.get_or_create(
         product=instance.product, 
-        store=instance.bill.store,
-        defaults={"current_amount": 0}
+        store=instance.bill.bill_description.store,
+        defaults={"current_amount": Decimal(0)}
     )
-    # If Selling: Subtract new amount and add back old amount (in case of update)
+
+    new_amount = Decimal(instance.item_amount)  # ✅ Convert to Decimal
+
     if bill_type == "SELLING":
         stock.current_amount += old_amount  # Revert old stock deduction
-        stock.current_amount -= instance.item_amount  # Deduct new amount
+        stock.current_amount -= new_amount  # Deduct new amount
 
-    # If Purchasing: Add new amount and subtract old amount (in case of update)
-    elif bill_type == "PURCHASING":
+    elif bill_type == "PURCHASE":
         stock.current_amount -= old_amount  # Revert old stock addition
-        stock.current_amount += instance.item_amount  # Add new amount
+        stock.current_amount += new_amount  # Add new amount
 
     stock.save()
 
-
+@receiver(post_save,sender=Bill_detail)
+def update_prices(sender,instance,**kwargs):
+    product=instance.product
+    bill_type=instance.bill.bill_type
+    organization=instance.bill.organization
+    product_detail,created=Product_Detail.objects.get_or_create(product=product,defaults={"current_amount":0,"organization":organization})
+    if bill_type=="PURCHASE":
+        product_detail.purchased_price=instance.item_price
+    elif bill_type=="SELLING":  
+        product_detail.selling_price=instance.item_price
+    product_detail.save()
 
 

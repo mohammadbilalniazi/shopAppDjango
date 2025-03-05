@@ -4,86 +4,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from .serializer import *
 from .models import *
-import json
 from common.organization import findOrganization
 from django.http import HttpResponse
 from django.template import loader 
 from django.contrib.auth.decorators import login_required
-from django.forms.models import model_to_dict
-from common.generate_ihsaya import generate_product_report
 from django.db.models import Q
-def change_prices_product(bill_type,item_price,product_detail):
-    if bill_type=="PURCHASE":
-        product_detail.purchased_price=item_price
-    elif bill_type=="SELLING":
-        product_detail.selling_price=item_price
-    try:
-        product_detail.save()
-        changed=True
-    except Exception as e:
-        print("product_detail error ",e)
-        changed=False
-    return changed
     
-# @login_required()
-def handle_price_stock_product(bill_detail,operation='INCREASE',bill_type='PURCHASE',store=None):
-    # bill_type=bill_detail.bill.bill_type
-    # print("")
-    organization=bill_detail.bill.organization
-    if store==None:
-        store=bill_detail.bill.bill_description.store
-    item_price=bill_detail.item_price
-    item_amount=bill_detail.item_amount
-    return_qty=bill_detail.return_qty
-    product=bill_detail.product
-    
-    # price_changed=change_prices_product(bill_type,item_price,product.product_detail)
-    ###########################change_detail##################
-    net_amount=(float(item_amount)-float(return_qty))
-    # print("item_amount ",item_amount,"returnQty ",return_qty,"net_amount",net_amount)
-    stock_query=Stock.objects.filter(store=store,product=product)
-
-    if stock_query.count()>0:
-        stock=stock_query[0]
-        current_amount=stock.current_amount
-    else:
-        current_amount=0
-        stock=Stock(store=store,product=product,current_amount=0)
-
-    product_detail_query=Product_Detail.objects.filter(product=product)
-    if product_detail_query.count()>0:
-        product_detail=product_detail_query[0]
-    else:
-        product_detail=Product_Detail(product=product,organization=organization,current_amount=0)
-
-
-    if operation=='INCREASE':      
-        if bill_type=="PURCHASE":
-            product_detail.purchased_price=item_price
-            current_amount=float(current_amount)+net_amount
-        elif bill_type=="SELLING":  
-            product_detail.selling_price=item_price
-            current_amount=float(current_amount)-net_amount
-    else:
-        if bill_type=="PURCHASE":
-            print("PURCHASE current_amount ",current_amount,"net amount ",net_amount)
-            current_amount=float(current_amount)-net_amount
-        elif bill_type=="SELLING":  
-            print("SELLING current_amount ",current_amount,"net amount ",net_amount)
-            current_amount=float(current_amount)+net_amount
-    try:
-        print("stock ",stock,"store ",store,"final_current amount ",current_amount)
-        stock.current_amount=current_amount
-        stock.save()
-        product_detail.save()
-        detail_changed=True
-    except Exception as e:
-        print("########change_price_product error",e)
-        detail_changed=False
-    # print(" price_changed,detail_changed ",price_changed,detail_changed)
-    return (bill_detail,detail_changed)  
-
-
 def show_html(request,id=None):
     context={}
     (self_organization,parent_organization,store)=findOrganization(request)
