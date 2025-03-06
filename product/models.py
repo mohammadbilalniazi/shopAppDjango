@@ -155,7 +155,9 @@ class Product(models.Model):
     
 class Product_Detail(models.Model): 
     product=models.OneToOneField(Product,on_delete=models.CASCADE,null=True,blank=True,unique=True)
-    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,null=True,to_field="name")
+    # organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,null=True,to_field="name",related_name="old_product_organization")
+    unit=models.ForeignKey(Unit,on_delete=models.DO_NOTHING,default=None,null=True)
+    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)    
     minimum_requirement=models.IntegerField(default=1)
     purchased_price= models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     selling_price=models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)

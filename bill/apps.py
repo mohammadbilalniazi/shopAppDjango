@@ -11,7 +11,7 @@ class BillConfig(AppConfig):
         from configuration.models import Organization
         from django.contrib.auth.models import User
         from .models import Bill_Description
-        from product.models import Store
+        from product.models import Store,Product_Detail
         
         # for bill in Bill.objects.all():
         #     try:
@@ -39,3 +39,11 @@ class BillConfig(AppConfig):
         #     except Bill_Description.DoesNotExist:
         #         print("Store not found")
                 
+        # for product_detail in Product_Detail.objects.all():
+        #     try:
+        #         organization=Organization.objects.get(name=product_detail.organization)
+        #         print("organization",organization," product_detail.organization ",product_detail.organization)
+        #         product_detail.product_new_organization=organization
+        #         product_detail.save()
+        #     except Organization.DoesNotExist:
+        #         print("organization not found",product_detail.organization)

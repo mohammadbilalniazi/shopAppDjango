@@ -596,7 +596,6 @@ def search(request,page=None):
     
     # profit_sum_from_bill_of_bill_rcvr_org=query.filter(bill_type='PURCHASE',bill_receiver2__bill_rcvr_org=parent_organization).aggregate(Sum("profit"))['profit__sum']
     
-    bill_count=query.count()
     # if total_sum_purchase_from_bill_of_bill_rcvr_org!=None:
     #     total_sum_purchase=total_sum_purchase+total_sum_purchase_from_bill_of_bill_rcvr_org
     # if payment_sum_purchase_from_bill_of_bill_rcvr_org!=None:
@@ -625,11 +624,11 @@ def search(request,page=None):
     print("profit_sum",profit_sum)
     #####################################summation of bill created by organization and by opposit organization#################
    
-    baqaya_purchase=total_sum_purchase-payment_sum_purchase
-    baqaya_selling=total_sum_selling-payment_sum_selling
-    majmoa_upon_rcvr_org=total_sum_selling+payment_sum_payment+payment_sum_purchase
-    majmoa_upon_shirkat=total_sum_purchase+payment_sum_selling+receivement_sum
-    majmoa_baqaya=majmoa_upon_rcvr_org-majmoa_upon_shirkat
+    notpaid_purchase=total_sum_purchase-payment_sum_purchase
+    notpaid_sell=total_sum_selling-payment_sum_selling
+    total_upon_opposit_org=total_sum_selling+payment_sum_payment+payment_sum_purchase
+    total_upon_self_org=total_sum_purchase+payment_sum_selling+receivement_sum
+    total_summary=total_upon_opposit_org-total_upon_self_org
     
     possessed_cash_asset=(payment_sum_selling+receivement_sum)-(payment_sum_purchase+payment_sum_expense+payment_sum_payment)
     possessed_non_cash_asset=total_sum_purchase-total_sum_selling
@@ -639,16 +638,16 @@ def search(request,page=None):
     #current_profit=total_asset-initial_total_asset
 
     statistics=dict({
-                    "majmoa_baqaya":majmoa_baqaya,
-                    "majmoa_upon_rcvr_org":majmoa_upon_rcvr_org,
-                    "majmoa_upon_shirkat":majmoa_upon_shirkat,
+                    "total_summary":total_summary,
+                    "total_upon_opposit_org":total_upon_opposit_org,
+                    "total_upon_self_org":total_upon_self_org,
                     "bill_count":bill_count,
                     "total_sum_purchase":total_sum_purchase,
                     "payment_sum_purchase":payment_sum_purchase,
-                    "baqaya_purchase":baqaya_purchase,
+                    "notpaid_purchase":notpaid_purchase,
                     "total_sum_selling":total_sum_selling,
                     "payment_sum_selling":payment_sum_selling,
-                    "baqaya_selling":baqaya_selling,
+                    "notpaid_sell":notpaid_sell,
                     # "total_sum_payment":total_sum_payment,
                     "payment_sum_payment":payment_sum_payment,
                     # "total_sum_expense":total_sum_expense,
@@ -663,8 +662,7 @@ def search(request,page=None):
                     # "current_profit":current_profit,
                     })      
     print("#####################################",query)
-    query=query.order_by("-pk").values()
+    # query=query.order_by("-pk").values()
     
-    serializer_context={"message":"OK","ok":True,"query":list(query),"statistics":statistics,"serializer_data":serializer.data}
+    serializer_context={"message":"OK","ok":True,"statistics":statistics,"serializer_data":serializer.data}
     return paginator.get_paginated_response(serializer_context)
-    # return Response({"message":"OK","ok":True,"query":list(query),"statistics":statistics,"serializer_data":serializer.data})    

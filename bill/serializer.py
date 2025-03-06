@@ -38,10 +38,12 @@ class Bill_Receiver2_Serializer(serializers.ModelSerializer):
 class Bill_search_Serializer(serializers.ModelSerializer):
     # bill_description=Bill_Description_Serializer()
     bill_receiver2=Bill_Receiver2_Serializer()
+    organization=serializers.SerializerMethodField()
     class Meta:
         model=Bill  
         fields=["id","bill_receiver2","bill_type","bill_no","payment","date","organization","creator","total"] #month===> kaifyath_haziri
-
+    def get_organization(self,obj):
+        return obj.organization.name    
 class Bill_Create_Serializer(serializers.ModelSerializer):
     bill_detail_set = Bill_detail_Serializer(many=True)
     bill_receiver2=Bill_Receiver2_Serializer()

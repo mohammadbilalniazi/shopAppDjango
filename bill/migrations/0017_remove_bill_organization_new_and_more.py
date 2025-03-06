@@ -10,10 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='bill',
-            name='organization_new',
-        ),
+       
         migrations.RemoveField(
             model_name='bill_description',
             name='store',

@@ -19,23 +19,17 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
         fields =['id','item_name','model','product_detail','category','purchase_amount','selling_amount','current_amount']
 
     def get_purchase_amount(self,obj):
-        
         store=Store.objects.get(id=int(self.context.get('store_id')))
         self.stock=Stock.objects.get(store=store,product=obj)
-       
-        # all_bill_current_amt=purchase_amount-selling_amount
+        self.all_purchasing_amount=Bill_detail.objects.filter(bill__bill_type="PURCHASE",product=obj).aggregate(Sum("item_amount"))['item_amount__sum']
+        if self.all_purchasing_amount is None:
+            self.all_purchasing_amount=0
         return self.stock.purchasing_amount
     
     def get_selling_amount(self,obj):
-        # # self.selling_amount=Bill_detail.objects.filter(bill__bill_type="SELLING",product=obj).aggregate(Sum("item_amount"))['item_amount__sum']
-        # # if self.selling_amount==None:
-        # #     self.selling_amount=0
-        # # self.all_bill_current_amt=self.purchase_amount-self.selling_amount
-        # store=Store.objects.get(id=int(self.context.get('store_id')))
-        # stock_query=Stock.objects.filter(store=store,product=obj)
-        # if stock_query.count()>0:
-        #     stock=stock_query[0]
-        #     stock_current_amount=stock.current_amount
+        self.all_selling_amount=Bill_detail.objects.filter(bill__bill_type="SELLING",product=obj).aggregate(Sum("item_amount"))['item_amount__sum']
+        if self.all_selling_amount is None:
+            self.all_selling_amount=0
         return self.stock.selling_amount
     def get_category(self,obj):
         return obj.category.name
@@ -43,33 +37,18 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
     def get_current_amount(self,obj):
         if not self.context.get('store_id'):
             return 0
-        store=Store.objects.get(id=int(self.context.get('store_id')))
-        stock_query=Stock.objects.filter(store=store,product=obj)
+        self.all_bill_current_amt=self.all_purchasing_amount-self.all_selling_amount
+        if self.all_bill_current_amt!=self.stock.current_amount:
+            stock_current_amount=self.all_bill_current_amt
+            self.stock.current_amount=stock_current_amount
+            self.stock.save()
         return self.stock.current_amount
-  selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
-    purchasing_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
   
-        if stock_query.count()>0:
-            stock=stock_query[0]
-            stock_current_amount=stock.current_amount
-            # if self.all_bill_current_amt!=stock_current_amount:
-            #     stock_current_amount=self.all_bill_current_amt
-            #     stock.save()
-        # else:
-        #     stock_current_amount=self.all_bill_current_amt
-        #     obj=Stock(store=store,product=obj,current_amount=stock_current_amount)
-        #     obj.save()
-        # if all_bill_current_amt!==current_amount:
-        #     print("product ",obj,"actaul all_bill_current_amt ",all_bill_current_amt)
-        # return self.all_bill_current_amt
-        return stock_current_amount
 
 class SubServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model=SubService
         fields=["service","sub_service_name","detail","html_id","is_active"]
-
-
 
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:
