@@ -12,14 +12,13 @@ async function search_product(url=null)
     }
     console.log("data product search",formdata);
     if(url==null){
-        url='/products/all/'
+        url='/products/'
     }
     let response=await call_shirkat(
                 url,
                 "POST",
                 JSON.stringify(formdata)
                 );
-    console.log("product response",response);
     // return 
     // let data=response.data
     prv=response.data['previous']
@@ -51,7 +50,6 @@ async function search_product(url=null)
         return;
     }
     for(key in data['serializer_data']){     
-        var creator=data['serializer_data'][key]['creator'];
         var organization="";
         if(data['serializer_data'][key]['product_detail']!=undefined && data['serializer_data'][key]['product_detail']!=null )
         {

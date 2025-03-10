@@ -14,7 +14,6 @@ async function call_shirkat(url,method,data,headers=null)
         {
         url:url,
         method:method,
-        // data:JSON.stringify(data),\
         data:data,
         headers:headers
         }
@@ -30,6 +29,6 @@ async function call_shirkat(url,method,data,headers=null)
         }
         );  
     }
-    // console.log("data ",data," method ",method,"++++response ",response,' response.data ',response.data)
+    console.log("data ",data," method ",method,"++++response ",response,' response.data ',response.data)
     return response;
 }

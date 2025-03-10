@@ -35,8 +35,6 @@ from expenditure import views as expenditure_view
 from common.generate_ihsaya import generate_product_ihsaya_service
 
 urlpatterns = [ 
-    # path('',views_login.host_to_heroku_login_form,name="login_form"),
-    # path('admin/login/',views_login.login_form,name="login_form"),
     path('login/check',views_login.host_to_heroku_submit),
     path('expenditure/bill/form/',expenditure_view.expense_form),
     path('expenditure/bill/form/<id>/',expenditure_view.expense_form),
@@ -61,7 +59,7 @@ urlpatterns = [
     path('admin/bill/bill/',views_bill.bill_show),
     path('bill/detail/<bill_id>/',views_bill.bill_show),
     path('bill/update/<bill_id>/',views_bill.bill_show),
-    path('products/<organization_id>/',views_product.show,name='product_show'),
+    path('products/',views_product.show,name='product_show'),
     path('products/product_form/',views_product.form,name='product_form'),
     path('product/product/add/<id>',views_product.form,name='product_form'),
     
@@ -73,12 +71,8 @@ urlpatterns = [
     path('products/product/add/<id>',views_product.form,name='product_form'),
     path('product/product_form/create/',views_product.create,name='product_form_create'),
     path('product/product_form/create/<id>',views_product.create,name='product_form_create'),
-    path('products/select_service/<html_id>/<dest>/',views_product.select_service,name='select_service'),
-
     path('units/<id>/',views_unit.show,name='unit_show'), 
     path('stores/<id>/<organization>',views_store.show,name='store_show'),
-
-
     path('chat/home/',views_chat.home),
     path('chat/send/',views_chat.send,name='send'),
     path('chat/getMessages/<room>/',views_chat.getMessage,name='get_message'),
@@ -91,9 +85,6 @@ urlpatterns = [
     path('generate_product_ihsaya_service/<store_id>',generate_product_ihsaya_service),
     path('admin/', admin.site.urls),
     path('',admin.site.urls),
-    
-    # path('',admin.site.urls),
-    # path('/',views.index),
     path('host_to_heroku_login_form/',views_login.host_to_heroku_login_form,name='host_to_heroku_login_form'),
     path("host_to_heroku_login_form/submit/",views_login.host_to_heroku_submit,name="host_to_heroku_submit")
 ]
