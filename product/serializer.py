@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product,Product_Detail,Stock,Service , SubService,Unit,Store
+from .models import Product,Product_Detail,Stock,Unit,Store
 from django.db.models import Sum
 from bill.models import Bill_detail
 
@@ -45,11 +45,6 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
         return self.stock.current_amount
   
 
-class SubServiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=SubService
-        fields=["service","sub_service_name","detail","html_id","is_active"]
-
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model=Unit
@@ -61,9 +56,4 @@ class StoreSerializer(serializers.ModelSerializer):
         fields="__all__"
 # SubService=("service","detail","html_id","is_active")
 # Service=("service_name","category","detail","html_id","service_incharger","is_active")
-#     
-class ServiceSerializer(serializers.ModelSerializer):
-    subservice_set=SubServiceSerializer(many=True)
-    class Meta:
-        model=Service
-        fields=["subservice_set","service_name","category","detail","html_id","service_incharger","is_active"]
+#    

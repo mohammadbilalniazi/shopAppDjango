@@ -12,28 +12,6 @@ class Currency(models.Model):
     def __str__(self):
         return self.currency
 
-class Languages(models.Model):
-    language=models.CharField(max_length=30,unique=True)
-    description=models.TextField()
-
-    class Meta:
-        verbose_name_plural =("Languages")
-
-    def __str__(self):
-        return self.language
-    
-
-class Language_Detail(models.Model):
-    id_field=models.CharField(max_length=40,null=True,blank=True)
-    src=models.CharField(max_length=15,null=True)
-    dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
-    text=models.TextField(default=None)
-    value=models.TextField(null=True) 
-    class Meta:
-        unique_together=(("id_field","src","dest","value"))
-        verbose_name_plural =("Language Detail")
-
-
 
 class Country(models.Model):
     name=models.CharField(max_length=20,unique=True)
@@ -59,14 +37,18 @@ class Location(models.Model):
         return str(self.country)+'_'+self.state
 
 class Organization(models.Model):  
-    parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",null=True,blank=True)
+    # parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",null=True,blank=True,related_name="smt")
+    parent=models.ForeignKey("self",on_delete=models.CASCADE,null=True,blank=True,related_name="organization_set")
+    
     owner=models.OneToOneField(User,on_delete=models.CASCADE,unique=True)  
     name=models.CharField(max_length=20,unique=True)
-    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city')
+    # location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city',related_name="kdkf")
+    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,blank=True,related_name="city_set")
     # password=models.CharField(max_length=25)
     organization_type=models.CharField(max_length=25) 
     created_date=models.DateField()
-    is_active=models.BooleanField(default=True)
+    # is_active=models.BooleanField(default=True)
+    is_service=models.BooleanField(default=True)
     img=models.FileField(upload_to="Organization",validators=[FileExtensionValidator(allowed_extensions=['jpg','png','jpeg'])],null=True,blank=True)
     class Meta:
         unique_together=(("name","owner"),)

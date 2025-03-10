@@ -53,106 +53,89 @@ def form(request,id=None):
     context['categories']=Category.objects.all()
     return HttpResponse(template.render(context,request))
 
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+
+
 @login_required(login_url='/admin')
-@api_view(('PUT','POST'))
-def create(request,id=None):
-    data=request.data
+@api_view(('PUT', 'POST'))
+@transaction.atomic #no partial update
+def create(request, id=None):
+    data = request.data
     print("EEE")
-    product=dict()
-    product['id']=data['id']
-    product['item_name']=data['item_name']
-    product['category']=data['category']
-    # product['organization']=data['organization']
-    if hasattr(request.FILES,'img'):
-        img=request.FILES['img']
-    else:
-        img=None
-    # print("imagge",request.FILES['img'])
-    product['is_active']=data['is_active']
-    print(" data",data) 
-    # return Response("test")
-    product_detail=dict()
-    stock_detail=dict()
-    product['model']=data['model']
-    if data['minimum_requirement']=='':
-        data['minimum_requirement']=0
-    product_detail['minimum_requirement']=data['minimum_requirement']
-    if data['current_amount']=='':
-        data['current_amount']=0
-    stock_detail['current_amount']=data['current_amount']
     
-    if data['purchased_price']=='':
-        data['purchased_price']=0
-    product_detail['purchased_price']=data['purchased_price']
-    if data['selling_price']=='':
-        data['selling_price']=0
-    product_detail['selling_price']=data['selling_price']
-    category_id=product['category']
-    product['category']=Category.objects.get(id=int(category_id))
-    (self_organization,parent_organization,store)=findOrganization(request)
-    product_detail['organization']=parent_organization
-    # print('request.data ',type(product))
-    # product=request.data
-    # print('product ',product,' request data ',request.data,' product_detail ',product_detail)
-    if 'is_active' in product.keys():
-        if product['is_active']=='on':
-            product['is_active']=True
-        else:
-            product['is_active']=False
-    else:
-        product['is_active']=False
-    if product['id']=='' or product['id']==' ' or product['id']==None:
-        product.pop('id')
-        product_query=Product.objects.filter(item_name=product['item_name'],model=product['model'])
+    # Create product dictionary
+    product = {
+        "id": data.get("id"),
+        "img": request.FILES.get("img", None),
+        "item_name": data.get("item_name"),
+        "category": get_object_or_404(Category, id=int(data["category"])),  # Ensures category exists
+        "model": data.get("model", ""),
+        "is_service": data.get("is_service") == "on"
+    }
+
+    # Convert numeric values safely
+    product_detail = {
+        "minimum_requirement": int(data.get("minimum_requirement", 0)),
+        "purchased_price": float(data.get("purchased_price", 0)),
+        "selling_price": float(data.get("selling_price", 0))
+    }
+    
+    stock_detail = {
+        "current_amount": float(data.get("current_amount", 0))
+    }
+
+    # Fetch parent organization
+    self_organization, parent_organization, store = findOrganization(request)
+    product_detail["organization"] = parent_organization
+
+    # Create or update Product
+    if not product["id"] or str(product["id"]).strip() == "":
+        product.pop("id")
+        product_query = Product.objects.filter(item_name=product["item_name"], model=product["model"])
         if product_query.exists():
-            ok=False
-            message="product {} {} already exists".format(product['item_name'],product['model'])
-            product=product_query[0]
-            # print('product execption ',e)
-            return Response({"message":message,"ok":ok,"id":product.id})
-        product=Product(**product)
-        print(' product ',product)
+            product = product_query.first()
+            return Response({"message": f"Product {product.item_name} {product.model} already exists", "ok": False, "id": product.id})
+
+        product = Product(**product)
         try:
             product.save()
-            message='Product Inserted'
-            ok=True
+            message = "Product Inserted"
+            ok = True
         except Exception as e:
-            message=str(e)
-            ok=False
-            print('product execption ',e)
+            return Response({"message": str(e), "ok": False})
     else:
-        product['id']=int(product['id'])
+        product["id"] = int(product["id"])
         try:
-            product_query=Product.objects.filter(id=product['id'])
+            product_query = Product.objects.filter(id=product["id"])
             product_query.update(**product)
-            product=product_query[0]
-            ok=True
-            message="Data Inserted"
+            product = product_query.first()
+            message = "Data Updated"
+            ok = True
         except Exception as e:
-            print("Exception ",str(e))
-    product.img=img
-    product.save()
-    product_detail_query=Product_Detail.objects.filter(product=product,organization=parent_organization)
-    print("product_detail_query ",product_detail_query)
-    try:        
-        if product_detail_query.count()>0:
-            product_detail_query.update(**product_detail)
-        else:
-            print("product_detail_query.count()<0 ")
-            product_detail=Product_Detail(product=product,**product_detail)
-            product_detail.save()
-    except Exception as e:
-        print("product_detail e ",e)
-        message=str(e)
-        ok=False
-    
-    org_store_query=Store.objects.filter(Q(organization=parent_organization)|Q(organization__parent=parent_organization))
+            return Response({"message": str(e), "ok": False})
+
+    # Ensure product has correct image
+    if product.img:  # Check if there's an image
+        product.img = request.FILES.get("img")  # Assign uploaded image
+        product.save()
+
+    # Update or create Product_Detail
+    product_detail_query = Product_Detail.objects.filter(product=product, organization=parent_organization)
+    if product_detail_query.exists():
+        product_detail_query.update(**product_detail)
+    else:
+        Product_Detail.objects.create(product=product, **product_detail)
+
+    # Update stock for all stores in the parent organization
+    org_store_query = Store.objects.filter(Q(organization=parent_organization) | Q(organization__parent=parent_organization))
     for store in org_store_query:
-        stock_query=Stock.objects.filter(product=product,store=store)
-        if len(stock_query)==0:
-            stock=Stock(product=product,store=store,current_amount=stock_detail['current_amount']) 
+        stock, created = Stock.objects.get_or_create(product=product, store=store, defaults={"current_amount": stock_detail["current_amount"]})
+        if not created:
+            stock.current_amount = stock_detail["current_amount"]
             stock.save()
-    return Response({"message":message,"ok":ok,"id":product.id})
+
+    return Response({"message": message, "ok": ok, "id": product.id})
 
 @api_view(['GET','POST'])
 def show(request,organization_id="all"):

@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Product,Category,Service,SubService,Store,Unit
-from pathlib import PurePath
+from .models import Product,Category,Store,Unit
 from common.organization import findOrganization
 # from django.conf import settings
 from django.utils.html import format_html

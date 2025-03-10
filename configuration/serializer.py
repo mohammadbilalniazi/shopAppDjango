@@ -1,10 +1,7 @@
 from rest_framework.serializers import ModelSerializer
-from .models import Location,Language_Detail,Organization
+from .models import Location,Organization
 
-class TranslationSerializer(ModelSerializer):
-    class Meta:
-        model=Language_Detail
-        fields="__all__"
+
     
 class LocationSerializer(ModelSerializer):
     class Meta:

@@ -19,7 +19,6 @@ from django.contrib import messages
 def expense_form(request,id=None):
     template=loader.get_template('bill/expenditure/expense_form.html')
     date = date2jalali(datetime.now())
-    year=date.strftime('%Y')
     (self_organization,parent_organization,store)=findOrganization(request)
     form=Bill_Form()
     context={}
@@ -40,7 +39,6 @@ def expense_form(request,id=None):
 @login_required(login_url='/admin')
 @api_view(['POST','PUT'])
 def expense_insert(request):  
-    context={}    
     # print(".request.data ",request.data)
     ########################################## Bill input taking############################
     bill_no=int(request.data.get("bill_no",None))  
@@ -73,7 +71,6 @@ def expense_insert(request):
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
     else: ############### new insert Bill if not in system#############
-        opposit_bill='EXPENSE'
         bill_query=Bill.objects.filter(bill_no=int(bill_no),year=int(year),bill_type=bill_type,organization=organization)
         if bill_query.count()>0: # if we are not having update then we check if such bill present or not if exists we not enter
             ok=False

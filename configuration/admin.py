@@ -13,8 +13,8 @@ class CurrenciesAdmin(admin.ModelAdmin):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display=("owner","name","created_date","location")
-    readonly_fields=("parent","owner",)
+    list_display=("owner","name","created_date")
+    # readonly_fields=("parent","owner",)
 
 # @admin.register(Sub_Organization)
 # class Sub_OrganizationAdmin(admin.ModelAdmin):

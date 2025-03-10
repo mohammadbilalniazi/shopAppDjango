@@ -161,7 +161,7 @@
         </div>
     </tr>
     <!-- <tr><td></td><td></td><td></td></tr>  -->
-        <tr><td>Is Active</td><td> <input  name="is_active" checked type="checkbox" id="is_active">  <!-- {{form.is_active}} --></td> <td><input  type="submit" onclick=""   id='form_submit_btn' {% if product %} value="Update" style="background-color:green;float:right" onclick="confirm()" {% else %} value="Add Product" style="float:right" {% endif %} class="" name="save"> </td></tr>
+        <tr><td>Is Service</td><td> <input  name="is_service" checked type="checkbox" id="is_service">  <!-- {{form.is_service}} --></td> <td><input  type="submit" onclick=""   id='form_submit_btn' {% if product %} value="Update" style="background-color:green;float:right" onclick="confirm()" {% else %} value="Add Product" style="float:right" {% endif %} class="" name="save"> </td></tr>
 
     <tr><td>System Id</td><td colspan="2">{{product.id}}<input type="hidden" class="inputs" name="id"  disabled id="id" value='{{product.id}}'></td></tr>
     <tr><td>Item Name</td>
@@ -189,9 +189,6 @@
     <tr><td>Current Amount Available</td><td colspan="2"><input type="number" class="inputs" disabled {% if product %} value="{{current_amount}}" {% else %} value=0 {% endif %}    id="current_amount"  name="current_amount" ></td></tr>
     <tr><td>Current Purchased Price</td><td colspan="2"><input type="number" step=".001" class="inputs" data-parsley-type="alphanum"   required id="purchased_price" value="{{product.product_detail.purchased_price}}"  name="purchased_price" ></td></tr>
     <tr><td>Current Selling Price</td><td colspan="2"><input type="number" step=".001" class="inputs"  value='{{product.product_detail.selling_price}}' required id="selling_price" name="selling_price" ></td></tr>
-   
-    
-  
  </form> 
 </table>
 </fieldset>
@@ -270,7 +267,7 @@ product_form.addEventListener("submit",async function(e){
     console.log("img ",img.files[0])
     model=document.getElementById("model");
     minimum_requirement=document.getElementById("minimum_requirement");
-    is_active=document.getElementById("is_active");
+    is_service=document.getElementById("is_service");
     current_amount=document.getElementById("current_amount");    
     purchased_price=document.getElementById("purchased_price");
     // prev_purchased_price=document.getElementById("prev_purchased_price");
@@ -284,7 +281,7 @@ product_form.addEventListener("submit",async function(e){
     formData.append("category",category.value);
     formData.append("organization",organization.value);
     formData.append("img",img.files[0]);
-    formData.append("is_active",is_active.value);
+    formData.append("is_service",is_service.value);
     formData.append("model",model.value);
     formData.append("minimum_requirement",minimum_requirement.value);
     formData.append("current_amount",current_amount.value);
@@ -326,11 +323,6 @@ product_form.addEventListener("submit",async function(e){
         }
         document.getElementById("selling_price").value=parseInt(purchased_price)+50;
     });
-
-    // document.getElementById("selling_price").addEventListener("change",e=>{
-    //     let form_submit_btn=document.getElementById("form_submit_btn");
-    //     form_submit_btn.click();
-    // })
 
     document.getElementById("item_name").addEventListener("change",(e)=>{
         let item_name= e.target.value;

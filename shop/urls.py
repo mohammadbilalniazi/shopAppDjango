@@ -16,13 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 # from shopapp import views,views_roznamcha,views_selling
-from bill import views_bill,views_creator,views_bill_receive_payment
+from bill import views_bill,views_bill_receive_payment
 from product import views_product,views_unit,views_store
 from user_request import request_views
 from chat import views as views_chat
 from chat import views_room
 from user import views_login
-from configuration import views_language,views_organization,views_location
+from configuration import views_organization,views_location
 # from qrapp import views_qr 
 from user_request import test_email_request    
 
@@ -42,8 +42,6 @@ urlpatterns = [
     path('expenditure/bill/form/<id>/',expenditure_view.expense_form),
     path('expenditure/bill/insert/',expenditure_view.expense_insert),
     path('test_email_request/',test_email_request.request),
-    path('language/translate/<src>/<dest>/',views_language.select_translations,name="select_translations"),
-    path('insert_language_detail/<src>/<dest>/',views_language.save_translations,name='save_translations'),
     path('organizations/<id>/',views_organization.rcvr_org_show,name='rcvr_org_show'),
     path('conifgurations/organization/',views_organization.show,name='organization_show'),
     path('configuration/organization/form/',views_organization.form,name='organization_form'),
@@ -51,24 +49,15 @@ urlpatterns = [
     path('configuration/organization/form/create/',views_organization.create,name='organization_form_save'),
     path('configuration/organization/form/create/<id>',views_organization.create,name='organization_form'),
     path('admin/configuration/organization/add/',views_organization.form,name='organization_form'),
-    # path('/admin/configuration/organization/<id>/<change>/',views_organization.change,name='organization_form_change'),)
     path('configuration/location/',views_location.show,name='location_show'),
-
-    # path('admin/shopapp/roznamcha/add/',views_roznamcha.roznamcha_form,name='roznamcha_form'), 
-    # path('roznamcha/save',views_roznamcha.roznamcha_save),
-    # path('admin/shopapp/selling/add/',views_selling.selling_form,name='selling_form'),
-    # path('selling/save',views_selling.selling_save),
     path('admin/bill/bill/add/',views_bill.Bill_form,name="Bill_form"),
     path('bill/delete/<id>/',views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>',views_bill.select_bill_no),
     path('bill/search/',views_bill.search), 
-    # path('bill/search/<bill_type>/<bill_no>/<bill_rcvr_org>/<store_id>/<start_date>/<end_date>/',views_bill.search),
     path('bill/detail/delete/<bill_detail_id>',views_bill.bill_detail_delete),
     path('bill/insert/',views_bill.Bill_insert,name="Bill_insert"),
     path('receive_payment/bill/save/',views_bill_receive_payment.Bill_insert),
     path('receive_payment/bill/',views_bill_receive_payment.bill_form),
-    
-    # path('receive_payment/bill/add/<bill_id>/',views_bill_receive_payment.bill_show),
     path('admin/bill/bill/',views_bill.bill_show),
     path('bill/detail/<bill_id>/',views_bill.bill_show),
     path('bill/update/<bill_id>/',views_bill.bill_show),
