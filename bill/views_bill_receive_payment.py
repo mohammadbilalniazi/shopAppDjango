@@ -43,7 +43,7 @@ def bill_form(request):
 
 @login_required(login_url='/admin')
 @api_view(['POST','PUT'])
-def Bill_insert(request):  
+def bill_insert(request):  
     context={}    
     print(".request.data ",request.data)
     ########################################## Bill input taking############################

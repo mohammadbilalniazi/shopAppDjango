@@ -288,7 +288,7 @@ def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
 @login_required(login_url='/admin')
 @api_view(['POST','PUT'])
 @transaction.atomic
-def Bill_insert(request):  
+def bill_insert(request):  
     ########################################## Bill input taking############################
     bill_no=int(request.data.get("bill_no",None))  
     id=request.data.get("id")
