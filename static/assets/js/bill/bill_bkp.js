@@ -84,7 +84,6 @@ function insert_purchasing_price(item_db_id,i)
 
 function change_price_field(item_db_id,index,bill_type_field)
 {
-    // console.log("###############item_db_id",item_db_id,"index",index,bill_type_field);
     item_price=document.getElementsByClassName("item_price")[index];
     // item_price.value=selling_price_obj[parseInt(item_db_id)]
     if(bill_type_field.value=="SELLING")
@@ -98,7 +97,7 @@ function change_price_field(item_db_id,index,bill_type_field)
         // insert_purchasing_price(item_db_id, index)
     }
     generate_total_amount_bill();
-    
+    return;
 }
 
 function add_events_to_elements(change_price=true)
@@ -168,164 +167,226 @@ function deleteRow(btn,bill_detail_id) {
     add_events_to_elements();
     return;
 }
-
-async function adding_row(){
-    // alert("called")
-    bill_type=document.getElementById("bill_type");
-   if(bill_type.value=="PURCHASE" || bill_type.value=="RECEIVEMENT")
-    {
-        organization=document.getElementById("bill_rcvr_org");
-    }
-    else{
-        organization=document.getElementById("organization");
-    }
-
-    table_form=document.getElementById("table_body");
-    var list_tr=document.createElement("tr");
-    table_form.appendChild(list_tr);
-    //###item_name
-    var td_in_tr1=document.createElement("td");
-    var div_in_td1=document.createElement("div");
-    // var div_in_div1=document.createElement("div");
-    var select_item_name_in_div=document.createElement("select");
-    select_item_name_in_div.className='item_name';
-    select_item_name_in_div.name='item_name';
-    select_item_name_in_div.required=true;
-    console.log("#### product_data ",product_data);
-    product_data_str=localStorage.getItem("product_data");
-    product_data=JSON.parse(product_data_str)
-    let item_in_list_select_index=0;
-    for(key in product_data){
-        var option_in_select=document.createElement("option");
-        //alert(data)
-        // console.log("## product_data[key]['purchased_price'] ",product_data[key]['purchased_price']," product_data[key] ",product_data[key])
-        option_in_select.value=product_data[key]['id'];
-        option_in_select.innerText=product_data[key]['item_name']+" "+product_data[key]['product_detail']['purchased_price'].toString();
-        select_item_name_in_div.appendChild(option_in_select);
-        selling_price_obj[product_data[key]['id']]=product_data[key]['product_detail']['selling_price']
-        purchasing_price_obj[product_data[key]['id']]=product_data[key]['product_detail']['purchased_price']
-        id=product_data[key]['id'];
-        if(item_in_list_select_index===0)
-        {
-        selling_price=product_data[key]['product_detail']['selling_price'];
-        purchased_price=product_data[key]['product_detail']['purchased_price'];
+async function adding_row() {
+    // Helper: Create and return an element with optional properties and children.
+    function createElement(tag, props = {}, children = []) {
+      const el = document.createElement(tag);
+      Object.entries(props).forEach(([key, value]) => {
+        if (key === 'className') {
+          el.className = value;
+        } else if (key === 'style') {
+          el.style.cssText = value;
+        } else if (key in el) {
+          el[key] = value;
+        } else {
+          el.setAttribute(key, value);
         }
-        item_in_list_select_index=item_in_list_select_index+1;
+      });
+      children.forEach(child => el.appendChild(child));
+      return el;
     }
-    div_in_td1.appendChild(select_item_name_in_div);
-    td_in_tr1.appendChild(div_in_td1);
-    list_tr.appendChild(td_in_tr1);
-    // console.log("price= called ",price) 
-    // ###########unit########################
-    var td_in_tr1=document.createElement("td");
-    var div_in_td1=document.createElement("div");
-    var select_unit_in_div=document.createElement("select");
-    select_unit_in_div.className='unit';
-    select_unit_in_div.name='unit';
-    select_unit_in_div.required=true;
-    unit_data_str=localStorage.getItem("unit_data");
-    unit_data=JSON.parse(unit_data_str)
-    for(key in unit_data){        
-        var option_in_select=document.createElement("option");
-        option_in_select.value=unit_data[key]['id'];
-        option_in_select.innerText=unit_data[key]['name'];
-        select_unit_in_div.appendChild(option_in_select);
-    } 
-    
-    div_in_td1.appendChild(select_unit_in_div);   
-    td_in_tr1.appendChild(div_in_td1);
-    list_tr.appendChild(td_in_tr1);
-
-    // ###########item_amount########################
-    var item_amount_in_div=document.createElement("input");
-    item_amount_in_div.type="number";
-    item_amount_in_div.className='item_amount';
-    item_amount_in_div.name='item_amount';
-    item_amount_in_div.required=true;
-    var td_in_tr2=document.createElement("td");
-    var div_in_td2=document.createElement("div");
-    list_tr.appendChild(td_in_tr2);
-    td_in_tr2.appendChild(div_in_td2);
-    div_in_td2.appendChild(item_amount_in_div);
-    //#########################item_price################
-    var item_price_in_div=document.createElement("input");
-      
-    item_price_in_div.type="number";
-    item_price_in_div.name='item_price';
-    item_price_in_div.className='item_price';
-    
-    item_price_in_div.min="0"
-    
-    item_price_in_div.value="0";
-    
-    item_price_in_div.step=".001";
-    var bill_type=document.getElementById("bill_type");
-    // Logic   :  selling price for selling purchase price for purchase
-    if(bill_type.value=="SELLING")
-    {
-        item_price_in_div.value=selling_price;
+  
+    // Determine the organization element based on bill type.
+    const billTypeElement = document.getElementById("bill_type");
+    const organization = (billTypeElement.value === "PURCHASE" || billTypeElement.value === "RECEIVEMENT")
+      ? document.getElementById("bill_rcvr_org")
+      : document.getElementById("organization");
+  
+    // Create new table row and append it to the table body.
+    const tableBody = document.getElementById("table_body");
+    const row = createElement("tr");
+    tableBody.appendChild(row);
+  
+    // ---------------------------
+    // ITEM NAME Cell
+    // ---------------------------
+    // Create the item_name select element and assign a unique ID.
+    const selectItemName = createElement("select", {
+      id: "item_name_select_" + Date.now(), // Unique id for each select.
+      className: "item_name",
+      name: "item_name",
+      required: true
+    });
+  
+    // Parse product data from localStorage.
+    const productDataStr = localStorage.getItem("product_data");
+    const productData = JSON.parse(productDataStr);
+  
+    let itemIndex = 0;
+    for (const key in productData) {
+      if (Object.hasOwn(productData, key)) {
+        const product = productData[key];
+        const optionText = `${product.item_name} ${product.product_detail.purchased_price}`;
+        const option = createElement("option", {
+          value: product.id,
+          innerText: optionText
+        });
+        selectItemName.appendChild(option);
+  
+        // Populate global price objects (assuming these are declared elsewhere).
+        selling_price_obj[product.id] = product.product_detail.selling_price;
+        purchasing_price_obj[product.id] = product.product_detail.purchased_price;
+  
+        // Use the first item's prices as defaults.
+        if (itemIndex === 0) {
+          selling_price = product.product_detail.selling_price;
+          purchased_price = product.product_detail.purchased_price;
+        }
+        itemIndex++;
+      }
     }
-    else if(bill_type.value=="PURCHASE") // in purchase the bill takes the selling 
-    {
-        //price of the bill_receiver2 organizaiton product 
-        //not he purchasing price of that organization because they are selling 
-
-        item_price_in_div.value=purchased_price;
-        // item_price_in_div.value=selling_price;
+  
+    const tdItemName = createElement("td", {}, [
+      createElement("div", {}, [selectItemName])
+    ]);
+    row.appendChild(tdItemName);
+  
+    // ---------------------------
+    // UNIT Cell
+    // ---------------------------
+    const selectUnit = createElement("select", {
+      className: "unit",
+      name: "unit",
+      required: true
+    });
+  
+    const unitDataStr = localStorage.getItem("unit_data");
+    const unitData = JSON.parse(unitDataStr);
+    for (const key in unitData) {
+      if (Object.hasOwn(unitData, key)) {
+        const unit = unitData[key];
+        const option = createElement("option", {
+          value: unit.id,
+          innerText: unit.name
+        });
+        selectUnit.appendChild(option);
+      }
     }
-
-    item_price_in_div.required=true;
-    var td_in_tr2=document.createElement("td");
-    var div_in_td2=document.createElement("div");
-    
-    div_in_td2.appendChild(item_price_in_div);
-    td_in_tr2.appendChild(div_in_td2);
-    list_tr.appendChild(td_in_tr2);
-    
-    // console.log("item_price_in_div reached")
-    //#########################return_qty################
-    var return_qty_in_div=document.createElement("input");
-    return_qty_in_div.type="number"
-    // return_qty_in_div.id='return_qty'
-    return_qty_in_div.name='return_qty'
-    return_qty_in_div.className='return_qty'
-    return_qty_in_div.value=0
-    return_qty_in_div.required=true;
-    
-    var td_in_tr2=document.createElement("td");
-    var div_in_td2=document.createElement("div");
-    div_in_td2.appendChild(return_qty_in_div)
-    td_in_tr2.appendChild(div_in_td2)
-    list_tr.appendChild(td_in_tr2)
-    
-    var bill_detail_id_in_div=document.createElement("input");
-    bill_detail_id_in_div.type="hidden"
-    bill_detail_id_in_div.name='bill_detail_id'
-    bill_detail_id_in_div.className='bill_detail_id'
-    // return_qty_in_div.value=0
-    bill_detail_id_in_div.required=true;
-    var td_in_tr2=document.createElement("td");
-    var div_in_td2=document.createElement("div");
-    
-    div_in_td2.appendChild(bill_detail_id_in_div)
-    td_in_tr2.appendChild(div_in_td2)
-    list_tr.appendChild(td_in_tr2)
-
-    var input_in_td=document.createElement("input");
-    input_in_td.type="button";
-    input_in_td.value="remove";
-    input_in_td.id="remove_btn";
-    
-    input_in_td.className="remove_btn";
-    input_in_td.style.cssText="font-weight:900;font-size:16px; background-color:red;color:black; padding:0px; margin:0px;";
-    input_in_td.onclick=function(){deleteRow(this,0); return;}
-    var td_in_tr=document.createElement("td");
-    td_in_tr.appendChild(input_in_td);
-    list_tr.appendChild(td_in_tr);
-    //#######################now add events to created elements########################
-    add_events_to_elements();   
-}
-
+  
+    const tdUnit = createElement("td", {}, [
+      createElement("div", {}, [selectUnit])
+    ]);
+    row.appendChild(tdUnit);
+  
+    // ---------------------------
+    // ITEM AMOUNT Cell
+    // ---------------------------
+    const inputItemAmount = createElement("input", {
+      type: "number",
+      className: "item_amount",
+      name: "item_amount",
+      required: true
+    });
+    const tdItemAmount = createElement("td", {}, [
+      createElement("div", {}, [inputItemAmount])
+    ]);
+    row.appendChild(tdItemAmount);
+  
+    // ---------------------------
+    // ITEM PRICE Cell
+    // ---------------------------
+    const inputItemPrice = createElement("input", {
+      type: "number",
+      name: "item_price",
+      className: "item_price",
+      min: "0",
+      value: "0",
+      step: ".001",
+      required: true
+    });
+  
+    // Set the price based on the bill type.
+    if (billTypeElement.value === "SELLING") {
+      inputItemPrice.value = selling_price;
+    } else if (billTypeElement.value === "PURCHASE") {
+      inputItemPrice.value = purchased_price;
+    }
+  
+    const tdItemPrice = createElement("td", {}, [
+      createElement("div", {}, [inputItemPrice])
+    ]);
+    row.appendChild(tdItemPrice);
+  
+    // ---------------------------
+    // RETURN QTY Cell
+    // ---------------------------
+    const inputReturnQty = createElement("input", {
+      type: "number",
+      name: "return_qty",
+      className: "return_qty",
+      value: 0,
+      required: true
+    });
+    const tdReturnQty = createElement("td", {}, [
+      createElement("div", {}, [inputReturnQty])
+    ]);
+    row.appendChild(tdReturnQty);
+  
+    // ---------------------------
+    // Hidden BILL DETAIL ID Cell
+    // ---------------------------
+    const inputBillDetailId = createElement("input", {
+      type: "hidden",
+      name: "bill_detail_id",
+      className: "bill_detail_id",
+      required: true
+    });
+    const tdBillDetailId = createElement("td", {}, [
+      createElement("div", {}, [inputBillDetailId])
+    ]);
+    row.appendChild(tdBillDetailId);
+  
+    // ---------------------------
+    // REMOVE BUTTON Cell
+    // ---------------------------
+    const removeButton = createElement("input", {
+      type: "button",
+      value: "remove",
+      id: "remove_btn",
+      className: "remove_btn",
+      style: "font-weight:900;font-size:16px;background-color:red;color:black;padding:0;margin:0;"
+    });
+    removeButton.onclick = function () {
+      deleteRow(this, 0);
+      return;
+    };
+  
+    const tdRemove = createElement("td", {}, [removeButton]);
+    row.appendChild(tdRemove);
+  
+    // ---------------------------
+    // Initialize Select2 on the item_name select element.
+    // ---------------------------
+    // Use a timeout to ensure the element is in the DOM.
+      // ✅ Apply Select2 after ensuring it's loaded
+      setTimeout(() => {
+        if ($.fn.select2) {
+          console.log("Initializing Select2...");
+          $(`#${selectItemName}`).select2({
+            placeholder: "Select an item",
+            allowClear: true,
+            width: "100%"
+          });
+        } else {
+          console.error("❌ Select2 is NOT loaded!");
+        }
+      }, 100);
+  setTimeout(() => {
+    if (jQuery.fn.select2) {
+      $(`#${selectItemName}`).select2({
+        placeholder: "Select an item",
+        allowClear: true,
+        width: "100%"
+      });
+    } else {
+      console.error("Select2 is not loaded!");
+    }
+  }, 100);
+  
+    // Add events to the newly created elements (assuming this function exists).
+    add_events_to_elements();
+  }
+  
 try
 {
     detail_or_update=document.getElementById("detail_or_update");
@@ -695,15 +756,7 @@ catch(e)
 
 
 async function init(){
-    // if(bill_type.value=="PURCHASE" || bill_type.value=="RECEIVEMENT")
-    //     {
-    //         bill_rcvr_org=document.getElementById("bill_rcvr_org");
-    //         organization=document.getElementById("organization");
-    //     }
-    //     else{
-    //         bill_rcvr_org=document.getElementById("bill_rcvr_org");
-    //         organization=document.getElementById("organization");
-    //     }
+    
         addnawajans=document.getElementById("addnawajans");
         addnawajans.disabled=true;
         await get_products(organization.value,false);

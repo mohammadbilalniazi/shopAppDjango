@@ -9,25 +9,25 @@ async function make_table(data)
 
     data=data.results;
     const bill_tbody = document.querySelector('#bill_tbody');
-    majmoa_upon_shirkat=document.getElementById("majmoa_upon_shirkat");
-    majmoa_upon_shirkat.value=data.statistics.majmoa_upon_shirkat;
-    majmoa_upon_rcvr_org=document.getElementById("majmoa_upon_rcvr_org");
-    majmoa_upon_rcvr_org.value=data.statistics.majmoa_upon_rcvr_org;
-    majmoa_baqaya=document.getElementById("majmoa_baqaya");
+    total_upon_self_org=document.getElementById("total_upon_self_org");
+    total_upon_self_org.value=data.statistics.total_upon_self_org;
+    total_upon_opposit_org=document.getElementById("total_upon_opposit_org");
+    total_upon_opposit_org.value=data.statistics.total_upon_opposit_org;
+    total_summary=document.getElementById("total_summary");
     net_profit_sum=document.getElementById("net_profit_sum");
     net_profit_sum.value=data.statistics.net_profit_sum
     profit_sum=document.getElementById("profit_sum");
     profit_sum.value=data.statistics.profit_sum
-    majmoa_baqaya.value=data.statistics.majmoa_baqaya;
-    if(majmoa_baqaya.value<0)
+    total_summary.value=data.statistics.total_summary;
+    if(total_summary.value<0)
     {
-     majmoa_baqaya.style.color="black";
-     majmoa_baqaya.style.background="red";
+     total_summary.style.color="black";
+     total_summary.style.background="red";
     }
     else
     {   
-     majmoa_baqaya.style.color="black";
-     majmoa_baqaya.style.background="lightgreen";
+     total_summary.style.color="black";
+     total_summary.style.background="lightgreen";
     }
     
     if(net_profit_sum.value<0)
@@ -44,16 +44,16 @@ async function make_table(data)
     total_sum_purchase.value=data.statistics.total_sum_purchase;
     payment_sum_purchase=document.getElementById("payment_sum_purchase");
     payment_sum_purchase.value=data.statistics.payment_sum_purchase;
-    baqaya_purchase=document.getElementById("baqaya_purchase");
-    baqaya_purchase.value=data.statistics.baqaya_purchase;
+    notpaid_purchase=document.getElementById("notpaid_purchase");
+    notpaid_purchase.value=data.statistics.notpaid_purchase;
 
     total_sum_selling=document.getElementById("total_sum_selling");
     total_sum_selling.value=data.statistics.total_sum_selling;
     payment_sum_selling=document.getElementById("payment_sum_selling");
     payment_sum_selling.value=data.statistics.payment_sum_selling;
-    baqaya_selling=document.getElementById("baqaya_selling");
-    baqaya_selling.value=data.statistics.baqaya_selling;
-    // console.log("data.statistics.baqaya_selling ",data.statistics.baqaya_selling)
+    notpaid_sell=document.getElementById("notpaid_sell");
+    notpaid_sell.value=data.statistics.notpaid_sell;
+    // console.log("data.statistics.notpaid_sell ",data.statistics.notpaid_sell)
 
     
     // total_sum_payment=document.getElementById("total_sum_payment");

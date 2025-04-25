@@ -5,9 +5,7 @@
         <title>Add Bill | Django site admin</title>
         <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
         <link rel="stylesheet" type="text/css" href="/static/admin/css/nav_sidebar.css">
-        <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
         <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-        
         <link rel="stylesheet" type="text/css" href="/static/assets/css/common.css">
         <link rel="stylesheet" type="text/css" href="/static/assets/css/fontawesome.min.css">
         <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/fontawesome.min.css"> -->
@@ -79,50 +77,9 @@
     › <a href="/admin/bill/bill/add">Add Bill</a>
     </div>
     <div class="main shifted" id="main"> 
-        <!-- <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button> -->
-        <!-- <nav class="sticky" id="nav-sidebar">
-            <input type="search" id="nav-filter" placeholder="Start typing to filter…" aria-label="Filter navigation items">
-             
-            
-                <div class="app-shopapp module current-app">
-                <table>
-                    <caption>
-                    <a href="/admin/shopapp/" class="section" title="Models in the Shirkat application">Shirkat</a>
-                    </caption>
-                    
-                    <tbody>
-                        <tr class="model-initial_asset">
-                            <th scope="row"><a href="/admin/shopapp/initial_asset/">Asset</a></th>
-                            <td><a href="/admin/shopapp/initial_asset/add/" class="addlink">Add</a></td> 
-                        </tr>
-   
-                        <tr class="model-unit">  
-                            <th scope="row"><a href="/admin/products/unit/">Units</a></th>
-                            <td><a href="/admin/products/unit/add/" class="addlink">Add</a></td>    
-                        </tr>
-                        <tr class="model-store">
-                            <th scope="row"><a href="/admin/products/store/">Stores</a></th>
-                            <td><a href="/admin/products/store/add/" class="addlink">Add</a></td>
-                        </tr>
-                        <tr class="model-product">
-                            <th scope="row"><a href="/products/product/">Products</a></th>
-                            <td><a href="/products/product/add/" class="addlink">Add</a></td>   
-                        </tr>
-                        
-                        <tr class="model-Bill current-model">  
-                            <th scope="row"><a href="/admin/bill/bill/" aria-current="page">bills</a></th>
-                            <td><a href="/admin/bill/bill/add/" class="addlink">Add</a></td>    
-                        </tr>
-                    </tbody>
-                </table>
-                </div>
-        </nav> -->
-
         <div class="content">
                     <div class="colM">{% if messages %} {% for message in messages %} {% if message.tags == "error" %} <div class='alert alert-danger' style="background-color:red"> {%  else %} <div class='alert alert-danger' style="background-color:green"> {%endif%}  {{ message}} </div> {% endfor %} {% endif %}</div>
-    
             <!-- Content -->
-            
             <div id="content" class="colM">   
                     <div id="content-main">
                                 <div>

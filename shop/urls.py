@@ -61,8 +61,8 @@ urlpatterns = [
     path('admin/bill/bill/add/',views_bill.Bill_form,name="Bill_form"),
     path('bill/delete/<id>/',views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>',views_bill.select_bill_no),
-    path('bill/search/',views_bill.search), 
-    # path('bill/search/<bill_type>/<bill_no>/<bill_rcvr_org>/<store_id>/<start_date>/<end_date>/',views_bill.search),
+    
+    path('bill/search/<bill_type>/<bill_no>/<bill_rcvr_org>/<store_id>/<start_date>/<end_date>/',views_bill.search),
     path('bill/detail/delete/<bill_detail_id>',views_bill.bill_detail_delete),
     path('bill/insert/',views_bill.Bill_insert,name="Bill_insert"),
     path('receive_payment/bill/save/',views_bill_receive_payment.Bill_insert),

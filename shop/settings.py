@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'chat',
     'bill',
     'user',
+    'systemadmin',
     'configuration',
     'rest_framework',
      'corsheaders',
@@ -187,7 +188,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         # 'NAME': BASE_DIR / 'shop.sqlite3',
-        'NAME':'shirkat',
+        'NAME':'shirkat_original',
         'HOST':'localhost',
         'USER':'root',
         'PASSWORD':'',
