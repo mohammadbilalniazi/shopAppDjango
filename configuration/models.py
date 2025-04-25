@@ -60,10 +60,12 @@ class Location(models.Model):
         return str(self.country)+'_'+self.state
 
 class Organization(models.Model):  
-    parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",null=True,blank=True)
+    parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",related_name='organization_parent_sets',null=True,blank=True)
+    parent_new=models.ForeignKey("self",on_delete=models.CASCADE,related_name='organization_parent_sets2',null=True,blank=True)
     owner=models.OneToOneField(User,on_delete=models.CASCADE,unique=True)  
     name=models.CharField(max_length=20,unique=True)
-    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city')
+    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city',related_name='organization_location')
+    location_new=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,related_name='organization_location2')
     # password=models.CharField(max_length=25)
     organization_type=models.CharField(max_length=25) 
     created_date=models.DateField()
@@ -74,14 +76,6 @@ class Organization(models.Model):
     
     def __str__(self):
         return self.name 
-# class Sub_Organization(models.Model):
-#     organization=models.ForeignKey(Organization,on_delete=models.CASCADE)
-#     name=models.CharField(max_length=20)
-#     user=models.OneToOneField(User,on_delete=models.CASCADE,unique=True)
-#     created_date=models.DateField()
-#     is_active=models.BooleanField(default=True)
-#     class Meta:
-#         unique_together=(("user","organization"),)
 
 STATUS=((0,"CANCELLED"),(1,"CREATED"))    
 class Role(models.Model):
@@ -94,21 +88,5 @@ class Role(models.Model):
     is_active=models.BooleanField(default=True)
     class Meta:
         unique_together=(("name","parent","organization"),)
-# class Member_User(models.Model):
-#     organization=models.ForeignKey(Organization,on_delete=models.CASCADE)
-#     first_name=models.CharField(max_length=20)
-#     last_name=models.CharField(max_length=20,null=True,blank=True)
-#     father_name=models.CharField(max_length=20)
-#     user=models.OneToOneField(User,on_delete=models.CASCADE,unique=True,to_field="username")
-#     role=models.ForeignKey(Role,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True,default=None)
-#     group=models.ForeignKey(Group,on_delete=models.DO_NOTHING,to_field="name")
-#     created_date=models.DateField()
-#     created_by=models.ForeignKey('self',on_delete=models.DO_NOTHING)
-#     is_staff=models.BooleanField(default=True)
-#     is_active=models.BooleanField(default=True)
-#     class Meta:
-#         unique_together=(("first_name","father_name","organization"),)
-
-
 
 

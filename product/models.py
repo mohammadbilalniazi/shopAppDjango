@@ -11,6 +11,7 @@ from django.conf import settings
 
 class Store(models.Model):
     organization=models.OneToOneField(Organization,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True,default=None)
+    organization_new=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='store_organization_set',null=True,blank=True)
     name=models.CharField(max_length=50,unique=True)
     location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,blank=True)
     is_active=models.BooleanField(default=True)
@@ -45,18 +46,10 @@ def validate_image(fieldfile_obj):
     else:
         return fieldfile_obj
     
-# Create your models here.
 
-# from bill.views_bill import findOrganization
-# def findorg(self):
-#     # qs = super(Product, self).queryset(request)
-#     organization=findOrganization(request)
-#     print("organization ")
-#     if request.user.is_superuser:
-#         return qs
-#     return qs.filter(organization=organization)
 class Unit(models.Model):
     organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True,default=None)
+    organization_new=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='unit_organization_set',null=True,blank=True)
     name=models.CharField(max_length=20)
     description=models.CharField(max_length=100,null=True,blank=True)
     is_active=models.BooleanField(default=True)
@@ -156,6 +149,7 @@ class Product(models.Model):
 class Product_Detail(models.Model): 
     product=models.OneToOneField(Product,on_delete=models.CASCADE,null=True,blank=True,unique=True)
     organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,null=True,to_field="name")
+    organization_new=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='product_detail_organization_set',null=True,blank=True)
     minimum_requirement=models.IntegerField(default=1)
     purchased_price= models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     selling_price=models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
@@ -174,61 +168,7 @@ class Row_Column_Address(models.Model):
     product=models.OneToOneField(Product,on_delete=models.DO_NOTHING,null=True,blank=True,unique=True)
     row=models.IntegerField(null=True,blank=True)
     column=models.IntegerField(null=True,blank=True)
-
-class Service(models.Model):
-    name = models.CharField(max_length=50,null=False, blank=False)
-    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,null=True)
-    category=models.ForeignKey(Category,on_delete=models.DO_NOTHING,default=None)
-    dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
-    detail=models.TextField(null=True,blank=True)
-    html_id=models.CharField(max_length=50,null=False)
-    img=models.ImageField(upload_to = user_directory_path,null=True,blank=True,validators=[validate_image])
-    is_active=models.BooleanField(default=None,null=True)
-    class Meta:
-        unique_together=("name","organization")
-    def __str__(self): 
-        return f"{self.name}"  
-
-class Service_Media(models.Model):
-    service = models.ForeignKey(Service,on_delete=models.SET_NULL,null=True)
-    uploader=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    file =  models.FileField(upload_to='uploads/%Y-%m-%d',unique=True)
-    is_active=models.BooleanField(default=None,null=True)
-     
-    # Service=("service","uploader","file","is_active") 
-    def __str__(self): 
-        return f"{self.file}"  
-
-
-
-    
-class SubService(models.Model):
-    service = models.ForeignKey(Service,on_delete=models.CASCADE,null=False, blank=False)
-    # category=models.ForeignKey(Category,on_delete=models.DO_NOTHING,default=None)
-    dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
-    sub_service_name = models.CharField(max_length=50,null=True)
-    detail=models.TextField(null=True,blank=True)
-    html_id=models.CharField(max_length=50,null=False, blank=False,unique=True)
-    is_active=models.BooleanField(default=None,null=True)
-      
-    class Meta:
-        unique_together=("sub_service_name","service","dest") 
-    def __str__(self): 
-        return f"{self.service}"  
-    
-    # SubService=("service","detail","html_id","is_active")
-    # Service=("service_name","category","detail","html_id","service_incharger","is_active")
-
-class SubService_Media(models.Model):
-    service = models.ForeignKey(SubService,on_delete=models.SET_NULL,null=True)
-    uploader=models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    # title = models.CharField(max_length=150)
-    file =  models.FileField(upload_to='uploads/%Y-%m-%d',unique=True)
-    is_active=models.BooleanField(default=None,null=True)
-    
-    # Service=("service","uploader","file","is_active") 
-    def __str__(self): 
-        return f"{self.file}" 
+    store=models.ForeignKey(Store,on_delete=models.DO_NOTHING,null=True,blank=True)
 
 
 

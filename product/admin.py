@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product,Category,Service,SubService,Store,Unit
+from .models import Product,Category,Store,Unit
 from pathlib import PurePath
 from common.organization import findOrganization
 # from django.conf import settings
@@ -77,18 +77,3 @@ class ProductAdmin(admin.ModelAdmin):
         else:
             return 0
 
-
- 
-# @admin.register(Service) 
-# class ServiceAdmin(admin.ModelAdmin):
-#     list_display=("name","category","dest","detail","html_id","is_active")
-
- 
-# @admin.register(SubService) 
-# class SubSerivceAdmin(admin.ModelAdmin):
-#     list_display=("service","sub_service_name","dest","detail","html_id","is_active")
-
-
-    
-
-    # Service=("service","uploader","file","is_active") 
