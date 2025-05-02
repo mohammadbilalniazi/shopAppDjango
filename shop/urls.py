@@ -58,12 +58,12 @@ urlpatterns = [
     # path('roznamcha/save',views_roznamcha.roznamcha_save),
     # path('admin/shopapp/selling/add/',views_selling.selling_form,name='selling_form'),
     # path('selling/save',views_selling.selling_save),
-    path('admin/bill/bill/add/',views_bill.Bill_form,name="Bill_form"),
+    path('admin/bill/bill/add/',views_bill.bill_form,name="Bill_form"),
     path('bill/delete/<id>/',views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>',views_bill.select_bill_no),
     path('bill/search/',views_bill.search), 
     path('bill/detail/delete/<bill_detail_id>',views_bill.bill_detail_delete),
-    path('bill/insert/',views_bill.Bill_insert,name="Bill_insert"),
+    path('bill/insert/',views_bill.bill_insert,name="Bill_insert"),
     path('receive_payment/bill/save/',views_bill_receive_payment.Bill_insert),
     path('receive_payment/bill/',views_bill_receive_payment.bill_form),
     
@@ -71,12 +71,10 @@ urlpatterns = [
     path('admin/bill/bill/',views_bill.bill_show),
     path('bill/detail/<bill_id>/',views_bill.bill_show),
     path('bill/update/<bill_id>/',views_bill.bill_show),
-    path('products/<organization_id>/',views_product.show,name='product_show'),
+    path('products/',views_product.show,name='product_show'),
     path('products/product_form/',views_product.form,name='product_form'),
     path('product/product/add/<id>',views_product.form,name='product_form'),
-    
     path('admin/product/product/add/',views_product.form,name='product_form'),
-    
     path('admin/product/product/',views_product.show_html,name='product_show_html'),
     path('product/product/',views_product.show_html,name='product_show_html'),
     path('products/product/add/',views_product.form,name='product_form'),

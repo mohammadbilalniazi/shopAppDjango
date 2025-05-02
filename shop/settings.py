@@ -187,8 +187,8 @@ CORS_ALLOWED_ORIGINS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        # 'NAME': BASE_DIR / 'shop.sqlite3',
-        'NAME':'shirkat_original',
+            #  'NAME':'shirkat_original',
+        'NAME':'shirkat_original_test',
         'HOST':'localhost',
         'USER':'root',
         'PASSWORD':'',

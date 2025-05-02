@@ -38,11 +38,11 @@ class Location(models.Model):
 
 class Organization(models.Model):  
     # parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",related_name='organization_parent_sets',null=True,blank=True)
-    parent=models.ForeignKey("self",on_delete=models.CASCADE,related_name='organization_parent_sets2',null=True,blank=True)
+    parent=models.ForeignKey("self",on_delete=models.CASCADE,null=True,blank=True)
     owner=models.OneToOneField(User,on_delete=models.CASCADE,unique=True)  
     name=models.CharField(max_length=20,unique=True)
     # location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city',related_name='organization_location')
-    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,related_name='organization_location2')
+    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True)
     # password=models.CharField(max_length=25)
     organization_type=models.CharField(max_length=25) 
     created_date=models.DateField()

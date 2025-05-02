@@ -10,8 +10,7 @@ from django.conf import settings
 # Create your models here.
 
 class Store(models.Model):
-    # organization=models.OneToOneField(Organization,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True,default=None)
-    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='store_organization_set',null=True,blank=True)
+    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,null=True,blank=True)
     name=models.CharField(max_length=50,unique=True)
     location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,blank=True)
     is_active=models.BooleanField(default=True)
@@ -48,8 +47,7 @@ def validate_image(fieldfile_obj):
     
 
 class Unit(models.Model):
-    # organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,to_field="name",null=True,blank=True,default=None)
-    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='unit_organization_set',null=True,blank=True)
+    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,null=True,blank=True)
     name=models.CharField(max_length=20)
     description=models.CharField(max_length=100,null=True,blank=True)
     is_active=models.BooleanField(default=True)
@@ -127,8 +125,9 @@ class Product(models.Model):
     category=models.ForeignKey(Category,on_delete=models.DO_NOTHING,default=None)
     model=models.CharField(max_length=20,null=True,blank=True)
     barcode=models.CharField(max_length=25,null=True,blank=True)
-    img=models.ImageField(upload_to='Products',null=True,blank=True)
-    is_active=models.BooleanField(default=True,null=True)
+    serial_no = models.CharField(max_length=25, null=True, blank=True, unique=True)  # Ensure uniqueness if required
+    img = models.ImageField(upload_to='Products', null=True, blank=True)
+    is_service = models.BooleanField(default=False)  # Removed null=True
     # def image_tag(self):
     #     # return mark_safe('<img src="/media/%s" width="150" height="150" />' % (self.img))
     #     if hasattr(self.img,"url"):  
@@ -148,8 +147,8 @@ class Product(models.Model):
     
 class Product_Detail(models.Model): 
     product=models.OneToOneField(Product,on_delete=models.CASCADE,null=True,blank=True,unique=True)
-    # organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,null=True,to_field="name")
-    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='product_detail_organization_set',null=True,blank=True)
+    unit=models.ForeignKey(Unit,on_delete=models.DO_NOTHING,default=None,null=True)
+    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,null=True,blank=True)
     minimum_requirement=models.IntegerField(default=1)
     purchased_price= models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     selling_price=models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)

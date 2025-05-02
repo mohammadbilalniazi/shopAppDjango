@@ -107,12 +107,6 @@
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                <!-- <select type="text" name="organization"  id="organization"> 
-                                    <option {% if bill.organization %}  value="{{bill.organization.id}}" {% else %}  value="{{organization.id}}" {% endif %}>
-                                        {% if bill %}  {{bill.organization}} {% else %}  {{organization}} {% endif %}
-                                    </option>
-                                </select> -->
-
                                 <select type="text"  name="organization"  id="organization">     
                                     {% for row in organizations %}
                                     <option value="{{row.id}}" {% if row == bill.organization or row == organization %} selected {% endif %}>{{row}} </option>

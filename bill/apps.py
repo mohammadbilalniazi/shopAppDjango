@@ -38,7 +38,8 @@ class BillConfig(AppConfig):
     #             bill_desc.save()
     #         except Exception as e:
     #             print("Store not found ",str(e))
-            
-           
+         
+
+
             
                 

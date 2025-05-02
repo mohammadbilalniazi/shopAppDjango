@@ -4,11 +4,9 @@ from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
 from product.models import Product,Unit,Store
-from product.views_product import handle_price_stock_product
 from common.organization import findOrganization
 from common.date import handle_day_out_of_range
 from configuration.models import *
-from django.contrib.auth.models import User
 from datetime import datetime
 from django.contrib import messages
 from .models import Bill, Bill_detail,Bill_Description,Bill_Receiver2
@@ -17,9 +15,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q,Max
+from django.db import transaction
 from .serializer import Bill_search_Serializer
 import re
-import json
 from rest_framework.pagination import PageNumberPagination
 
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
@@ -70,13 +68,6 @@ def select_bill_no(request,organization_id,bill_rcvr_org_id,bill_type=None):
 @login_required(login_url='/admin')
 def bill_show(request,bill_id=None):
     print("bill_id =",bill_id)
-    # for bill_receiver in Bill_Receiver.objects.all():
-    #     organization_query=Organization.objects.filter(name=bill_receiver.bill_rcvr_org)
-    #     if organization_query.count()>0:
-    #         org=organization_query[0]
-    #         obj=Bill_Receiver2(bill=bill_receiver.bill,bill_rcvr_org=org,store=bill_receiver.store)
-    #         # print("obj ",model_to_dict(obj))
-    #         obj.save()
     context={}
     form=Bill_Form()
     context['form']=form
@@ -98,11 +89,15 @@ def bill_show(request,bill_id=None):
             template=loader.get_template('bill/bill_form_receive_payment.html')
         else:
             template=loader.get_template('bill/bill_form.html')
-            context['products']=Product.objects.filter(product_detail__organization=bill.organization)
-            context['units']=Unit.objects.all()
-        if bill.organization==parent_organization:                 
+            # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
+            context['products']=Product.objects.all()
+        context['units']=Unit.objects.all()
+        if bill.organization==parent_organization or request.user.is_superuser:                 
             context['rcvr_orgs']=Organization.objects.all().order_by("-pk") 
-        
+            if request.user.is_superuser:
+                context['organizations']=Organization.objects.all() 
+            else:
+                context['organizations']=Organization.objects.filter(id=parent_organization.id)
         elif hasattr(bill,'bill_receiver2'):
             if bill.bill_receiver2.bill_rcvr_org==parent_organization:
                 #  bill_obj.bill_receiver2:
@@ -112,12 +107,16 @@ def bill_show(request,bill_id=None):
             context['stores']=org_store_query
             bill_rcvr_org_store_query=Store.objects.filter(organization=bill.bill_receiver2.bill_rcvr_org)
             context['bill_rcvr_org_stores']=bill_rcvr_org_store_query
-        else:
-            store_query=Store.objects.filter(organization=bill.organization)
       
         # return HttpResponse("test")
     # print('(self_organization,parent_organization) ',self_organization,' ',parent_organization)
     context['organization']=parent_organization
+    if request.user.is_superuser:
+        organizations=Organization.objects.all()
+    else:
+        organizations=Organization.objects.filter(id=parent_organization.id)
+    context['organizations']=organizations
+    
     return HttpResponse(template.render(context,request))
 
 
@@ -153,7 +152,7 @@ def bill_detail_show(request,bill_id=None):
             org_store_query=Store.objects.filter(organization=bill_obj.organization)
             bill_rcvr_org_store_query=Store.objects.filter(organization=bill_obj.bill_receiver2.bill_rcvr_org)
         else:
-            store_query=Store.objects.filter(organization=bill_obj.organization)
+            org_store_query=Store.objects.filter(organization=bill_obj.organization)
         context['stores']=org_store_query
         context['bill_rcvr_org_stores']=bill_rcvr_org_store_query
         # return HttpResponse("test")
@@ -171,25 +170,10 @@ def bill_delete(request,id=None):
         bill_query=Bill.objects.filter(id=int(id))
         if bill_query.count()>0:
             bill_obj=bill_query[0]
-            previous_bill_store=bill_obj.bill_description.store
-            previous_bill_type=bill_obj.bill_type
             if bill_obj.organization!=parent_organization:
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
                 messages.error(request,message=message)
                 return bill_show(request,bill_id=id)
-            # if hasattr(bill_obj,'bill_receiver2'):
-                # if bill_obj.bill_receiver2.approval_user!=None or bill_obj.bill_receiver2.is_approved: # it means approved
-                #     message="Bill Id {} is can not be deleted it is already approved".format(id)
-                #     messages.error(request,message=message)
-                #     return bill_show(request,bill_id=id)
-            bill_details=bill_obj.bill_detail_set.all()
-            for bill_detail in bill_details:
-                try: # should be reducred from the opposit here bill_rcvr
-                    if bill_obj.bill_type=='PURCHASE' or bill_obj.bill_type=='SELLING':
-                        bill_rcvr_org=bill_obj.bill_receiver2.bill_rcvr_org
-                        (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'DELETE',previous_bill_type,previous_bill_store)
-                except Exception as e:
-                    print("product_detail_bill_rcvr_org $ e",e) 
             bill_obj.delete()
             message="Bill Id {} is Successfully deleted".format(id)
             messages.success(request,message=message)
@@ -214,20 +198,16 @@ def bill_detail_delete(request,bill_detail_id=None):
         if bill_detail_query.count()>0:      
             bill_detail=bill_detail_query[0]
             bill=bill_detail.bill
-            previous_bill_store=bill.bill_description.store
             previous_bill_type=bill.bill_type
             if bill.organization!=parent_organization:
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
                 return Response({"Message":message,"is_success":False})
             if bill.bill_receiver2.approval_user!=None: # it means approved
-                return Rdyesponse({"Message":'it is approved',"is_success":False})
+                return Response({"Message":'it is approved',"is_success":False})
             if len(bill.bill_detail_set.all())==1:
                 bill_delete(request,int(bill.id))
                 message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
                 return Response({"Message":message,"is_success":False})
-
-            if bill.bill_type!='EXPENSE':
-                bill_rcvr_org=bill.bill_receiver2.bill_rcvr_org
             previous_item_amount=bill_detail.item_amount
             previous_return_qty=bill_detail.return_qty
             item_price=bill_detail.item_price
@@ -236,13 +216,10 @@ def bill_detail_delete(request,bill_detail_id=None):
             remaining=total-deleted_amount
             if previous_bill_type=="SELLING":
                 ok=handle_profit_loss(bill_detail,bill_detail.profit,operation='DECREASE')
-                            
             try:
                 bill_detail.delete()
                 bill.total=remaining
                 bill.save()
-                if bill.bill_type=='PURCHASE' or bill.bill_type=='SELLING':
-                    (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'DELETE',previous_bill_type,previous_bill_store)
                 message="Bill Detail Id {} is Successfully deleted and deleted amount {} and current total bill amount is {}".format(bill_detail_id,deleted_amount)
             except Exception as e:
                 message=str(e)
@@ -260,7 +237,7 @@ def bill_detail_delete(request,bill_detail_id=None):
     return Response({"Message":message,"is_success":is_success})
 
 @login_required(login_url='/admin')
-def Bill_form(request):
+def bill_form(request):
     template=loader.get_template('bill/bill_form.html')
     date = date2jalali(datetime.now())
     year=date.strftime('%Y')
@@ -313,11 +290,9 @@ def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
 
 @login_required(login_url='/admin')
 @api_view(['POST','PUT'])
-def Bill_insert(request):  
-    context={}    
-    print(".request.data ",request.data)
+@transaction.atomic
+def bill_insert(request):  
     ########################################## Bill input taking############################
-  
     bill_no=int(request.data.get("bill_no",None))  
     id=request.data.get("id")
     date=request.data.get("date")
@@ -332,18 +307,11 @@ def Bill_insert(request):
     bill_receiver2_store_query=Store.objects.filter(id=bill_receiver2_store)
     if store_query.count()>0:
         store=store_query[0] 
-        #print("store",store)
-        
     if bill_receiver2_store_query.count()>0:
         bill_receiver2_store=bill_receiver2_store_query[0]
-        #print("bill_receiver2_store",bill_receiver2_store)
-        
-    # print("bill_receiver2_store ",bill_receiver2_store)
-    # return Response({"message":"test","ok":False})
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
     (self_organization,parent_organization,_)=findOrganization(request)
-
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -363,8 +331,6 @@ def Bill_insert(request):
         bill_rcvr_org=Organization.objects.get(id=int(bill_rcvr_org))
     except Exception as e:
         return Response({"message":str(e),"ok":False,"data":None,"bill_id":None}) 
-    prev_bill_rcvr_org=bill_rcvr_org #initially we take it as then we change in update if previous bill rcvr_org is different from current
-
     is_approved=request.data.get("is_approved",False)
     if is_approved==1 or is_approved=="1" or is_approved=="on":
         is_approved=True
@@ -379,7 +345,6 @@ def Bill_insert(request):
         date_str=str(date2jalali(datetime.now()))
         date_str=handle_day_out_of_range(date_str)
         approval_date=datetime.strptime(date_str,'%Y-%m-%d')
-    # approval_user=request.data.get("approval_user")
     #print("1status ",status," approval_date=",approval_date," is_approved= ",is_approved)
     if bill_rcvr_org==parent_organization:
         if is_approved or int(status)==1:
@@ -397,16 +362,12 @@ def Bill_insert(request):
         approval_date=None
         approval_user=None
         is_approved=False
-    # return Response({"message":'test'+date,"ok":False})
     #########endof data prepration########
     if id!="" and id!='':
         ###############update#########################
         bill_query=Bill.objects.filter(id=int(id))
         bill_obj=bill_query[0] 
         print("update with id== something bill_query.count()==0 ",bill_query.count()==0) 
-        previous_bill_store=bill_obj.bill_description.store
-        previous_bill_type =bill_obj.bill_type
-        
         if bill_query.count()==0:
             ok=False
             message="The Bill with Id {} not exist ".format(id)
@@ -429,7 +390,7 @@ def Bill_insert(request):
         bill_obj.bill_type=bill_type
         bill_obj.profit=0
     else: ############### new insert Bill if not in system#############
-        opposit_bill=get_opposit_bill(bill_type)
+        # opposit_bill=get_opposit_bill(bill_type)
         # bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=year),Q(Q(bill_type=bill_type),Q(organization=organization)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=organization)))
         bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=int(year)),Q(organization=organization),Q(bill_type=bill_type),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org) )
         if bill_query.count()>0: # if we are not having update then we check if such bill present or not if exists we not enter
@@ -470,18 +431,15 @@ def Bill_insert(request):
         net_amount=float(item_amount[i])-float(return_qty[i]) 
         if bill_detail_id[i]=='':
             bill_detail=Bill_detail(bill=bill_obj,product=product_obj,unit=unit_obj,item_amount=item_amount[i],item_price=item_price[i],return_qty=return_qty[i])     
-            
             try:    
                 bill_detail.save()
                 if bill_obj.bill_type=='SELLING':
                     purchased_price=product_obj.product_detail.purchased_price
                     if purchased_price==None:
-                        purchased_price=0
+                        purchased_price=item_price[i]-10
                     profit=(float(item_price[i])-float(purchased_price))*net_amount
                     # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
                     ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                (bill_detail,detail_changed)=handle_price_stock_product(bill_detail,'INSERT',bill_type) 
-                
             except Exception as e:
                 ok=False
                 message=str(e)
@@ -490,8 +448,6 @@ def Bill_insert(request):
             if bill_detail_query.count()>0:       
                 bill_detail=bill_detail_query[0]
                 purchased_price=bill_detail.product.product_detail.purchased_price
-                selling_price=bill_detail.product.product_detail.selling_price
-                (_,detail_changed)=handle_price_stock_product(bill_detail,'DELETE',previous_bill_type,previous_bill_store) # in updation WE DELETE first previous increased or decreased amount then again insert new
                 bill_detail.bill=bill_obj
                 bill_detail.unit=unit_obj
                 if product_obj.id==bill_detail.product.id:
@@ -507,12 +463,8 @@ def Bill_insert(request):
                     if bill_type=='SELLING':
                         if purchased_price==None:
                             purchased_price=0
-                        # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
                         profit=(float(item_price[i])-float(purchased_price))*net_amount
-                    
                         ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                    
-                    (_,detail_changed)=handle_price_stock_product(bill_detail,'INSERT',bill_type,store)    
                 except Exception as e:
                     ok=False
                     message=str(e)
@@ -528,6 +480,8 @@ def Bill_insert(request):
     else:  
         messages.success(request,message)
     return Response({"message":message,"ok":ok,"data":model_to_dict(bill_obj),"bill_id":bill_obj.id})    
+
+# def search(request,bill_type,bill_no,bill_rcvr_org,store_id,start_date,end_date,page=None):
 @api_view(('POST',)) 
 def search(request,page=None):
     bill_type=request.data.get("bill_type",None)
@@ -620,6 +574,56 @@ def search(request,page=None):
     if profit_sum==None:
         profit_sum=0
     
+    ################################################opposit##############################
+    # total_sum_purchase_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='SELLING').aggregate(Sum("total"))['total__sum']
+    # payment_sum_purchase_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='SELLING').aggregate(Sum("payment"))['payment__sum']
+    
+
+    # total_sum_selling_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='PURCHASE').aggregate(Sum("total"))['total__sum']
+    # payment_sum_selling_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='PURCHASE').aggregate(Sum("payment"))['payment__sum']
+
+
+    # total_sum_payment_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='RECEIVEMENT').aggregate(Sum("total"))['total__sum']
+    # payment_sum_payment_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='RECEIVEMENT').aggregate(Sum("payment"))['payment__sum']
+
+    # total_sum_receivement_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='PAYMENT').aggregate(Sum("total"))['total__sum']
+    # receivement_sum_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
+    # bill_type='PAYMENT').aggregate(Sum("payment"))['payment__sum']
+    
+    # profit_sum_from_bill_of_bill_rcvr_org=query.filter(bill_type='PURCHASE',bill_receiver2__bill_rcvr_org=parent_organization).aggregate(Sum("profit"))['profit__sum']
+    
+    # if total_sum_purchase_from_bill_of_bill_rcvr_org!=None:
+    #     total_sum_purchase=total_sum_purchase+total_sum_purchase_from_bill_of_bill_rcvr_org
+    # if payment_sum_purchase_from_bill_of_bill_rcvr_org!=None:
+    #     payment_sum_purchase=payment_sum_purchase+payment_sum_purchase_from_bill_of_bill_rcvr_org
+    
+    # if total_sum_selling_from_bill_of_bill_rcvr_org!=None:
+    #     total_sum_selling=total_sum_selling+total_sum_selling_from_bill_of_bill_rcvr_org
+
+    # if payment_sum_selling_from_bill_of_bill_rcvr_org!=None:
+    #     payment_sum_selling=payment_sum_selling+payment_sum_selling_from_bill_of_bill_rcvr_org
+
+    # if total_sum_payment_from_bill_of_bill_rcvr_org!=None:  
+    #     total_sum_payment=total_sum_payment+total_sum_payment_from_bill_of_bill_rcvr_org
+
+    # if payment_sum_payment_from_bill_of_bill_rcvr_org!=None:
+    #     payment_sum_payment=payment_sum_payment+payment_sum_payment_from_bill_of_bill_rcvr_org
+
+    # if total_sum_receivement_from_bill_of_bill_rcvr_org!=None:
+    #     total_sum_receivement=total_sum_receivement+total_sum_receivement_from_bill_of_bill_rcvr_org
+    
+    # if receivement_sum_from_bill_of_bill_rcvr_org!=None:
+    #     receivement_sum=receivement_sum+receivement_sum_from_bill_of_bill_rcvr_org
+    
+    # if profit_sum_from_bill_of_bill_rcvr_org!=None:
+    #     profit_sum=profit_sum+profit_sum_from_bill_of_bill_rcvr_org
     print("profit_sum",profit_sum)
     #####################################summation of bill created by organization and by opposit organization#################
    

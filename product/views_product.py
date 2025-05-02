@@ -262,32 +262,31 @@ def create(request,id=None):
             stock.save()
     return Response({"message":message,"ok":ok,"id":product.id})
 
-@api_view(['GET','POST'])
-def show(request,organization_id="all"):
+@api_view(['POST'])
+def show(request):
     # print("method",request.method,"data",request.data)
+    item_name=request.data.get("item_name",None)
+    organization_id = request.data.get("organization_id", "all")
+    (self_organization,parent_organization,store)=findOrganization(request,None if organization_id=="all" else organization_id)      
     if organization_id=="all":
-        (self_organization,parent_organization,store)=findOrganization(request)      
-        query_set=Product.objects.all().order_by('-pk')
-        if request.method=='POST':
-            if 'item_name' in request.data:
-                query_set=query_set.filter(item_name__icontains=request.data['item_name'])
+        query_set=Product.objects.order_by('-pk')
     else:
-        (self_organization,parent_organization,store)=findOrganization(request,organization_id)      
         query_set=Product.objects.filter(product_detail__organization=parent_organization)
-
-    if 'store_id' in request.data:
-        context={'store_id':request.data['store_id']}
-    else:
-        context={'store_id':store.id}
-    if request.method=='POST':
-        if  int(request.data['is_paginate'])==1:
-            paginator=PageNumberPagination()
-            paginator.page_size=20
-            query_set=paginator.paginate_queryset(query_set.order_by('item_name'),request)
-            serializer=ProductSerializer(query_set,many=True,context=context)
-            return paginator.get_paginated_response({'ok':True,'serializer_data':serializer.data})
+    if item_name:
+        query_set=query_set.filter(item_name__icontains=item_name)
+    store_id=request.data.get('store_id') or (store.id if store else None)
+    context={'store_id':store_id}
+    is_paginate=int(request.data.get("is_paginate",0))
+    if  is_paginate==1:
+        paginator=PageNumberPagination()
+        paginator.page_size=20
+        query_set=paginator.paginate_queryset(query_set.order_by('item_name'),request)
+        serializer=ProductSerializer(query_set,many=True,context=context)
+        return paginator.get_paginated_response({'ok':True,'serializer_data':serializer.data})
     serializer=ProductSerializer(query_set.order_by('item_name'),context=context,many=True)
     return Response(serializer.data)
+
+
 
 
 @api_view(['GET'])
