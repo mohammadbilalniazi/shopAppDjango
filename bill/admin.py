@@ -5,7 +5,7 @@ from bill.models import Bill,Bill_detail
 class BillAdmin(admin.ModelAdmin):
     #list_display=("item_name","item_amount","item_price","date","return_qty")
     #list_display=get_model_fields(Bill)
-    list_display=("organization","bill_no")
+    list_display=("bill_no","total","date")
     
 @admin.register(Bill_detail)
 class Bill_detailAdmin(admin.ModelAdmin):

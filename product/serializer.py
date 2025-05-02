@@ -68,4 +68,3 @@ class StoreSerializer(serializers.ModelSerializer):
         fields="__all__"
 # SubService=("service","detail","html_id","is_active")
 # Service=("service_name","category","detail","html_id","service_incharger","is_active")
-#     

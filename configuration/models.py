@@ -13,29 +13,6 @@ class Currency(models.Model):
     def __str__(self):
         return self.currency
 
-class Languages(models.Model):
-    language=models.CharField(max_length=30,unique=True)
-    description=models.TextField()
-
-    class Meta:
-        verbose_name_plural =("Languages")
-
-    def __str__(self):
-        return self.language
-    
-
-class Language_Detail(models.Model):
-    id_field=models.CharField(max_length=40,null=True,blank=True)
-    src=models.CharField(max_length=15,null=True)
-    dest=models.ForeignKey(Languages,on_delete=models.DO_NOTHING,null=True) 
-    text=models.TextField(default=None)
-    value=models.TextField(null=True) 
-    class Meta:
-        unique_together=(("id_field","src","dest","value"))
-        verbose_name_plural =("Language Detail")
-
-
-
 class Country(models.Model):
     name=models.CharField(max_length=20,unique=True)
     shortcut=models.CharField(max_length=5,unique=True)
@@ -60,12 +37,12 @@ class Location(models.Model):
         return str(self.country)+'_'+self.state
 
 class Organization(models.Model):  
-    parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",related_name='organization_parent_sets',null=True,blank=True)
-    parent_new=models.ForeignKey("self",on_delete=models.CASCADE,related_name='organization_parent_sets2',null=True,blank=True)
+    # parent=models.ForeignKey("self",on_delete=models.CASCADE,to_field="name",related_name='organization_parent_sets',null=True,blank=True)
+    parent=models.ForeignKey("self",on_delete=models.CASCADE,null=True,blank=True)
     owner=models.OneToOneField(User,on_delete=models.CASCADE,unique=True)  
     name=models.CharField(max_length=20,unique=True)
-    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city',related_name='organization_location')
-    location_new=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,related_name='organization_location2')
+    # location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True,to_field='city',related_name='organization_location')
+    location=models.ForeignKey(Location,on_delete=models.CASCADE,null=True)
     # password=models.CharField(max_length=25)
     organization_type=models.CharField(max_length=25) 
     created_date=models.DateField()
@@ -82,11 +59,12 @@ class Role(models.Model):
     parent=models.ForeignKey("self",on_delete=models.CASCADE,blank=True,null=True)
     name=models.CharField(max_length=20,unique=True)
     created_by=models.OneToOneField(User,on_delete=models.CASCADE)
-    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,to_field="name")
+    # organization=models.ForeignKey(Organization,on_delete=models.CASCADE)
     order=models.IntegerField()
     created_date=models.DateField()
     is_active=models.BooleanField(default=True)
     class Meta:
-        unique_together=(("name","parent","organization"),)
+        # unique_together=(("name","parent","organization"),)
+        unique_together=(("name","parent"),)
 
 
