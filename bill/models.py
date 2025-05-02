@@ -19,16 +19,18 @@ class Bill(models.Model):
     bill_no=models.IntegerField(default=None)
     bill_type=models.CharField(max_length=11,default="PURCHASE")  
     # organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,to_field="name",related_name='bill_organization_set1',default=None)
-    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,null=True,blank=True)
+    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,related_name='bill_organization_set',null=True,blank=True)
+  
     # creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.DO_NOTHING,null=True,blank=True,to_field="username",related_name='bill_location_set1')
-    creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.DO_NOTHING,null=True,blank=True)
+    creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.DO_NOTHING,null=True,blank=True,related_name='bill_location_set')
+  
     total=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     payment=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     # year=models.SmallIntegerField(default=1401)   
     year=models.SmallIntegerField(default=get_current_shamsi_date)
     # date=models.DateField(null=True)
     date=models.CharField(max_length=10,default=current_shamsi_date)  
-    profit=models.DecimalField(default=0.0,max_digits=10,decimal_places=5)
+    profit=models.IntegerField(default=0)
  
 class Bill_Receiver2(models.Model):
     bill=models.OneToOneField(Bill,on_delete=models.CASCADE,unique=True)
@@ -41,11 +43,11 @@ class Bill_Receiver2(models.Model):
 class Bill_Description(models.Model):
     bill=models.OneToOneField(Bill,on_delete=models.CASCADE)
     # store=models.ForeignKey(Store,on_delete=models.DO_NOTHING,null=True,blank=True,to_field="name",related_name='bill_description_set1')
-    store=models.ForeignKey(Store,on_delete=models.DO_NOTHING,null=True,blank=True)
+    store=models.ForeignKey(Store,on_delete=models.DO_NOTHING,null=True,blank=True,related_name='bill_description_set')
     status=models.SmallIntegerField(choices=STATUS,default=0) # 0 created 1 approved 2 reversed  3  rejected
     currency=models.CharField(max_length=7,default="afn")
     # shipment_location=models.ForeignKey(Location,on_delete=models.DO_NOTHING,null=True,to_field='city',related_name='bill_city_set1',default=None)
-    shipment_location=models.ForeignKey(Location,on_delete=models.DO_NOTHING,null=True,default=None)
+    shipment_location_new=models.ForeignKey(Location,on_delete=models.DO_NOTHING,null=True,related_name='bill_city_set',default=None)
    
     # def __str__(self):
     #     return f"{self.bill}"
