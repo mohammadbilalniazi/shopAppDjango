@@ -102,17 +102,17 @@
                         {% csrf_token %}       
                 <table>
                 <tr class="bill_creator">
-                     <td>
+                    <td>
                         Bill Creator Organization
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                <select type="text"  name="organization"  id="organization">     
+                                <select type="text"  name="organization" onchange="show_store('organization'); return;"  id="organization">     
                                     {% for row in organizations %}
                                     <option value="{{row.id}}" {% if row == bill.organization or row == organization %} selected {% endif %}>{{row}} </option>
                                     {% endfor %}
                                 </select>
-                            </span>  
+                        </span>  
                     </td> 
                 </tr> 
                 <tr class="bill_creator">
@@ -322,9 +322,7 @@
                                                         <td><div><input type="number"  value="{{detail.item_price}}" name="item_price" step="any" class="item_price"></div></td>
                                                         <td><div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty"></div></td>
                                                         <td><div><input disabled type="number"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id" ></div></td>
-                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="deleteRow(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
-                                                        
-                                                    
+                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="deleteRow(this,{{detail.id}})" style="background-color:red;color:black;"></td>
                                                         </tr>
                                                     {% endfor %}
                                                     {% endif %}

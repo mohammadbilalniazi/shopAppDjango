@@ -80,7 +80,7 @@ urlpatterns = [
     path('products/product/add/',views_product.form,name='product_form'),
     path('products/product/add/<id>',views_product.form,name='product_form'),
     path('product/product_form/create/',views_product.create,name='product_form_create'),
-    path('product/product_form/create/<id>',views_product.create,name='product_form_create'),
+    
     path('products/select_service/<html_id>/<dest>/',views_product.select_service,name='select_service'),
 
     path('units/<id>/',views_unit.show,name='unit_show'), 

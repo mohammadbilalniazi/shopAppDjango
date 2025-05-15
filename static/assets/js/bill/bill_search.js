@@ -150,7 +150,7 @@ async function search_bills(url=null)
     // url=`/bill/search/${bill_type}/${parseInt(bill_no)}/${opposit_shirkat}/${store}/${start_date}/${end_date}`;  
     url=`/bill/search/`;  
     }
-    const data={bill_type:bill_type,bill_no:bill_no,opposit_shirkat:opposit_shirkat,store:store,start_date:start_date,end_date:end_date}
+    const data={bill_type:bill_type,bill_no:bill_no,opposit_shirkat:opposit_shirkat,store_id:store,start_date:start_date,end_date:end_date}
     let response=await call_shirkat(url,"POST",data);
     console.log("search resutls",response.data)
     make_table(response.data);

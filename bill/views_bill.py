@@ -300,15 +300,6 @@ def bill_insert(request):
     print("type of year")
     status=int(request.data.get("status",0))
     ############before request.data  and request.data.getlist
-    store=int(request.data.get("store",0))
-    store_query=Store.objects.filter(id=store)
-    
-    bill_receiver2_store=int(request.data.get("bill_receiver2_store",0))
-    bill_receiver2_store_query=Store.objects.filter(id=bill_receiver2_store)
-    if store_query.count()>0:
-        store=store_query[0] 
-    if bill_receiver2_store_query.count()>0:
-        bill_receiver2_store=bill_receiver2_store_query[0]
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
     (self_organization,parent_organization,_)=findOrganization(request)
@@ -331,6 +322,17 @@ def bill_insert(request):
         bill_rcvr_org=Organization.objects.get(id=int(bill_rcvr_org))
     except Exception as e:
         return Response({"message":str(e),"ok":False,"data":None,"bill_id":None}) 
+    store=int(request.data.get("store",0))
+    store_query=Store.objects.filter(id=store)
+    if store_query.count()>0:
+        store=store_query[0] 
+
+    bill_receiver2_store=int(request.data.get("bill_receiver2_store",0))
+    bill_receiver2_store_query=Store.objects.filter(id=bill_receiver2_store)
+    if bill_receiver2_store_query.count()>0:
+        bill_receiver2_store=bill_receiver2_store_query[0]
+    if (store.organization!=organization and store.organization.parent!=organization) or (bill_receiver2_store.organization!=bill_rcvr_org and bill_receiver2_store.organization.parent!=bill_rcvr_org):
+        return Response({"message":"Stores are not the same","ok":False,"data":None,"bill_id":None}) 
     is_approved=request.data.get("is_approved",False)
     if is_approved==1 or is_approved=="1" or is_approved=="on":
         is_approved=True
@@ -494,7 +496,8 @@ def search(request,page=None):
     start_date=re.sub('\t','',str(start_date))
     end_date=re.sub('\t','',str(end_date))
     
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=findOrganization(request,store_id)
+    
     query=Bill.objects.filter(Q(date__range=[start_date,end_date]),Q(organization=parent_organization)|Q(bill_receiver2__bill_rcvr_org=parent_organization))
     print("1 query coutn ",query.count())
     if int(bill_no)!=0:
@@ -664,7 +667,6 @@ def search(request,page=None):
                     "net_profit_sum":net_profit_sum
                     # "current_profit":current_profit,
                     })      
-    print("#####################################",query)
     # query=query.order_by("-pk").values()
     
     serializer_context={"message":"OK","ok":True,"statistics":statistics,"serializer_data":serializer.data}

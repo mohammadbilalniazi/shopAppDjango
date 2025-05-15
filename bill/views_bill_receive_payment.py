@@ -26,7 +26,6 @@ from .views_bill import get_opposit_bill
 def bill_form(request):
     template=loader.get_template('bill/bill_form_receive_payment.html')
     date = date2jalali(datetime.now())
-    year=date.strftime('%Y')
     (self_organization,parent_organization,store)=findOrganization(request)
     # print('self_organization ',self_organization,' parent_organization ',parent_organization)
     # print('Store.objects.filter(organization=parent_organization) ',Store.objects.filter(organization=parent_organization))

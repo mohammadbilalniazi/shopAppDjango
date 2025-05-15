@@ -83,41 +83,6 @@ def handle_price_stock_product(bill_detail,operation='INSERT',bill_type='PURCHAS
     # print(" price_changed,detail_changed ",price_changed,detail_changed)
     return (bill_detail,detail_changed)  
 
-
-# def get_product_bill_rcvr_org(product,bill_rcvr_org):
-#     product_detail_data=model_to_dict(product.product_detail)
-#     try:
-#         del product_detail_data['id']
-#     except Exception as e:
-#         print("del product_detail_data['id'] ",e)
-#     product_detail_data['organization']=bill_rcvr_org
-#     try:
-#         product_detail_query=Product_Detail.objects.filter(product=product,organization=bill_rcvr_org)
-#         if product_detail_query.count()>0:
-#             print("Product_Detail>0")
-#             product_detail_of_bill_rcvr_org=product_detail_query[0]
-#         else:
-#             product_detail_of_bill_rcvr_org=Product_Detail()
-#             product_detail_of_bill_rcvr_org.organization=bill_rcvr_org
-#             product_detail_of_bill_rcvr_org.product=product
-#             product_detail_of_bill_rcvr_org.minimum_requirement=1
-#             product_detail_of_bill_rcvr_org.selling_price=product_detail_data['selling_price']
-#             product_detail_of_bill_rcvr_org.purchased_price=product_detail_data['purchased_price']
-#             stock_query=Stock.objects.filter(store=product_detail_of_bill_rcvr_org.store,product=product)
-#             if stock_query.count()>0:
-#                 current_amount=stock_query[0].current_amount
-#                 stock=stock_query[0]
-#             else:
-#                 current_amount=0
-#                 stock=Stock(store=store,product=product)
-#                 stock.current_amount=current_amount
-#             stock.save()
-#         product_detail_of_bill_rcvr_org.save()
-#         print("product_detail.saved()")
-#     except Exception as e:
-#         print('product_price product_detail exception ',e)
-#     return product_detail_of_bill_rcvr_org
-        
 def show_html(request,id=None):
     context={}
     (self_organization,parent_organization,store)=findOrganization(request)
@@ -131,11 +96,9 @@ def show_html(request,id=None):
     (self_organization,parent_organization,store)=findOrganization(request)
     org_store_query=Store.objects.filter(Q(organization=parent_organization)|Q(organization__parent=parent_organization))
     context['stores']=org_store_query
-
     context['products']=query.order_by("-pk")
     context['organizations']=Organization.objects.all()
     context['products_length']=query.count()
-    # context['']
     return render(request,'products/products.html',context)
 
 @login_required(login_url='/admin')
@@ -148,22 +111,28 @@ def form(request,id=None):
         context['product']=product
         context['id']=int(id)
         stock_query=stock_query.filter(product=product)
+        current_amount=0
         if stock_query.count()>0:
             stock=stock_query[0]
+            current_amount=stock.current_amount
         else:
-            stock=Stock(product=product,store=store,current_amount=0)
-            stock.save()
-        current_amount=stock.current_amount
+            if store:
+                stock=Stock(product=product,store=store,current_amount=0)
+                stock.save()
         context['current_amount']=current_amount
     template=loader.get_template('products/product_form.html')
     context['self_organization']=self_organization
     context['parent_organization']=parent_organization
+    if request.user.is_superuser:
+        context['organizations']=Organization.objects.all() 
+    else:
+        context['organizations']=Organization.objects.filter(id=parent_organization.id)
     context['categories']=Category.objects.all()
     return HttpResponse(template.render(context,request))
 
 @login_required(login_url='/admin')
 @api_view(('PUT','POST'))
-def create(request,id=None):
+def create(request):
     data=request.data
     print("EEE")
     product=dict()
@@ -267,6 +236,7 @@ def show(request):
     # print("method",request.method,"data",request.data)
     item_name=request.data.get("item_name",None)
     organization_id = request.data.get("organization_id", "all")
+    print("organization_id ",organization_id)
     (self_organization,parent_organization,store)=findOrganization(request,None if organization_id=="all" else organization_id)      
     if organization_id=="all":
         query_set=Product.objects.order_by('-pk')

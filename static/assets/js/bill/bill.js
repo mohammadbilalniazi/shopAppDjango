@@ -13,7 +13,6 @@ async function get_units() {
     let unit_data = localStorage.getItem("unit_data");
 
     if (!unit_data) {
-        console.log("Fetching unit data...");
         let response = await call_shirkat(unit_url, 'GET');
         unit_data = response.data;
         localStorage.setItem("unit_data", JSON.stringify(unit_data));
@@ -26,14 +25,21 @@ async function get_units() {
  * Fetches products and updates local storage.
  */
 async function get_products(organization = "all", change_price = true) {
-    const url = `/products/${organization}/`;
+    
     let storedProductData = localStorage.getItem("product_data");
 
     if (storedProductData) {
         product_data = JSON.parse(storedProductData);
     } else {
-        console.log("Fetching product data...");
-        let response = await call_shirkat(url, 'GET');
+        // console.log("Fetching product data...");
+        let data={"organization":organization}
+        if(organization=="all"){
+             response=await call_shirkat("/products/",'POST');
+        }
+        else{
+            response = await call_shirkat('/products/', 'POST',data);
+        }
+        // console.log("response ",response);
         product_data = response.data;
         localStorage.setItem("product_data", JSON.stringify(product_data));
     }
@@ -52,7 +58,9 @@ async function get_products(organization = "all", change_price = true) {
     localStorage.setItem("selling_price_obj",JSON.stringify(selling_price_obj));
     localStorage.setItem("purchasing_price_obj",JSON.stringify(purchasing_price_obj));
     localStorage.setItem("product_data", JSON.stringify(product_data));
-    add_events_to_elements(change_price);
+    if(organization!=""){// if organizaiton=="all" it only needs the products
+        add_events_to_elements(change_price);
+    }
 }
 
 /**
@@ -77,7 +85,7 @@ function change_price_field(item_db_id, index, bill_type_field) {
  * Adds event listeners to dynamically created elements.
  */
 function add_events_to_elements(change_price = true) {
-    console.log("Adding events to elements...");
+    // console.log("Adding events to elements...");
     
     try {
         let item_amount = document.getElementsByClassName("item_amount");
@@ -159,6 +167,7 @@ async function adding_row() {
     for (const key in productData) {
         if (Object.hasOwn(productData, key)) {
             const product = productData[key];
+            
             const option = createElement("option", {
                 value: product.id,
                 innerText: `${product.item_name} ${product.product_detail.purchased_price}`

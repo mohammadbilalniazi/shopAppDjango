@@ -193,14 +193,7 @@ DATABASES = {
         'USER':'root',
         'PASSWORD':'',
     }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     # 'NAME': BASE_DIR / 'shop.sqlite3',
-    #     'NAME':'test',
-    #     'HOST':'localhost',
-    #     'USER':'root',
-    #     'PASSWORD':'',
-    # }
+  
 } 
 
 # DATABASES = {

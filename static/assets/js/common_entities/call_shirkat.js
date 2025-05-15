@@ -1,34 +1,25 @@
-async function call_shirkat(url,method,data,headers=null)
-{
-    // console.log(" headers == null",headers==null)
-    // let headers=headers;
-    if(headers==null){
-    // console.log(" headers ",headers)
-     headers={"Accept": "application/json","Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
+async function call_shirkat(url, method, data = {}, headers = null) {
+    if (headers === null) {
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken')
+        };
     }
-    let response='';
-    // console.log("headers ",headers);
-    if(method=='POST')
-    {   
-        response= await axios(
-        {
-        url:url,
-        method:method,
-        data:data,
-        headers:headers
-        }
-        );
+    const config = {
+        url,
+        method: method.toUpperCase(),
+        headers
+    };
+    if (method.toUpperCase() === 'POST') {
+        config.data = data;
     }
-    else
-    {
-        response= await axios(
-        {
-        url:url,
-        method:method,
-        headers:{"Accept": "application/json","Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
-        }
-        );  
+    try {
+        const response = await axios(config);
+        console.log("data", data, "method", method, "++++response", response, 'response.data', response.data);
+        return response;
+    } catch (error) {
+        console.error("Axios error:", error);
+        throw error;
     }
-    console.log("data ",data," method ",method,"++++response ",response,' response.data ',response.data)
-    return response;
 }

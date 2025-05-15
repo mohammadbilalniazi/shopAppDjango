@@ -1,28 +1,7 @@
 <html lang="en-us" dir="ltr"><head>
 <title>Add Product </title>
 <link rel="stylesheet" href="/static/admin/css/base.css">
-
-  <!-- <link rel="stylesheet" href="/static/admin/css/dark_mode.css"> -->
-
-
   <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
-  <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
-
-<!-- <link rel="stylesheet" href="/static/admin/css/forms.css"> -->
-
-
-<!-- <script src="/admin/jsi18n/"></script> -->
-<!-- <script src="/static/admin/js/vendor/jquery/jquery.js"></script> -->
-<!-- <script src="/static/admin/js/calendar.js"></script> -->
-<!-- <script src="/static/admin/js/jquery.init.js"></script> -->
-<!-- <script src="/static/admin/js/admin/DateTimeShortcuts.js"></script> -->
-<!-- <script src="/static/admin/js/core.js"></script> -->
-<!-- <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script> -->
-<!-- <script src="/static/admin/js/actions.js"></script> -->
-<!-- <script src="/static/admin/js/urlify.js"></script>
-<script src="/static/admin/js/prepopulate.js"></script>
-<script src="/static/admin/js/vendor/xregexp/xregexp.js"></script> -->
-
   <script src="/static/assets/js/toastr.min.js"></script>
   <script src="/static/assets/js/axios.min.js"></script>
   <script src="/static/assets/js/cookie.js"></script>
@@ -58,47 +37,23 @@
 
 <!-- Container -->
 <div id="container">
-
-
-    
     <!-- Header -->
-    
     <div id="header">
         <div id="branding">
-        
 <h1 id="site-name"><a href="/admin/"></a><a href="/admin"><h1 style="color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px">Shirkat</h1></a></h1>
-
         </div>
-        
-        
         <div id="user-tools">
-            
                 Welcome,
                  <strong>{{user}}</strong>            
-        
-                
                     <a href="/">View site</a> /
-                
-                
-                    
-                    
-                
-                
                 <a href="/admin/password_change/">Change password</a> /
-                
                 <form id="logout-form" method="post" action="/admin/logout/">
                     <input type="hidden" name="csrfmiddlewaretoken" value="8LP5v6xU4Ej19AeHnMIgx5oG3jZcHtckqlxNAjjB365TVjgKCgOTE84m3awem81F">
                     <button type="submit">Log out</button>
                 </form>
-            
         </div>
-        
-        
-        
     </div>
-    
     <!-- END Header -->
-    
 <div class="breadcrumbs">
 <a href="/admin/">Home</a>
 › <a href="/product/product/">Products</a>
@@ -108,41 +63,27 @@
                 Add product
   </a>
 </div>
-
-    
-
     <div class="main shifted" id="main">
-      
-        
-          
 <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
 <nav class="sticky" id="nav-sidebar">
      <div class="app-purchase module">
-        
        <table style="margin-top:20%">
              <thead>    
             <tr ><div id='pagination_id'></div></tr>
             </thead> 
         <tbody id='product_body'>
-            
         </tbody>
        </table>
     </div>
-  
 </nav> 
       <div class="content">
         <div id="content" class="colM">
-          
           <!-- <h1>Add Product</h1> -->
-          
           <div id="content-main">
-  
     <div>
   <fieldset class="module aligned ">
-       
 <table>
-     <form method="post" id="product_form" action='{{request.META.HTTP_NAME}}/product/product_form/create/{{id}}' enctype="multipart/form-data"  >                  
-  
+     <form method="post" id="product_form" action='{{request.META.HTTP_NAME}}/product/product_form/create/' enctype="multipart/form-data"  >                  
     {% csrf_token %}  
     <tr>
         <div>
@@ -150,7 +91,6 @@
                 {% for message in messages %}
                     {% if message.tags == "error" %}
                         <div class='alert alert-danger' style="background-color:red">
-                    
                     {% else %}
                     <div class='alert alert-success' dir="ltr"  style="background-color:green">
                     {%endif%}
@@ -181,7 +121,11 @@
     </tr>
     <tr><td>organization</td>
         <td colspan="2">
-        <input type="text" id="organization" class="inputs" disabled name="organization" value="{{self_organization}}"  maxlength="20" required=""  id="name"></td></tr>
+            <select type="text" name="organization" id="organization">     
+                {% for row in organizations %}
+                <option value="{{row.id}}" {% if row == product.organization  %} selected {% endif %}>{{row.name}} </option>
+                {% endfor %}
+            </select>
     <tr><td>Product Image</td><td colspan="2"><input type="file"  name="img" id="img" ></td></tr>
     <!-- <tr><td>Description</td><td><textarea  name="description" id="description" value="{{product.product_detail.description}}"  required=""></textarea></td></tr> -->
     <tr><td>Model</td><td colspan="2"><input type="text" class="inputs"  name="model" id="model" value="{{product.model}}"  required=""></td></tr>
@@ -193,24 +137,8 @@
 </table>
 </fieldset>
 </div>
-
-
-
-    <!-- <script id="django-admin-form-add-constants" src="/static/admin/js/change_form.js" data-model-name="organization" async="">
-    </script>
-
-
-
-
-<script id="django-admin-prepopulated-fields-constants" src="/static/admin/js/prepopulate_init.js" data-prepopulated-fields="[]">
-</script> -->
-
-
 </div>
-
 </div>
-
-          
           <br class="clear">
         </div>
         <!-- END Content -->
@@ -219,19 +147,14 @@
     </div>
 </div>
 <!-- END Container -->
-
-
 <div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;"><div><a href="#" class="calendarnav-previous">&lt;</a><a href="#" class="calendarnav-next">&gt;</a></div><div id="calendarin0" class="calendar"><table><caption>March 2023</caption><tbody><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr><tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr><tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr><tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class=""><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="today"><a href="#">31</a></td><td class="nonday"> </td></tr></tbody></table></div><div class="calendar-shortcuts"><a href="#">Yesterday</a>&nbsp;|&nbsp;<a href="#">Today</a>&nbsp;|&nbsp;<a href="#">Tomorrow</a></div><p class="calendar-cancel"><a href="#">Cancel</a></p></div></body></html>
-
   <script src="/static/assets/js/show_message.js"></script>
   <script src="/static/assets/js/common_entities/call_shirkat.js"></script> 
  <!-- <script src="/static/assets/js/configuration/organization.js"></script>   -->
-
 <script>
  async function get_products()
  {
-    url='/products/'+"all"+"/";
-    let response=await call_shirkat(url,'GET');
+    let response=await call_shirkat("/products/",'POST');
     localStorage.setItem("product_data",JSON.stringify(response.data));
     let product_data=JSON.parse(localStorage.getItem("product_data"));
     let selling_price_obj={};   
@@ -249,6 +172,7 @@
     }
     localStorage.setItem("selling_price_obj",JSON.stringify(selling_price_obj));
     localStorage.setItem("purchasing_price_obj",JSON.stringify(purchasing_price_obj));
+    localStorage.setItem("product_data", JSON.stringify(product_data));
  }
  get_products();
 var product_form=document.getElementById('product_form');
@@ -275,7 +199,6 @@ product_form.addEventListener("submit",async function(e){
     // prev_selling_price=document.getElementById("prev_selling_price");
     // const product = new FormData();
     const formData=new FormData();
-    
     formData.append("id",id.value);
     formData.append("item_name",item_name.value);
     formData.append("category",category.value);
@@ -304,7 +227,6 @@ product_form.addEventListener("submit",async function(e){
         {
             show_message(response.data.message,"error");   
             alert(response.data.message);
-         
         }
     }
     else{

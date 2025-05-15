@@ -50,7 +50,6 @@ async function search_product(url=null)
         return;
     }
     for(key in data['serializer_data']){     
-        var organization="";
         if(data['serializer_data'][key]['product_detail']!=undefined && data['serializer_data'][key]['product_detail']!=null )
         {
         organization=data['serializer_data'][key]['product_detail']['organization'];
