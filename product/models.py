@@ -5,8 +5,6 @@ from django.core.exceptions import ValidationError
 from django.utils.html import mark_safe
 from django.conf import settings
 
-
-
 # Create your models here.
 
 class Store(models.Model):

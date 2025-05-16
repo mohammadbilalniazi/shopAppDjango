@@ -163,46 +163,71 @@ async function adding_row() {
     });
 
     const productData = JSON.parse(localStorage.getItem("product_data")) || {};
+    const originalOptions = [];
 
     for (const key in productData) {
         if (Object.hasOwn(productData, key)) {
             const product = productData[key];
-            
+            const text = `${product.item_name} ${product.product_detail.purchased_price}`;
             const option = createElement("option", {
                 value: product.id,
-                innerText: `${product.item_name} ${product.product_detail.purchased_price}`
+                innerText: text
             });
+            originalOptions.push({ element: option, text: text.toLowerCase() });
             selectItemName.appendChild(option);
         }
     }
+
+    // Create search input for filtering options
+    const searchInput = createElement("input", {
+        type: "text",
+        placeholder: "Search item...",
+        className: "item_search_input",
+        onkeyup: (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            originalOptions.forEach(({ element, text }) => {
+                element.hidden = !text.includes(searchTerm);
+            });
+        }
+    });
+    
+
+    // Wrap search and select in a container
+    const itemContainer = createElement("div", {}, [searchInput, selectItemName]);
+    row.appendChild(createElement("td", {}, [itemContainer]));
+
+    // Create unit select
     const selectUnit = createElement("select", {
         className: "unit",
         name: "unit",
         required: true
-      });
-    
-      const unitDataStr = localStorage.getItem("unit_data");
-      const unitData = JSON.parse(unitDataStr);
-      for (const key in unitData) {
+    });
+
+    const unitDataStr = localStorage.getItem("unit_data");
+    const unitData = JSON.parse(unitDataStr);
+    for (const key in unitData) {
         if (Object.hasOwn(unitData, key)) {
-          const unit = unitData[key];
-          const option = createElement("option", {
-            value: unit.id,
-            innerText: unit.name
-          });
-          selectUnit.appendChild(option);
+            const unit = unitData[key];
+            const option = createElement("option", {
+                value: unit.id,
+                innerText: unit.name
+            });
+            selectUnit.appendChild(option);
         }
-      }
-    
-    
-    row.appendChild(createElement("td", {}, [selectItemName]));
-    
+    }
+
     row.appendChild(createElement("td", {}, [selectUnit]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "item_amount", required: true })]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "item_price", min: "0", step: ".001", required: true })]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "return_qty", value: 0, required: true })]));
     row.appendChild(createElement("td", {}, [createElement("input", { type: "hidden", className: "bill_detail_id", required: true })]));
-    row.appendChild(createElement("td", {}, [createElement("input", { type: "button", value: "remove", className: "remove_btn", style: "background-color:red;color:black;", onclick: () => deleteRow(row, 0) })]));
+    row.appendChild(createElement("td", {}, [createElement("input", {
+        type: "button",
+        value: "remove",
+        className: "remove_btn",
+        style: "background-color:red;color:black;",
+        onclick: () => deleteRow(row, 0)
+    })]));
 
     setTimeout(() => {
         if (jQuery.fn.select2) {
@@ -212,6 +237,7 @@ async function adding_row() {
 
     add_events_to_elements();
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   init();
 });
