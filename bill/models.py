@@ -6,6 +6,8 @@ from common.date import current_shamsi_date
 from django.db.models.signals import post_delete,pre_save,post_save
 from django.dispatch import receiver
 from product.models import Stock,Product_Detail
+from django.db.models import F, Sum, DecimalField, ExpressionWrapper
+
 
 STATUS=((0,"CANCELLED"),(1,"CREATED"))
 BILL_TYPES=(("purchase","purchase"),("sell","sell"),("expense","expense"),("payment","payment"))
@@ -57,6 +59,18 @@ class Bill_detail(models.Model):
         # unique_together =("bill","product",)
         verbose_name_plural = "Bill detail" 
 
+   
+
+
+def calculate_bill_total(bill):
+    total = Bill_detail.objects.filter(bill=bill).annotate(
+        line_total=ExpressionWrapper(
+            F('item_price') * F('item_amount'),
+            output_field=DecimalField()
+        )
+    ).aggregate(sum_total=Sum('line_total'))['sum_total'] or 0
+    bill.total = total
+    bill.save()
 
 
 @receiver(post_delete, sender=Bill_detail)
@@ -79,6 +93,7 @@ def update_stock_on_delete(sender, instance, **kwargs):
         elif bill_type == "PURCHASE":
             stock.current_amount -= instance.item_amount
         stock.save()
+    calculate_bill_total(instance.bill)
 
 from decimal import Decimal  # ✅ Import Decimal
 
@@ -139,7 +154,8 @@ def update_prices_profit(sender,instance,**kwargs):
     total_profit=Bill_detail.objects.filter(bill=bill).aggregate(total=models.Sum("profit"))["total"] or 0
     bill.profit=total_profit
     bill.save()
-   
+    calculate_bill_total(instance.bill)
+
 
 
 
