@@ -11,10 +11,10 @@ class CurrenciesAdmin(admin.ModelAdmin):
 #     list_filter=("src","dest","id_field")
 
 
-# @admin.register(Organization)
-# class OrganizationAdmin(admin.ModelAdmin):
-# list_display=("owner","name","created_date")
-# readonly_fields=("owner","name",)
+@admin.register(Organization)
+class OrganizationAdmin(admin.ModelAdmin):
+    list_display=("owner","name","organization_type")
+    readonly_fields=("owner","name","organization_type",)
 
 # @admin.register(Sub_Organization)
 # class Sub_OrganizationAdmin(admin.ModelAdmin):

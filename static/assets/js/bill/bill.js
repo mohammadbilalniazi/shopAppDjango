@@ -155,56 +155,37 @@ async function adding_row() {
     const row = createElement("tr");
     tableBody.appendChild(row);
 
+    // Item name <select>
+    const selectItemId = `item_name_select_${Date.now()}`;
     const selectItemName = createElement("select", {
-        id: `item_name_select_${Date.now()}`,
+        id: selectItemId,
         className: "item_name",
         name: "item_name",
-        required: true
+        required: true,
     });
 
     const productData = JSON.parse(localStorage.getItem("product_data")) || {};
-    const originalOptions = [];
-
     for (const key in productData) {
         if (Object.hasOwn(productData, key)) {
             const product = productData[key];
-            const text = `${product.item_name} ${product.product_detail.purchased_price}`;
             const option = createElement("option", {
                 value: product.id,
-                innerText: text
+                innerText: `${product.item_name} ${product.product_detail.purchased_price}`
             });
-            originalOptions.push({ element: option, text: text.toLowerCase() });
             selectItemName.appendChild(option);
         }
     }
 
-    // Create search input for filtering options
-    const searchInput = createElement("input", {
-        type: "text",
-        placeholder: "Search item...",
-        className: "item_search_input",
-        onkeyup: (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            originalOptions.forEach(({ element, text }) => {
-                element.hidden = !text.includes(searchTerm);
-            });
-        }
-    });
-    
+    row.appendChild(createElement("td", {}, [selectItemName]));
 
-    // Wrap search and select in a container
-    const itemContainer = createElement("div", {}, [searchInput, selectItemName]);
-    row.appendChild(createElement("td", {}, [itemContainer]));
-
-    // Create unit select
+    // Unit select
     const selectUnit = createElement("select", {
         className: "unit",
         name: "unit",
         required: true
     });
 
-    const unitDataStr = localStorage.getItem("unit_data");
-    const unitData = JSON.parse(unitDataStr);
+    const unitData = JSON.parse(localStorage.getItem("unit_data")) || {};
     for (const key in unitData) {
         if (Object.hasOwn(unitData, key)) {
             const unit = unitData[key];
@@ -229,14 +210,20 @@ async function adding_row() {
         onclick: () => deleteRow(row, 0)
     })]));
 
+    // Initialize Select2
     setTimeout(() => {
         if (jQuery.fn.select2) {
-            $(`#${selectItemName.id}`).select2({ placeholder: "Select an item", allowClear: true, width: "100%" });
+            $(`#${selectItemId}`).select2({
+                placeholder: "Select an item",
+                allowClear: true,
+                width: "resolve"
+            });
         }
     }, 100);
 
     add_events_to_elements();
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   init();
