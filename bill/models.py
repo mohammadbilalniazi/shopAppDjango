@@ -39,10 +39,10 @@ class Bill(models.Model):
 
 
 class Bill_Receiver2(models.Model):
-    bill=models.OneToOneField(Bill,on_delete=models.CASCADE,unique=True)
+    bill=models.OneToOneField(Bill,on_delete=models.CASCADE)
     bill_rcvr_org=models.ForeignKey(Organization,on_delete=models.PROTECT,null=True,blank=True)
     is_approved=models.BooleanField(default=False,null=True,blank=True)
-    approval_date=models.DateField(default=None,null=True,blank=True)
+    approval_date=models.DateField(null=True,blank=True)
     approval_user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,default=None)
     store=models.ForeignKey(Store,on_delete=models.PROTECT,null=True,blank=True)
 

@@ -19,7 +19,7 @@ from product.models import Stock
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
 from common.file_handle import delete_file
-from common.organization import findOrganization
+from common.organization import find_organization
 import random
 
 @login_required
@@ -28,7 +28,7 @@ def rcvr_org_show(request,id="all"):
     # print("vendors_show id=",id)
     # if request.type=="DELETE":
     if id=="all":
-        (self_organization,parent_organization,store)=findOrganization(request)
+        (self_organization,parent_organization,store)=find_organization(request)
         if parent_organization!=None and self_organization!=None:
             query_set=Organization.objects.all().exclude(id=parent_organization.id).exclude(parent=self_organization).order_by('-pk')
         elif self_organization!=None:
@@ -84,7 +84,7 @@ def form(request,id=None):
         context['id']=int(id)
     template=loader.get_template('configurations/organization_form.html')
     
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     print("self_organization ",self_organization," parent_organization ",parent_organization)
     context['self_organization']=self_organization
     context['parent_organization']=parent_organization

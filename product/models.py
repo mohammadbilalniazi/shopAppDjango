@@ -64,7 +64,6 @@ class Category(models.Model):
     name = models.CharField(max_length=30,null=False, blank=False,unique=True)
     description=models.TextField(max_length=100,null=True,blank=True)
     img=models.ImageField(upload_to = Category_directory_path,null=True,blank=True)
-    # img=models.ImageField(upload_to = Category_directory_path,null=True,blank=True,validators=[validate_image])
     is_active=models.BooleanField(default=True)
     
     def save(self):
@@ -130,17 +129,6 @@ class Product(models.Model):
     def __str__(self):
         return self.item_name
 
-    # def image_tag(self):
-    #     # return mark_safe('<img src="/media/%s" width="150" height="150" />' % (self.img))
-    #     if hasattr(self.img,"url"):  
-    #         print('yes hasattr(self.img,"url")')
-    #         # delete_file(self.img.path)
-    #         # return mark_safe(f'<img src = "{self.img.url}" width = "150"/>')
-    #     else:
-    #         print('no hasattr(self.img,"url")')
-    #         # return mark_safe('<p>no image</p>')
-    
-    # image_tag.short_description = 'Image'
     class Meta:
         unique_together=("item_name","model")
     def __str__(self): 
@@ -149,7 +137,6 @@ class Product(models.Model):
     
 class Product_Detail(models.Model): 
     product=models.OneToOneField(Product,on_delete=models.CASCADE,null=True,blank=True,unique=True)
-    # organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,null=True,to_field="name",related_name="old_product_organization")
     unit=models.ForeignKey(Unit,on_delete=models.DO_NOTHING,default=None,null=True)
     organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)    
     minimum_requirement=models.IntegerField(default=1)
@@ -158,6 +145,7 @@ class Product_Detail(models.Model):
      
 class Stock(models.Model):
     store=models.ForeignKey(Store,on_delete=models.DO_NOTHING)
+    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)    
     product=models.ForeignKey(Product,on_delete=models.CASCADE,null=True,blank=True)
     current_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)

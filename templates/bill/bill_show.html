@@ -206,7 +206,15 @@
                                                             </select>
                                                           </span>                    
                                                     </th> 
-                                                    
+                                                    <th>
+                                                          <span style="display:inline;margin:1%;" id="store_span">
+                                                            <select type="text" name="organization" placeholder="شرکت" class="" required="" id="organization">     
+                                                                {% for row in organizations %}
+                                                                <option value="{{row.id}}" >{{row}} </option>
+                                                                {% endfor %}
+                                                            </select>
+                                                          </span>                    
+                                                    </th> 
                                                     
                                                     <th style="display:inline-block">
                                                         <input style="display:inline-block;width:49%" type="number" placeholder="bill_no" name="bill_no" id="bill_no">                     

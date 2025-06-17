@@ -54,9 +54,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'product',
     'expenditure',
-    'user_request',
-    'qrapp',
-    'chat',
     'bill',
     'user',
     'configuration',
@@ -178,10 +175,18 @@ CORS_ALLOWED_ORIGINS = [
 # } 
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     # 'NAME': BASE_DIR / 'shop.sqlite3',
+    #     'NAME':'shirkat',
+    #     'HOST':'localhost',
+    #     'USER':'root',
+    #     'PASSWORD':'',
+    # }
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         # 'NAME': BASE_DIR / 'shop.sqlite3',
-        'NAME':'shirkat',
+        'NAME':'shirkat_original_test',
         'HOST':'localhost',
         'USER':'root',
         'PASSWORD':'',

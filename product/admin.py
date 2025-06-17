@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Product,Category,Store,Unit
-from common.organization import findOrganization
+from common.organization import find_organization
 # from django.conf import settings
 from django.utils.html import format_html
 # Register your models here.
@@ -37,7 +37,7 @@ class ProductAdmin(admin.ModelAdmin):
     # readonly_fields = ['image_tag']
     # def queryset(self, request):
     #     qs = super(Product, self).queryset(request)
-    #     (self_organization,=findOrganization(request)
+    #     (self_organization,=find_organization(request)
     #     print("organization ",organization)
     #     # if request.user.is_superuser:
     #     #     return qs

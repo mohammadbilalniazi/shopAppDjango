@@ -4,7 +4,7 @@ from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
 from product.models import Product,Unit,Store
-from common.organization import findOrganization
+from common.organization import find_organization
 from common.date import handle_day_out_of_range
 from configuration.models import *
 from datetime import datetime
@@ -23,9 +23,9 @@ from rest_framework.pagination import PageNumberPagination
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     date = date2jalali(datetime.now()) 
     year=date.strftime('%Y')
-    (self_organization,parent_organization,store)=findOrganization(request,organization_id)
+    (self_organization,parent_organization,store)=find_organization(request,organization_id)
     print("self_organization , parent_organization ",self_organization,parent_organization)
-    (bill_rcvr_org,parent_bill_rcvr_org,store)=findOrganization(request,bill_rcvr_org_id)
+    (bill_rcvr_org,parent_bill_rcvr_org,store)=find_organization(request,bill_rcvr_org_id)
     opposit_bill=get_opposit_bill(bill_type)
     print("opposit_bill ",opposit_bill)
     if bill_type=="EXPENSE":
@@ -68,26 +68,27 @@ def select_bill_no(request,organization_id,bill_rcvr_org_id,bill_type=None):
 @login_required(login_url='/admin')
 def bill_show(request,bill_id=None):
     print("bill_id =",bill_id)
-   
     context={}
     form=Bill_Form()
     context['form']=form
-    (self_organization,parent_organization,store)=findOrganization(request)
-    
+    (self_organization,parent_organization,store)=find_organization(request)
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
         context['rcvr_orgs']=Organization.objects.all() 
-        org_store_query=Store.objects.filter(Q(organization=parent_organization)|Q(organization__parent=parent_organization))
+        if request.user.is_superuser:
+            org_store_query=Store.objects.all()
+        else:
+            org_store_query=Store.objects.filter(Q(organization=parent_organization)|Q(organization__parent=parent_organization))
         context['stores']=org_store_query
         template=loader.get_template('bill/bill_show.html')
-    else:
+    else: 
         bill=Bill.objects.get(id=int(bill_id))
         form.fields['date'].initial=str(bill.date) #before  hawala.mustharadi_file
         # print("bill_obj",bill_obj.bill_detail_set.all().order_by("id"))
         context['bill_detail_set']=bill.bill_detail_set.all().order_by("id")
         context['bill']=bill
         #handle_difference_profit_loss(bill)        
-        if bill.bill_type=='PAYMENT' or bill.bill_type=='RECEIVEMENT':
+        if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
         else:
             template=loader.get_template('bill/bill_form.html')
@@ -109,58 +110,23 @@ def bill_show(request,bill_id=None):
             context['stores']=org_store_query
             bill_rcvr_org_store_query=Store.objects.filter(organization=bill.bill_receiver2.bill_rcvr_org)
             context['bill_rcvr_org_stores']=bill_rcvr_org_store_query
-      
         # return HttpResponse("test")
     # print('(self_organization,parent_organization) ',self_organization,' ',parent_organization)
     context['organization']=parent_organization
-    return HttpResponse(template.render(context,request))
-
-
-
-@login_required(login_url='/admin')
-def bill_detail_show(request,bill_id=None):
-    # print("bill_id =",bill_id)
-    context={}
-    form=Bill_Form()
-    context['form']=form
-    (self_organization,parent_organization,store)=findOrganization(request)
-    if bill_id==None :
-        context['bills']=Bill.objects.all().order_by("-pk")
-        context['rcvr_orgs']=Organization.objects.all().order_by("-pk")
-        template=loader.get_template('bill/bill_show.html')
+    if request.user.is_superuser:
+        organizations=Organization.objects.all()
     else:
-        # context['detail_flag']=True
-        template=loader.get_template('bill/bill_form.html')
-        bill_obj=Bill.objects.get(id=int(bill_id))
-        form.fields['date'].initial=str(bill_obj.date) #before  hawala.mustharadi_file
-        context['bill']=bill_obj
-        if bill_obj.bill_type=='PAYMENT' or bill_obj.bill_type=='RECEIVEMENT':
-            template=loader.get_template('bill/bill_form_receive_payment.html')
-        context['products']=Product.objects.filter(product_detail__organization=bill_obj.organization)
-        context['units']=Unit.objects.all()
-        if bill_obj.organization==parent_organization:                 
-            context['rcvr_orgs']=Organization.objects.all().order_by("-pk")     
-        elif hasattr(bill_obj,'bill_receiver2'):
-            if bill_obj.bill_receiver2.bill_rcvr_org==parent_organization:
-                #  bill_obj.bill_receiver2:
-                context['rcvr_orgs']=Organization.objects.filter(id=parent_organization.id)
-        if bill_obj.bill_type!="EXPENSE":
-            org_store_query=Store.objects.filter(organization=bill_obj.organization)
-            bill_rcvr_org_store_query=Store.objects.filter(organization=bill_obj.bill_receiver2.bill_rcvr_org)
-        else:
-            org_store_query=Store.objects.filter(organization=bill_obj.organization)
-        context['stores']=org_store_query
-        context['bill_rcvr_org_stores']=bill_rcvr_org_store_query
-        # return HttpResponse("test")
-    print('(self_organization,parent_organization) ',self_organization,' ',parent_organization)
-    context['organization']=parent_organization
+        organizations=Organization.objects.filter(id=parent_organization.id)
+    context['organizations']=organizations
+    
     return HttpResponse(template.render(context,request))
+
 
 
 @login_required(login_url='/admin')
 def bill_delete(request,id=None):
     context={}
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     if id!=None:
         context['detail']=True
         bill_query=Bill.objects.filter(id=int(id))
@@ -185,7 +151,7 @@ def bill_delete(request,id=None):
 @api_view(['GET','DELETE'])
 def bill_detail_delete(request,bill_detail_id=None):
     context={} 
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     message=""
     is_success=False
     if bill_detail_id!=None:
@@ -212,7 +178,6 @@ def bill_detail_delete(request,bill_detail_id=None):
             remaining=total-deleted_amount
             if previous_bill_type=="SELLING":
                 ok=handle_profit_loss(bill_detail,bill_detail.profit,operation='DECREASE')
-                            
             try:
                 bill_detail.delete()
                 bill.total=remaining
@@ -234,11 +199,11 @@ def bill_detail_delete(request,bill_detail_id=None):
     return Response({"Message":message,"is_success":is_success})
 
 @login_required(login_url='/admin')
-def Bill_form(request):
+def bill_form(request):
     template=loader.get_template('bill/bill_form.html')
     date = date2jalali(datetime.now())
     year=date.strftime('%Y')
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
@@ -308,7 +273,7 @@ def bill_insert(request):
         bill_receiver2_store=bill_receiver2_store_query[0]
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
-    (self_organization,parent_organization,_)=findOrganization(request)
+    (self_organization,parent_organization,_)=find_organization(request)
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -490,8 +455,7 @@ def search(request,page=None):
     print("#####bill_type ",bill_type,"bill_no ",bill_no," bill_rcvr_org ",bill_rcvr_org," store_id ",store_id," start_date ",start_date," end_date ",end_date)
     start_date=re.sub('\t','',str(start_date))
     end_date=re.sub('\t','',str(end_date))
-    
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     query=Bill.objects.filter(Q(date__range=[start_date,end_date]),Q(organization=parent_organization)|Q(bill_receiver2__bill_rcvr_org=parent_organization))
     print("1 query coutn ",query.count())
     if int(bill_no)!=0:

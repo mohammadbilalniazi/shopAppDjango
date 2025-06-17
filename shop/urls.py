@@ -18,13 +18,9 @@ from django.urls import path
 # from shopapp import views,views_roznamcha,views_selling
 from bill import views_bill,views_bill_receive_payment
 from product import views_product,views_unit,views_store
-from user_request import request_views
-from chat import views as views_chat
-from chat import views_room
 from user import views_login
 from configuration import views_organization,views_location
 # from qrapp import views_qr 
-from user_request import test_email_request    
 
 from django.contrib import admin
 from django.urls import path
@@ -39,7 +35,6 @@ urlpatterns = [
     path('expenditure/bill/form/',expenditure_view.expense_form),
     path('expenditure/bill/form/<id>/',expenditure_view.expense_form),
     path('expenditure/bill/insert/',expenditure_view.expense_insert),
-    path('test_email_request/',test_email_request.request),
     path('organizations/<id>/',views_organization.rcvr_org_show,name='rcvr_org_show'),
     path('conifgurations/organization/',views_organization.show,name='organization_show'),
     path('configuration/organization/form/',views_organization.form,name='organization_form'),
@@ -48,7 +43,7 @@ urlpatterns = [
     path('configuration/organization/form/create/<id>',views_organization.create,name='organization_form'),
     path('admin/configuration/organization/add/',views_organization.form,name='organization_form'),
     path('configuration/location/',views_location.show,name='location_show'),
-    path('admin/bill/bill/add/',views_bill.Bill_form,name="Bill_form"),
+    path('admin/bill/bill/add/',views_bill.bill_form,name="Bill_form"),
     path('bill/delete/<id>/',views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>',views_bill.select_bill_no),
     path('bill/search/',views_bill.search), 
@@ -73,15 +68,9 @@ urlpatterns = [
     path('product/product_form/create/<id>',views_product.create,name='product_form_create'),
     path('units/<id>/',views_unit.show,name='unit_show'), 
     path('stores/<id>/<organization>',views_store.show,name='store_show'),
-    path('chat/home/',views_chat.home),
-    path('chat/send/',views_chat.send,name='send'),
-    path('chat/getMessages/<room>/',views_chat.getMessage,name='get_message'),
-    path('chat/room/<str:room_id>/',views_chat.room,name='room'),
-    path('chat/checkview/',views_chat.checkview,name='checkview'),
-    path('chat/get_rooms/',views_room.get_rooms,name='get_rooms'),
+  
     # path('qrapp/qr_generater/',views_qr.qr_generater),
     # path('qrapp/qr_reader/',views_qr.qr_reader),
-    path('requests_user/request/save/',request_views.request),
     path('generate_product_ihsaya_service/<store_id>',generate_product_ihsaya_service),
     path('admin/', admin.site.urls),
     path('',admin.site.urls),

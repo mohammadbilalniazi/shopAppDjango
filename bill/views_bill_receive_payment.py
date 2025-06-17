@@ -3,7 +3,7 @@ from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
 from product.models import Store
-from common.organization import findOrganization
+from common.organization import find_organization
 from common.date import handle_day_out_of_range
 from configuration.models import Organization
 from configuration.models import *
@@ -22,9 +22,8 @@ def bill_form(request):
     template=loader.get_template('bill/bill_form_receive_payment.html')
     date = date2jalali(datetime.now())
     year=date.strftime('%Y')
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     # print('self_organization ',self_organization,' parent_organization ',parent_organization)
-    # print('Store.objects.filter(organization=parent_organization) ',Store.objects.filter(organization=parent_organization))
     form=Bill_Form()
     # context={}
     form.fields['date'].initial=date
@@ -67,7 +66,7 @@ def bill_insert(request):
     # return Response({"message":"test","ok":False})
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -148,7 +147,7 @@ def bill_insert(request):
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
         bill_obj.profit=0
-        # bill_obj.organization=organization   #because organization=findorganization in opposit organization approval will be changed
+        # bill_obj.organization=organization   #because organization=find_organization in opposit organization approval will be changed
         ####################### bill_description update bill_receiver2 update####################
         if previous_bill_type!="EXPENSE":
             # bill_description=bill_obj.bill_description

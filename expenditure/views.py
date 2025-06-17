@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from jalali_date import date2jalali
 from datetime import datetime
-from common.organization import findOrganization
+from common.organization import find_organization
 from bill.forms import Bill_Form
 from django.contrib.auth.decorators import login_required
 from django.template import loader
@@ -19,7 +19,7 @@ from django.contrib import messages
 def expense_form(request,id=None):
     template=loader.get_template('bill/expenditure/expense_form.html')
     date = date2jalali(datetime.now())
-    (self_organization,parent_organization,store)=findOrganization(request)
+    (self_organization,parent_organization,store)=find_organization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
