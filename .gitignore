@@ -1,0 +1,52 @@
+# Global ignores
+.DS_Store
+.env
+node_modules/
+venv/
+__pycache__/
+db.sqlite3
+db.sqlite3-journal
+coverage/
+.vscode/
+.idea/
+
+# Backend-specific ignores
+/backend/staticfiles/
+/backend/mediafiles/
+backend/__pycache__/
+*.pyc
+
+# Frontend-specific ignores
+/frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.nuxt/
+frontend/yarn.lock
+frontend/package-lock.json
+
+# Ignore media files (images, videos, audio, documents)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+*.mkv
+*.flac
+
+# Ignore document files
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.csv
+*.pdf
+*.ppt
+*.pptx
