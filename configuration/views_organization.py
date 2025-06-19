@@ -5,7 +5,6 @@ from jalali_date import date2jalali
 from django.template import loader 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from product.models import Store
 from configuration.models import *
 from django.contrib.auth.models import User
 from datetime import datetime
@@ -28,7 +27,7 @@ def rcvr_org_show(request,id="all"):
     # print("vendors_show id=",id)
     # if request.type=="DELETE":
     if id=="all":
-        (self_organization,parent_organization,store)=find_organization(request)
+        (self_organization,parent_organization)=find_organization(request)
         if parent_organization!=None and self_organization!=None:
             query_set=Organization.objects.all().exclude(id=parent_organization.id).exclude(parent=self_organization).order_by('-pk')
         elif self_organization!=None:
@@ -84,7 +83,7 @@ def form(request,id=None):
         context['id']=int(id)
     template=loader.get_template('configurations/organization_form.html')
     
-    (self_organization,parent_organization,store)=find_organization(request)
+    (self_organization,parent_organization)=find_organization(request)
     print("self_organization ",self_organization," parent_organization ",parent_organization)
     context['self_organization']=self_organization
     context['parent_organization']=parent_organization
@@ -146,13 +145,11 @@ def create(request,id=None):
     #############################################end data get#############################
     #1 step(create): check org : 1. check update key ==> a. update id==None  then create owner user then create org  then save().
     #2 step(update): query_org find org and update and find owner through org and update then save()
-    
     # print("created_date ",type(created_date)," id==None ",id==None)
     # return HttpResponse('tes')
    
     if id=='' or id=='None' or id==None: # 1 step create
         org_query=Organization.objects.filter(name=name)
-        owner_user_query=User.objects.filter(username=owner)
         if org_query.count()==0:
             try:
                 # if owner_user_query.count()==0:
@@ -171,19 +168,9 @@ def create(request,id=None):
                 owner.set_password(password)
                 org=Organization(parent=parent,owner=owner,name=name,location=location,is_active=is_active,created_date=created_date,img=img,organization_type=organization_type )
                 org.save()
-                store_name=name+" "+"store"
-                organization_default_store=Store.objects.filter(organization=org)
-                if organization_default_store.count()==0:
-                    store=Store(organization=org,name=store_name)
-                    try:
-                        store.save()
-                    except:
-                        store.name=name
-                        store.save()
-
-                stock_query=Stock.objects.filter(store=store)
+                stock_query=Stock.objects.filter(organization=org)
                 if stock_query.count()==0:
-                    stock=Stock(store=store,current_amount=0)
+                    stock=Stock(organization=org,current_amount=0)
                     stock.save()
                 messages.success(request,'Organization {} successfully created '.format(org.name))
                 return redirect('/configuration/organization/form/'+str(org.id))
@@ -216,13 +203,7 @@ def create(request,id=None):
                 ok,message=delete_file(org_query[0],'img')
             org_query.update(parent=parent,owner=owner_obj,name=name,location=location,organization_type=organization_type,img=img,is_active=is_active)
             messages.success(request,'Organization {} successfully updated '.format(org.name))
-            # org_query[0].save()
-            store_name=name+" "+"store"
-            if org_query[0].store_set.count()==0:
-                store=Store(organization=org,name=store_name)
-                store.save()
             return redirect('/configuration/organization/form/'+str(org_query[0].id)) 
         else:
             messages.error(request,' we do not have {} organization for updation so kindly create organization'.format(org.name))
             return redirect('/configuration/organization/form/') 
-    return redirect('/configuration/organization/form/')

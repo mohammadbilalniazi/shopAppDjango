@@ -150,7 +150,6 @@ class Stock(models.Model):
     current_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     purchasing_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
-    
     class Meta:
         unique_together=("store","product")
 

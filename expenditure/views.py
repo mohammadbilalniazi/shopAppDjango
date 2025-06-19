@@ -19,7 +19,7 @@ from django.contrib import messages
 def expense_form(request,id=None):
     template=loader.get_template('bill/expenditure/expense_form.html')
     date = date2jalali(datetime.now())
-    (self_organization,parent_organization,store)=find_organization(request)
+    (self_organization,parent_organization)=find_organization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date

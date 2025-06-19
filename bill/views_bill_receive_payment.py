@@ -2,7 +2,6 @@ from django.http import HttpResponse
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
-from product.models import Store
 from common.organization import find_organization
 from common.date import handle_day_out_of_range
 from configuration.models import Organization
@@ -22,7 +21,7 @@ def bill_form(request):
     template=loader.get_template('bill/bill_form_receive_payment.html')
     date = date2jalali(datetime.now())
     year=date.strftime('%Y')
-    (self_organization,parent_organization,store)=find_organization(request)
+    (self_organization,parent_organization)=find_organization(request)
     # print('self_organization ',self_organization,' parent_organization ',parent_organization)
     form=Bill_Form()
     # context={}
@@ -31,9 +30,6 @@ def bill_form(request):
     context={
         'form':form,
         'organization':parent_organization,
-        # 'rcvr_orgs':Organizations.objects.all(),
-        'stores':Store.objects.filter(Q(organization=parent_organization)|Q(organization__parent=parent_organization)),
-        # 'bill_no':bill_no,
         'date':date,
     } 
     
@@ -52,21 +48,9 @@ def bill_insert(request):
     year=date.split("-")[0]
     status=int(request.data.get("status",0))
     ############before request.data  and request.data.getlist
-    store=int(request.data.get("store",0))
-    store_query=Store.objects.filter(id=store)
-    
-    bill_receiver2_store=int(request.data.get("bill_receiver2_store",0))
-    bill_receiver2_store_query=Store.objects.filter(id=bill_receiver2_store)
-    print("bill_receiver2_store id",bill_receiver2_store)
-    if store_query.count()>0:
-        store=store_query[0] 
-    if bill_receiver2_store_query.count()>0:
-        bill_receiver2_store=bill_receiver2_store_query[0]
-    # print("bill_receiver2_store ",bill_receiver2_store)
-    # return Response({"message":"test","ok":False})
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
-    (self_organization,parent_organization,store)=find_organization(request)
+    (self_organization,parent_organization)=find_organization(request,organization)
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -169,17 +153,17 @@ def bill_insert(request):
     try:
         bill_obj.save()
         if bill_type!="EXPENSE":  # in expense we do not need bill_description and bill_receiver2
-            bill_description_query=Bill_Description.objects.filter(bill=bill_obj)
+            bill_description_query=Bill_Description.objects.filter(bill=bill_obj) 
             bill_receiver2_query=Bill_Receiver2.objects.filter(bill=bill_obj)
             if bill_description_query.count()>0:
-                bill_description_query.update(store=store,status=status)
+                bill_description_query.update(status=status)
             else:
-                bill_description=Bill_Description(bill=bill_obj,store=store,status=status)
+                bill_description=Bill_Description(bill=bill_obj,status=status)
                 bill_description.save()  
             if bill_receiver2_query.count()>0:
-                bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user,store=bill_receiver2_store)
+                bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
             else:
-                bill_receiver2=Bill_Receiver2(bill=bill_obj,bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user,store=bill_receiver2_store)
+                bill_receiver2=Bill_Receiver2(bill=bill_obj,bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
                 bill_receiver2.save()  
         ok=True
         message="bill No {} Successfully Insert".format(bill_no)

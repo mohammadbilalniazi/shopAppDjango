@@ -1,21 +1,5 @@
 from django.contrib import admin
-from .models import Product,Category,Store,Unit
-from common.organization import find_organization
-# from django.conf import settings
-from django.utils.html import format_html
-# Register your models here.
-
-
-@admin.register(Store) 
-class StoreAdmin(admin.ModelAdmin):
-    list_display=("name","location","is_active")
-
-# @admin.register(Product_Price)
-# class ProductPriceAdmin(admin.ModelAdmin):
-#     list_display=("product","purchased_price","selling_price")
-
-
-
+from .models import Product,Category,Unit
 
 @admin.register(Unit) 
 class UnitAdmin(admin.ModelAdmin):

@@ -22,6 +22,9 @@
     <script src="/static/admin/js/core.js"></script>
     <script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
     <script src="/static/admin/js/actions.js"></script>
+<script src="/static/assets/js/cookie.js"></script>
+
+<script src="/static/assets/js/common_entities/call_shirkat.js"></script>
     
     <script src="/static/admin/js/urlify.js"></script>
     <script src="/static/admin/js/prepopulate.js"></script>
@@ -42,7 +45,6 @@
         <div id="branding">
             <h1 id="site-name"><a href="/admin/"></a><a href="/admin"><h1 style="color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px">Shirkat</h1></a></h1>
         </div>
-        
         
         <div id="user-tools">
             
@@ -74,13 +76,13 @@
         <div id="content" class="" style="background-color: #f9f1c7;">
           <h1>Select product to change</h1>
           <input type="text" name='item_name' id='item_name'>
-            <span style="display:inline;margin:1%;" id="store_span">
-            <select type="text" name="store" class="" required="" id="store">     
-                {% for row in stores %}
-                <option value="{{row.id}}" >{{row}} </option>
-                {% endfor %}
+          <span style="display:inline;margin:3%">
+            <select type="text"  name="organization"  id="organization">     
+               {% for row in organizations %}
+               <option value="{{row.id}}" >{{row}} </option>
+               {% endfor %}
             </select>
-            </span>                    
+          </span>
   <div id="content-main">
         <ul class="object-tools">
   <li>
@@ -206,17 +208,14 @@
 </body></html>
 
 
-<script src="/static/assets/js/common_entities/call_shirkat.js"></script>
 <script src="/static/assets/js/product/product.js"></script>
 <script>
      const item_name=document.getElementById("item_name");
-     search_product();
+      const search_by_org=true;
+    search_product(null,search_by_org);
      item_name.addEventListener("input",(e)=>{
-         search_product();
+         search_product(null,search_by_org);
      });
      
-     const store=document.getElementById("store");
-     store.addEventListener("input",(e)=>{
-         search_product();
-     });
+    
 </script>

@@ -26,14 +26,15 @@ async function get_units() {
  * Fetches products and updates local storage.
  */
 async function get_products(organization = "all", change_price = true) {
-    const url = `/products/${organization}/`;
+    const url = `/products/`;
     let storedProductData = localStorage.getItem("product_data");
 
     if (storedProductData) {
         product_data = JSON.parse(storedProductData);
     } else {
         console.log("Fetching product data...");
-        let response = await call_shirkat(url, 'GET');
+        const postData={'organization_id':organization}
+        let response = await call_shirkat(url, 'POST',postData);
         product_data = response.data;
         localStorage.setItem("product_data", JSON.stringify(product_data));
     }
@@ -97,10 +98,8 @@ function add_events_to_elements(change_price = true) {
                 change_price_field(item_name[i].value, i, bill_type);
             }
         }
-        show_store();
         bill_rcvr_org.addEventListener("change", () => {
             generate_total_amount_bill();
-            show_store();
         });
     } catch (err) {
         console.error("Error adding events to elements:", err);
@@ -287,8 +286,6 @@ try{
      date=document.getElementById("date");
      organization=document.getElementById("organization");
      bill_rcvr_org=document.getElementById("bill_rcvr_org");
-     bill_receiver2_store=document.getElementById("bill_receiver2_store");
-     store=document.getElementById("store");
      creator=document.getElementById("creator");
      total=document.getElementById("total");
      total_payment=document.getElementById("total_payment");
@@ -298,7 +295,6 @@ try{
      is_approved=document.getElementById("is_approved");
      // status=document.getElementById("status");
      status_bill=document.getElementById("status");
-     console.log("##is_approved ",is_approved," status_bill ",status_bill.value," store ",store.value);
      approval_date=document.getElementById("approval_date");
      approval_user=document.getElementById("approval_user");
 
@@ -306,7 +302,6 @@ try{
          bill_obj={
              "date":date.value,
              "organization":organization.value,
-             "store":store.value,
              "creator":creator.value,
              "total":total.value,
              "total_payment":total_payment.value,
@@ -316,7 +311,6 @@ try{
              "bill_rcvr_org":bill_rcvr_org.value,
              "is_approved":is_approved.value,
              "status":status_bill.value,
-             "bill_receiver2_store":bill_receiver2_store.value,
              "approval_date":approval_date.value,
              "approval_user":approval_user.value,
          }
@@ -355,8 +349,6 @@ try{
              "id":bill_id.value,
              "date":date.value,
              "organization":organization.value,
-             "store":store.value,
-             "bill_receiver2_store":bill_receiver2_store.value,
              "creator":creator.value,
              "total":total.value,
              "total_payment":total_payment.value,
@@ -391,8 +383,6 @@ try{
              );
          console.log("response bill insert",response)
          if(response.status==200 || response.status==201){
-             // console.log("response=",response," response.data.ok ",response.data.ok);
-             generate_product_ihsaya_service(store.value)
              if(response.data.ok)
              {
                  show_message("bill Created ","success");
@@ -439,8 +429,6 @@ async function select_rcvr_orgs() {
       });
 
       rcvrOrgSpan.appendChild(selectRcvrOrg);
-      show_store()
-      selectRcvrOrg.addEventListener("change", () => show_store());
   } catch (e) {
       console.log("Error selecting receiver organizations", e);
   }

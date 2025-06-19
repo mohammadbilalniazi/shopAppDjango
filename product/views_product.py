@@ -14,7 +14,7 @@ from django.db import transaction
     
 def show_html(request,id=None):
     context={}
-    (self_organization,parent_organization,store)=find_organization(request)
+    (self_organization,parent_organization)=find_organization(request)
     if id==None or id=="all":
         if request.user.is_superuser:
             query=Product.objects.all()
@@ -22,21 +22,17 @@ def show_html(request,id=None):
             query=Product.objects.filter(product_detail__organization=parent_organization)
     else:
         query=Product.objects.filter(id=int(id))
-    (self_organization,parent_organization,store)=find_organization(request)
-    org_store_query=Store.objects.filter(Q(organization=parent_organization)|Q(organization__parent=parent_organization))
-    context['stores']=org_store_query
-
+    (self_organization,parent_organization)=find_organization(request)
     context['products']=query.order_by("-pk")
     context['organizations']=Organization.objects.all()
     context['products_length']=query.count()
-    # context['']
     return render(request,'products/products.html',context)
 
 @login_required(login_url='/admin')
 def form(request,id=None):
     context={}
-    (self_organization,parent_organization,store)=find_organization(request)
-    stock_query=Stock.objects.filter(store=store)
+    (self_organization,parent_organization)=find_organization(request)
+    stock_query=Stock.objects.filter(organization=self_organization)
     if id!=None:
         product=Product.objects.get(id=int(id))
         context['product']=product
@@ -45,7 +41,7 @@ def form(request,id=None):
         if stock_query.count()>0:
             stock=stock_query[0]
         else:
-            stock=Stock(product=product,store=store,current_amount=0)
+            stock=Stock(product=product,organization=self_organization,current_amount=0)
             stock.save()
         current_amount=stock.current_amount
         context['current_amount']=current_amount
@@ -85,11 +81,9 @@ def create(request, id=None):
     stock_detail = {
         "current_amount": float(data.get("current_amount", 0))
     }
-
     # Fetch parent organization
-    self_organization, parent_organization, store = find_organization(request)
+    (self_organization, parent_organization) = find_organization(request)
     product_detail["organization"] = parent_organization
-
     # Create or update Product
     if not product["id"] or str(product["id"]).strip() == "":
         product.pop("id")
@@ -115,42 +109,35 @@ def create(request, id=None):
             ok = True
         except Exception as e:
             return Response({"message": str(e), "ok": False})
-
     # Ensure product has correct image
     if product.img:  # Check if there's an image
         product.img = request.FILES.get("img")  # Assign uploaded image
         product.save()
-
     # Update or create Product_Detail
     product_detail_query = Product_Detail.objects.filter(product=product, organization=parent_organization)
     if product_detail_query.exists():
         product_detail_query.update(**product_detail)
     else:
         Product_Detail.objects.create(product=product, **product_detail)
-
-    # Update stock for all stores in the parent organization
-    org_store_query = Store.objects.filter(Q(organization=parent_organization) | Q(organization__parent=parent_organization))
-    for store in org_store_query:
-        stock, created = Stock.objects.get_or_create(product=product, store=store, defaults={"current_amount": stock_detail["current_amount"]})
-        if not created:
-            stock.current_amount = stock_detail["current_amount"]
-            stock.save()
+    stock, created = Stock.objects.get_or_create(product=product, organization=self_organization)
+    if not created:
+        stock.current_amount = stock_detail["current_amount"]
+        stock.save()
     return Response({"message": message, "ok": ok, "id": product.id})
 
 @api_view(['POST'])
 def show(request):
     # print("method",request.method,"data",request.data)
     item_name=request.data.get("item_name",None)
-    organization_id = request.data.get("organization_id", "all")
-    (self_organization,parent_organization,store)=find_organization(request,None if organization_id=="all" else organization_id)      
+    organization_id = request.data.get("organization", "all")
+    (self_organization,parent_organization)=find_organization(request,None if organization_id=="all" else organization_id)      
     if organization_id=="all":
         query_set=Product.objects.order_by('-pk')
     else:
         query_set=Product.objects.filter(product_detail__organization=parent_organization)
     if item_name:
         query_set=query_set.filter(item_name__icontains=item_name)
-    store_id=request.data.get('store_id') or (store.id if store else None)
-    context={'store_id':store_id}
+    context={'organization':self_organization.id if hasattr(self_organization,'id') else None}
     is_paginate=int(request.data.get("is_paginate",0))
     if  is_paginate==1:
         paginator=PageNumberPagination()

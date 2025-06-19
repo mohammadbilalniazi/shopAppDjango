@@ -196,18 +196,8 @@
                                                     <span id="pagination_id" style="background-color:palegreen;font-size:20px;margin-top:3%"></span> 
                                                 </tr>          
                                                 <tr>
-                                                   
-                                                     <th>
-                                                          <span style="display:inline;margin:1%;" id="store_span">
-                                                            <select type="text" name="store" placeholder="سرای" class="" required="" id="store">     
-                                                                {% for row in stores %}
-                                                                <option value="{{row.id}}" >{{row}} </option>
-                                                                {% endfor %}
-                                                            </select>
-                                                          </span>                    
-                                                    </th> 
-                                                    <th>
-                                                          <span style="display:inline;margin:1%;" id="store_span">
+                                                   <th>
+                                                          <span style="display:inline;margin:1%;" id="organization_span">
                                                             <select type="text" name="organization" placeholder="شرکت" class="" required="" id="organization">     
                                                                 {% for row in organizations %}
                                                                 <option value="{{row.id}}" >{{row}} </option>
@@ -215,6 +205,8 @@
                                                             </select>
                                                           </span>                    
                                                     </th> 
+                                                     
+                                                    
                                                     
                                                     <th style="display:inline-block">
                                                         <input style="display:inline-block;width:49%" type="number" placeholder="bill_no" name="bill_no" id="bill_no">                     
@@ -329,7 +321,6 @@
 <script src="/static/assets/js/toastr.min.js"></script> 
 <script src="/static/assets/js/show_message.js"></script>  
 <script src="/static/assets/js/common_entities/create_element.js"></script>
-<script src="/static/assets/js/common_entities/store.js"></script>
 <script src="/static/assets/js/configuration/organization.js"></script>
 <!-- <script src="/static/assets/js/bill/bill.js"></script> -->
 <script src="/static/assets/js/vendor/show_vendor.js"></script>

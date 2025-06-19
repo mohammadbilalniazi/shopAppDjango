@@ -22,17 +22,12 @@ class Bill_Description_Serializer(serializers.ModelSerializer):
 
 class Bill_Receiver2_Serializer(serializers.ModelSerializer):
     bill_rcvr_org=serializers.SerializerMethodField()
-    store=serializers.SerializerMethodField()
     class Meta:
         model=Bill_Receiver2
-        fields=['bill_rcvr_org','store']
+        fields=['bill_rcvr_org']
 
     def get_bill_rcvr_org(self,obj):
         return obj.bill_rcvr_org.name
-
-    
-    def get_store(self,obj):
-        return obj.store.name
 
 
 class Bill_search_Serializer(serializers.ModelSerializer):

@@ -126,7 +126,6 @@ async function search_bills(url=null)
     var start_date=document.getElementById("start_date_input").value;
     var end_date=document.getElementById("end_date_input").value;
     var bill_no=document.getElementById("bill_no").value;
-    var store=document.getElementById("store").value;
     var opposit_shirkat=document.getElementById("opposit_shirkat").value;
     
     var bill_type=document.getElementById("bill_type").value;
@@ -140,17 +139,13 @@ async function search_bills(url=null)
         opposit_shirkat="all";
     }
 
-    if(store=="")
-    {
-        store="all";
-    }
+    
 
     method="GET"; 
     if(url==null){
-    // url=`/bill/search/${bill_type}/${parseInt(bill_no)}/${opposit_shirkat}/${store}/${start_date}/${end_date}`;  
     url=`/bill/search/`;  
     }
-    const data={bill_type:bill_type,bill_no:bill_no,opposit_shirkat:opposit_shirkat,store:store,start_date:start_date,end_date:end_date}
+    const data={bill_type:bill_type,bill_no:bill_no,opposit_shirkat:opposit_shirkat,start_date:start_date,end_date:end_date}
     let response=await call_shirkat(url,"POST",data);
     console.log("search resutls",response.data)
     make_table(response.data);

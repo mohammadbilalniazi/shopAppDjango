@@ -1,14 +1,10 @@
-async function search_product(url=null)
+async function search_product(url=null,search_by_org=false)
 {
     let item_name=document.getElementById("item_name");
     let formdata={"item_name":item_name.value,'is_paginate':1}
-    
-    try{
-    let store_id=document.getElementById("store");
-    formdata["store_id"]=store_id.value;
-    }
-    catch(e){
-        console.log("e",e)
+    if(search_by_org){
+        let organization=document.getElementById("organization").value;
+        formdata['organization']=organization;
     }
     console.log("data product search",formdata);
     if(url==null){
@@ -19,8 +15,6 @@ async function search_product(url=null)
                 "POST",
                 JSON.stringify(formdata)
                 );
-    // return 
-    // let data=response.data
     prv=response.data['previous']
     nex=response.data['next']
     let data=response.data.results;
@@ -32,10 +26,10 @@ async function search_product(url=null)
     previous = ``;
     next = ``;
     if (prv) {
-        previous = `<tr><td>  <a href="${prv}" onclick='search_product(this.getAttribute("href")); return false;'  class="btn btn-success" role="button"> Previous </a> </td></tr>`;
+        previous = `<tr><td>  <a href="${prv}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;'  class="btn btn-success" role="button"> Previous </a> </td></tr>`;
     }
     if (nex) {
-        next = `<tr><td> <a  href="${nex}" onclick='search_product(this.getAttribute("href")); return false;' class="btn btn-success" role="button"> Next </a>  </td></tr>`;
+        next = `<tr><td> <a  href="${nex}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;' class="btn btn-success" role="button"> Next </a>  </td></tr>`;
     }
     html = next + previous
     pagination.insertAdjacentHTML('beforeend', html);
@@ -71,21 +65,54 @@ async function search_product(url=null)
         let row=`
             <tr>
                 <td>
-                <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >
-                ${data['serializer_data'][key]['item_name']}  (${purchased_price})
-                </a>
+                    <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >
+                    ${data['serializer_data'][key]['item_name']}  (${purchased_price})
+                    </a>
                 </td>
-                <td>${data['serializer_data'][key]['model']}</td><td>${data['serializer_data'][key]['category']}</td>
+                <td>${data['serializer_data'][key]['model']}</td>
+                <td>${data['serializer_data'][key]['category']}</td>
                 <td>${minimum_requirement}</td>
-                <td> ${data['serializer_data'][key]['purchase_amount']}</td>
-                
-                <td> ${data['serializer_data'][key]['selling_amount']}</td> 
-                <td> ${data['serializer_data'][key]['current_amount']}</td>
+                <td>${data['serializer_data'][key]['purchase_amount']}</td>
+                <td>${data['serializer_data'][key]['selling_amount']}</td> 
+                <td>
+                    <input type="number" id="stock_input_${data['serializer_data'][key]['id']}" value="${data['serializer_data'][key]['current_amount']}" class="form-control" />
+                </td>
                 <td>${purchased_price}</td><td>${selling_price}</td>
                 <td> <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update</a> </td>
-            </tr>`; 
+                <td>
+                    <button class="btn btn-primary" onclick="return update_stock(${data['serializer_data'][key]['id']});">Update Stock</button>
+                </td>
+            </tr>`;
+ 
         bill_tbody.insertAdjacentHTML('beforeend', row);
     }
     console.log("product response ",response); 
     
+}
+
+
+async function update_stock(product_id) {
+    const input = document.getElementById(`stock_input_${product_id}`);
+    const current_amount = input.value;
+    const organization_id = document.getElementById("organization").value;
+
+    if (!organization_id) {
+        alert("لطفاً اداره انتخاب کړئ");
+        return;
+    }
+
+    const formData = {
+        current_amount: current_amount,
+        product_id: product_id,
+        organization_id: organization_id
+    };
+
+    let response = await call_shirkat("/stock/update/", "POST", JSON.stringify(formData));
+
+    if (response.status === 201) {
+        alert("ذخیره معلومات نوي شول");
+    } else {
+        alert("خطا: " + JSON.stringify(response.data));
+    }
+    return false;
 }

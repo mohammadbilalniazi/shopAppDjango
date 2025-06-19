@@ -73,7 +73,6 @@ class Migration(migrations.Migration):
                 ('selling_price', models.DecimalField(decimal_places=2, default=0, max_digits=22, null=True)),
                 ('organization', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='configuration.organization')),
                 ('product', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='product.product')),
-                ('unit', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='product.unit')),
             ],
         ),
         migrations.CreateModel(

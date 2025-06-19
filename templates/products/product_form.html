@@ -335,9 +335,10 @@ product_form.addEventListener("submit",async function(e){
 
 <script src="/static/assets/js/product/product.js"></script>
 <script>
-     let item_name=document.getElementById("item_name");
+    const search_by_org=false;
+    search_product(null,search_by_org);
      item_name.addEventListener("input",(e)=>{
-         search_product();
+         search_product(null,search_by_org);
      });
      
 </script>

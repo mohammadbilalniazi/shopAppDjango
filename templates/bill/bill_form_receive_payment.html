@@ -16,8 +16,6 @@
         <link rel="stylesheet" href="/static/assets/css/toastr.min.css">
         <script src="/static/assets/js/jquery.min.js"></script>
         
-        <script src="/static/assets/js/common_entities/store.js"></script>
-    
     <meta name="robots" content="NONE,NOARCHIVE">
     <style>
         .danger-btn{
@@ -102,10 +100,7 @@
                             <th scope="row"><a href="/admin/products/unit/">Units</a></th>
                             <td><a href="/admin/products/unit/add/" class="addlink">Add</a></td>    
                         </tr>
-                        <tr class="model-store">
-                            <th scope="row"><a href="/admin/products/store/">Stores</a></th>
-                            <td><a href="/admin/products/store/add/" class="addlink">Add</a></td>
-                        </tr>
+                      
                         <tr class="model-product">
                             <th scope="row"><a href="/products/product/">Products</a></th>
                             <td><a href="/products/product/add/" class="addlink">Add</a></td>   
@@ -185,19 +180,7 @@
                           
                             </span> 
                         </td>
-                        <td>
-                          Bill Creator  Store
-                        </td>
-                        <td>
-                            <span style="display:inline;margin:1%;" id="store_span">
-                                <select type="text" name="store" placeholder="سرای" class="" required="" id="store">     
-                                    {% for row in stores %}
-                                    <option value="{{row.id}}" {% if row == bill.bill_description.store %} selected {% endif %}>{{row}} </option>
-                                    {% endfor %}
-                                </select>
-                                <a href="/admin/products/store/add/" class="addlink"></a>
-                            </span>  
-                        </td>
+                        
                         <td>
                             Date
                         </td>
@@ -259,20 +242,6 @@
                        
                     </tr> 
                     <tr class="bill_acceptor">
-                        <td>
-                          Bill Receiver Organization  Store
-                        </td>
-                        <td>
-                            <span style="display:inline;margin:1%;" id="bill_receiver2_store_span">
-                                <select type="text" name="bill_receiver2_store"  placeholder="سرای" class="" required="" id="bill_receiver2_store">     
-                                    {% for row in bill_rcvr_org_stores %}
-                                    <option value="{{row.id}}" {% if bill.bill_receiver2.store.id == row.id %} selected {% endif %}>{{row}}</option>
-                                    {% endfor %}
-                                </select>
-                                <a href="/admin/product/store/add/" class="addlink"></a>
-                            </span>  
-                        </td>
-                       
                         <td>
                             Approval User
                         </td>

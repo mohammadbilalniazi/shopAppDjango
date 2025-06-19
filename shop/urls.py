@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 # from shopapp import views,views_roznamcha,views_selling
 from bill import views_bill,views_bill_receive_payment
-from product import views_product,views_unit,views_store
+from product import views_product,views_unit,views_stock
 from user import views_login
 from configuration import views_organization,views_location
 # from qrapp import views_qr 
@@ -28,7 +28,6 @@ from django.conf import settings #new
 from django.conf.urls.static import static #new
 from user import views_login
 from expenditure import views as expenditure_view
-from common.generate_ihsaya import generate_product_ihsaya_service
 
 urlpatterns = [ 
     path('login/check',views_login.host_to_heroku_submit),
@@ -54,10 +53,11 @@ urlpatterns = [
     path('admin/bill/bill/',views_bill.bill_show),
     path('bill/detail/<bill_id>/',views_bill.bill_show),
     path('bill/update/<bill_id>/',views_bill.bill_show),
+
     path('products/',views_product.show,name='product_show'),
     path('products/product_form/',views_product.form,name='product_form'),
     path('product/product/add/<id>',views_product.form,name='product_form'),
-    
+    path('stock/update/',views_stock.update,name='update_stock'),
     path('admin/product/product/add/',views_product.form,name='product_form'),
     
     path('admin/product/product/',views_product.show_html,name='product_show_html'),
@@ -67,11 +67,6 @@ urlpatterns = [
     path('product/product_form/create/',views_product.create,name='product_form_create'),
     path('product/product_form/create/<id>',views_product.create,name='product_form_create'),
     path('units/<id>/',views_unit.show,name='unit_show'), 
-    path('stores/<id>/<organization>',views_store.show,name='store_show'),
-  
-    # path('qrapp/qr_generater/',views_qr.qr_generater),
-    # path('qrapp/qr_reader/',views_qr.qr_reader),
-    path('generate_product_ihsaya_service/<store_id>',generate_product_ihsaya_service),
     path('admin/', admin.site.urls),
     path('',admin.site.urls),
     path('host_to_heroku_login_form/',views_login.host_to_heroku_login_form,name='host_to_heroku_login_form'),

@@ -22,10 +22,6 @@ function add_events_to_elements()
        
           
             bill_rcvr_org=document.getElementById("bill_rcvr_org");
-            bill_rcvr_org.addEventListener("change",e=>{
-                // generate_total_amount_bill();
-                show_store();
-            });  
               
     }
     catch(err)
@@ -94,8 +90,6 @@ try{
         date=document.getElementById("date");
         organization=document.getElementById("organization");
         bill_rcvr_org=document.getElementById("bill_rcvr_org");
-        bill_receiver2_store=document.getElementById("bill_receiver2_store");
-        store=document.getElementById("store");
         creator=document.getElementById("creator");
         total=document.getElementById("total");
         total_payment=document.getElementById("total_payment");
@@ -105,7 +99,6 @@ try{
         is_approved=document.getElementById("is_approved");
         // status=document.getElementById("status");
         status_bill=document.getElementById("status");
-        console.log("##is_approved ",is_approved," status_bill ",status_bill.value," store ",store.value);
         approval_date=document.getElementById("approval_date");
         approval_user=document.getElementById("approval_user");
  
@@ -113,7 +106,6 @@ try{
             bill_obj={
                 "date":date.value,
                 "organization":organization.value,
-                "store":store.value,
                 "creator":creator.value,
                 "total":total.value,
                 "total_payment":total_payment.value,
@@ -123,7 +115,6 @@ try{
                 "bill_rcvr_org":bill_rcvr_org.value,
                 "is_approved":is_approved.value,
                 "status":status_bill.value,
-                "bill_receiver2_store":bill_receiver2_store.value,
                 "approval_date":approval_date.value,
                 "approval_user":approval_user.value,
             }
@@ -193,17 +184,11 @@ async function select_rcvr_orgs(){
         // console.log("plus ",plus);
         rcvr_org_span.appendChild(select_rcvr_org_in_div);   
         rcvr_org_span.appendChild(plus);   
-        // bill_rcvr_org=document.getElementById("bill_rcvr_org");
-        show_store();
         select_rcvr_org_in_div.addEventListener("change",e=>{
-            show_store();
             document.getElementById("table_body").innerHTML="";
         }); 
         
         organization=document.getElementById("organization");
-        organization.addEventListener("change",e=>{
-            show_store('organization','store');
-        });  
     });
 }
 
