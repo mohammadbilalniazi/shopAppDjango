@@ -240,9 +240,9 @@
                                                         <th>
                                                             <label style="float:left"> Item name <a href="/admin/product/product/add/" class="addlink"></a></label>                      
                                                         </th>
-                                                        <th>
+                                                        <!-- <th>
                                                             <label >  Unit <a href="/admin/product/unit/add/" class="addlink"></a></label>   
-                                                    </th>
+                                                    </th> -->
                                                         <th>
                                                             <label > Item amount</label>   
                                                         </th>
@@ -252,7 +252,9 @@
                                                         <th>
                                                             <label for="id_return_qty">Return qty</label>                     
                                                         </th>
-                                                    
+                                                        <th>
+                                                            <label for="action">Actions</label>                     
+                                                        </th>
                                                     </tr>
                                                    
                                                     {% if bill_detail_set %}
@@ -268,23 +270,25 @@
                                                             </select>
                                                             </div>
                                                         </td>
-                                                        <td> 
+                                                        
+                                                        <td>
                                                             <div>
-                                                            <select class="unit" name="unit">
+                                                           
+                                                            <input type="number"  value="{{detail.item_amount}}" name="item_amount" step="any" class="item_amount">
+                                                             <select class="unit" name="unit">
                                                             {% for row in units %}
                                                             <option value="{{row.id}}"  {% if detail.unit.id == row.id %} selected {% endif %}>{{row.name}}</option>
                                                             {% endfor %}
                                                             </select>
                                                             </div>
                                                         </td>
-                                                        <td><div><input type="number"  value="{{detail.item_amount}}" name="item_amount" step="any" class="item_amount"></div></td>
-                                                    
                                                         <td><div><input type="number"  value="{{detail.item_price}}" name="item_price" step="any" class="item_price"></div></td>
-                                                        <td><div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty"></div></td>
-                                                        <td><div><input disabled type="number"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id" ></div></td>
-                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="deleteRow(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
-                                                        
-                                                    
+                                                        <td>
+                                                            <div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty">
+                                                            <input  type="hidden"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id" >
+                                                            </div>
+                                                        </td>
+                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="remove_row(this,{{detail.id}})" style="background-color:red;color:black;"></td>
                                                         </tr>
                                                     {% endfor %}
                                                     {% endif %}
@@ -302,10 +306,8 @@
                                         {% else %}
                                         <input type="submit" value="Save" class="default" name="_save">
                                         {% endif %}
-                                        <input type="button" value="جنس ډیرول" id="addnawajans" onclick="adding_row()" name="addnawajans">
-                                        <!-- {% if bill %}
-                                        <a href="/bill/delete/{{bill.id}}/" role="button" class="danger-btn" style="background-color:red; color:white" >delete</a>
-                                        {% endif %}     -->
+                                        <input type="button" value="جنس ډیرول" id="addnawajans" onclick="add_row()" name="addnawajans">
+                                    
                                     </div> 
                             </div>
                         </form>
@@ -348,7 +350,6 @@
   <script src="/static/assets/js/axios.min.js"></script>
   <script src="/static/assets/js/cookie.js"></script>
 <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
-<script src="/static/assets/js/configuration/languages.js"></script>
 <script src="/static/assets/js/common_entities/create_element.js"></script>
 
 <script src="/static/assets/js/show_message.js"></script>

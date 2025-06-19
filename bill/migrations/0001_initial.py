@@ -69,7 +69,6 @@ class Migration(migrations.Migration):
                 ('currency', models.CharField(default='afg', max_length=7)),
                 ('bill', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='bill.bill')),
                 ('shipment_location', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.PROTECT, to='configuration.location')),
-                ('store', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='new_store', to='product.store')),
             ],
         ),
     ]

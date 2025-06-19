@@ -83,6 +83,7 @@
                {% endfor %}
             </select>
           </span>
+          <span id="update_stock_message" style="display: none; background-color: lightgreen;"></span> 
   <div id="content-main">
         <ul class="object-tools">
   <li>
@@ -99,11 +100,8 @@
 <table id="result_list">
 <thead>
 <tr>
+                        {% csrf_token %}       
 
-<!-- <th scope="col" class="sortable column-organization">
-   <div class="text"><a href="?o=0">Organization</a></div>
-   <div class="clear"></div>
-</th> -->
 <th scope="col" class="sortable column-item_name">
    
    <div class="text"><a href="?o=1">Item name</a></div>
@@ -143,16 +141,6 @@
 </th>
 
   
-<!-- <th scope="col" class="column-get_row">
-   
-   <div class="text"><span>Row</span></div>
-   <div class="clear"></div>
-</th>
-<th scope="col" class="column-get_column">
-   
-   <div class="text"><span>Column</span></div>
-   <div class="clear"></div>
-</th> -->
 <th scope="col" class="column-get_purchased_price">
    
    <div class="text"><span> purchased price</span></div>
@@ -163,11 +151,6 @@
    <div class="text"><span> selling price</span></div>
    <div class="clear"></div>
 </th>
-<!-- <th scope="col" class="column-image_tag">
-   
-   <div class="text"><span>Image</span></div>
-   <div class="clear"></div>
-</th> -->
 </tr>
 <tr ><div id='pagination_id'></div></tr>
 </thead>

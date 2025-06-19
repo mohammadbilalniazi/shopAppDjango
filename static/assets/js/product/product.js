@@ -80,7 +80,7 @@ async function search_product(url=null,search_by_org=false)
                 <td>${purchased_price}</td><td>${selling_price}</td>
                 <td> <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update</a> </td>
                 <td>
-                    <button class="btn btn-primary" onclick="return update_stock(${data['serializer_data'][key]['id']});">Update Stock</button>
+                <button class="btn btn-primary" onclick="return update_stock(event, ${data['serializer_data'][key]['id']});">Update Stock</button>
                 </td>
             </tr>`;
  
@@ -91,14 +91,16 @@ async function search_product(url=null,search_by_org=false)
 }
 
 
-async function update_stock(product_id) {
+async function update_stock(event, product_id) {
+    event.preventDefault();  // ✨ prevent default button or form submission
+
     const input = document.getElementById(`stock_input_${product_id}`);
     const current_amount = input.value;
     const organization_id = document.getElementById("organization").value;
 
     if (!organization_id) {
         alert("لطفاً اداره انتخاب کړئ");
-        return;
+        return false;
     }
 
     const formData = {
@@ -108,11 +110,19 @@ async function update_stock(product_id) {
     };
 
     let response = await call_shirkat("/stock/update/", "POST", JSON.stringify(formData));
+    let message = document.getElementById("update_stock_message");
 
-    if (response.status === 201) {
-        alert("ذخیره معلومات نوي شول");
+    if (response.status === 201 || response.status === 200) {
+        message.innerHTML = "ذخیره معلومات نوي شول";
+        message.style.display = 'block';
+        setTimeout(() => {
+            message.innerHTML = "";
+            message.style.display = 'none';
+        }, 2000);
     } else {
         alert("خطا: " + JSON.stringify(response.data));
     }
+
     return false;
 }
+

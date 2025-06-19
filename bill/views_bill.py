@@ -250,7 +250,7 @@ def bill_insert(request):
     ############before request.data  and request.data.getlist
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
-    (self_organization,parent_organization,_)=find_organization(request,organization.id)
+    (self_organization,parent_organization)=find_organization(request,organization.id)
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)

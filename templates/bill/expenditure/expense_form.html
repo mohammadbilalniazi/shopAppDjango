@@ -300,7 +300,7 @@
                                                         <td><div><input type="number"  value="{{detail.item_price}}" name="item_price" class="item_price"></div></td>
                                                         <td><div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty"></div></td>
                                                         <td><div><input disabled type="number"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id"></div></td>
-                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="deleteRow(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
+                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="remove_row(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
                                                     
                                                     
                                                         </tr>
@@ -353,7 +353,6 @@
   <script src="/static/assets/js/axios.min.js"></script>
   <script src="/static/assets/js/cookie.js"></script>
 <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
-<script src="/static/assets/js/configuration/languages.js"></script>
 <script src="/static/assets/js/common_entities/create_element.js"></script>
 
   <script src="/static/assets/js/show_message.js"></script>

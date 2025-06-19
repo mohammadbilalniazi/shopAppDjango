@@ -109,7 +109,7 @@ function add_events_to_elements(change_price = true) {
 /**
  * Deletes a row from the bill details table.
  */
-function deleteRow(btn, bill_detail_id) {
+function remove_row(btn, bill_detail_id) {
     if (parseInt(bill_detail_id) !== 0) {
         bill_detail_delete(parseInt(bill_detail_id));
     }
@@ -121,7 +121,7 @@ function deleteRow(btn, bill_detail_id) {
 /**
  * Dynamically adds a new row to the bill details table.
  */
-async function adding_row() {
+async function add_row() {
     function createElement(tag, props = {}, children = []) {
         const el = document.createElement(tag);
         Object.entries(props).forEach(([key, value]) => {
@@ -146,62 +146,109 @@ async function adding_row() {
     const row = createElement("tr");
     tableBody.appendChild(row);
 
+    // Prepare product data
+    let productData = {};
+    try {
+        productData = JSON.parse(localStorage.getItem("product_data")) || {};
+    } catch (e) {
+        console.error("Invalid product_data JSON", e);
+    }
+
+    // Create search input and product <select>
+    const selectId = `item_name_select_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const selectItemName = createElement("select", {
-        id: `item_name_select_${Date.now()}`,
-        className: "item_name",
+        id: selectId,
+        className: "item_name form-control",
         name: "item_name",
         required: true
     });
 
-    const productData = JSON.parse(localStorage.getItem("product_data")) || {};
-
-    for (const key in productData) {
-        if (Object.hasOwn(productData, key)) {
-            const product = productData[key];
-            const option = createElement("option", {
-                value: product.id,
-                innerText: `${product.item_name} ${product.product_detail.purchased_price}`
-            });
-            selectItemName.appendChild(option);
+    function populateOptions(filter = "") {
+        selectItemName.innerHTML = ""; // clear options
+        const filterLower = filter.toLowerCase();
+        for (const key in productData) {
+            if (Object.hasOwn(productData, key)) {
+                const product = productData[key];
+                const label = `${product.item_name} ${product.product_detail?.purchased_price || ""}`;
+                if (label.toLowerCase().includes(filterLower)) {
+                    const option = createElement("option", {
+                        value: product.id,
+                        innerText: label
+                    });
+                    selectItemName.appendChild(option);
+                }
+            }
         }
     }
+
+    const itemSearchInput = createElement("input", {
+        type: "text",
+        placeholder: "Search item...",
+        className: "form-control mb-1",
+        oninput: function () {
+            populateOptions(this.value);
+            // ✅ After filtering, re-trigger the price change logic if something is selected
+            const selectedVal = selectItemName.value;
+            if (selectedVal) {
+                change_price_field(selectedVal, row.rowIndex - 1, billTypeElement);
+            }
+        }
+    });
+    populateOptions(); // initial full list
+    // Unit select
     const selectUnit = createElement("select", {
-        className: "unit",
+        className: "unit form-control",
         name: "unit",
         required: true
-      });
-    
-      const unitDataStr = localStorage.getItem("unit_data");
-      const unitData = JSON.parse(unitDataStr);
-      for (const key in unitData) {
-        if (Object.hasOwn(unitData, key)) {
-          const unit = unitData[key];
-          const option = createElement("option", {
-            value: unit.id,
-            innerText: unit.name
-          });
-          selectUnit.appendChild(option);
-        }
-      }
-    
-    
-    row.appendChild(createElement("td", {}, [selectItemName]));
-    
-    row.appendChild(createElement("td", {}, [selectUnit]));
-    row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "item_amount", required: true })]));
-    row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "item_price", min: "0", step: ".001", required: true })]));
-    row.appendChild(createElement("td", {}, [createElement("input", { type: "number", className: "return_qty", value: 0, required: true })]));
-    row.appendChild(createElement("td", {}, [createElement("input", { type: "hidden", className: "bill_detail_id", required: true })]));
-    row.appendChild(createElement("td", {}, [createElement("input", { type: "button", value: "remove", className: "remove_btn", style: "background-color:red;color:black;", onclick: () => deleteRow(row, 0) })]));
+    });
 
-    setTimeout(() => {
-        if (jQuery.fn.select2) {
-            $(`#${selectItemName.id}`).select2({ placeholder: "Select an item", allowClear: true, width: "100%" });
+    try {
+        const unitData = JSON.parse(localStorage.getItem("unit_data")) || {};
+        for (const key in unitData) {
+            if (Object.hasOwn(unitData, key)) {
+                const unit = unitData[key];
+                const option = createElement("option", {
+                    value: unit.id,
+                    innerText: unit.name
+                });
+                selectUnit.appendChild(option);
+            }
         }
-    }, 100);
+    } catch (e) {
+        console.error("Invalid unit_data JSON", e);
+    }
+
+    // Build the row
+    row.appendChild(createElement("td", {}, [itemSearchInput, selectItemName]));
+    const amountInput = createElement("input", { type: "number", className: "item_amount form-control", required: true });
+    row.appendChild(createElement("td", {}, [amountInput, selectUnit]));
+    const priceInput = createElement("input", { type: "number", className: "item_price form-control", min: "0", step: ".001", required: true });
+    row.appendChild(createElement("td", {}, [priceInput]));
+    const returnQtyInput = createElement("input", { type: "number", className: "return_qty form-control", value: 0, required: true });
+    const hiddenIdInput = createElement("input", { type: "hidden", className: "bill_detail_id", required: true });
+    row.appendChild(createElement("td", {}, [returnQtyInput, hiddenIdInput]));
+    const removeBtn = createElement("input", {
+        type: "button",
+        value: "remove",
+        className: "remove_btn btn btn-danger",
+        onclick: () => remove_row(row, 0)
+    });
+    row.appendChild(createElement("td", {}, [removeBtn]));
+
+    // Event bindings
+    selectItemName.addEventListener("change", e => {
+        if (e.target.value) {
+            change_price_field(e.target.value, row.rowIndex - 1, billTypeElement);
+        }
+    });
+
+    priceInput.addEventListener("keyup", generate_total_amount_bill);
+    amountInput.addEventListener("keyup", generate_total_amount_bill);
+    returnQtyInput.addEventListener("input", generate_total_amount_bill);
 
     add_events_to_elements();
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   init();
 });
