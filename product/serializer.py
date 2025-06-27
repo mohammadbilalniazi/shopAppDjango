@@ -8,7 +8,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 class StockUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model=Stock
-        fields= ['id', 'store', 'organization', 'product',
+        fields= ['id','organization', 'product',
             'current_amount', 'selling_amount', 'purchasing_amount']
 class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializer
     product_detail=ProductDetailSerializer()

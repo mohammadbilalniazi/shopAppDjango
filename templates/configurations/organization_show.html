@@ -26,21 +26,7 @@
     <script src="/static/admin/js/vendor/xregexp/xregexp.js"></script>
     <script src="/static/admin/js/filters.js" defer></script>
     <script src="/static/assets/js/bootstrap.bundle.min.js" defer></script>
-    <script>
-      async function finalizeLedger(orgId) {
-
-        const amountInput = document.getElementById(`amount-${orgId}`);
-        const amount = amountInput.value;
-
-        if (!amount) {
-          alert("Please enter an amount");
-          return;
-        }
-
-        const data={ receive_pay: amount }
-        let response=await call_shirkat(`/organizations/finalize-ledger/${orgId}`,"POST",data);
-      }
-    </script>
+    
 
     <!-- Inside your base template's <head> -->
 
@@ -109,15 +95,15 @@
                       <td>{{ org.name }}</td>
 
                       <!-- Receive Pay + Finalize Button -->
-                      <td>
-                        <div class="input-group">
-                          <input type="number" id="amount-{{ org.id }}" class="form-control form-control-sm" placeholder="Amount" required>
-                          <button class="btn btn-sm btn-warning" onclick="finalizeLedger({{ org.id }})">Finalize Ledger</button>
-                        </div>
-                      </td>
+                      <!-- <td> -->
+                        <!-- <div class="input-group"> -->
+                          <!-- <input type="number" id="amount-{{ org.id }}" class="form-control form-control-sm" placeholder="Amount" required> -->
+                          <!-- <button class="btn btn-sm btn-warning" onclick="finalizeLedger({{ org.id }})">Finalize Ledger</button> -->
+                        <!-- </div> -->
+                      <!-- </td> -->
 
                       <td>
-                        <a href="/configuration/organization/{{ org.id }}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="/configuration/organization/form/{{ org.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
                       </td>
                     </tr>
                   {% empty %}

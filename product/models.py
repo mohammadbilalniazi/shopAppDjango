@@ -144,12 +144,11 @@ class Product_Detail(models.Model):
     selling_price=models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
      
 class Stock(models.Model):
-    store=models.ForeignKey(Store,on_delete=models.DO_NOTHING)
     organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)    
     product=models.ForeignKey(Product,on_delete=models.CASCADE,null=True,blank=True)
     current_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     purchasing_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     class Meta:
-        unique_together=("store","product")
+        unique_together=("organization","product")
 
