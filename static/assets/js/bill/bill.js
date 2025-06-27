@@ -86,7 +86,6 @@ function add_events_to_elements(change_price = true) {
         let return_qty = document.getElementsByClassName("return_qty");
         let bill_type = document.getElementById("bill_type");
         let item_name = document.getElementsByClassName("item_name");
-        let bill_rcvr_org = document.getElementById("bill_rcvr_org");
 
         for (let i = 0; i < item_amount.length; i++) {
             item_amount[i].addEventListener("keyup", generate_total_amount_bill);
@@ -98,9 +97,7 @@ function add_events_to_elements(change_price = true) {
                 change_price_field(item_name[i].value, i, bill_type);
             }
         }
-        bill_rcvr_org.addEventListener("change", () => {
-            generate_total_amount_bill();
-        });
+        
     } catch (err) {
         console.error("Error adding events to elements:", err);
     }
@@ -138,10 +135,6 @@ async function add_row() {
     }
 
     const billTypeElement = document.getElementById("bill_type");
-    const organization = (billTypeElement.value === "PURCHASE" || billTypeElement.value === "RECEIVEMENT")
-        ? document.getElementById("bill_rcvr_org")
-        : document.getElementById("organization");
-
     const tableBody = document.getElementById("table_body");
     const row = createElement("tr");
     tableBody.appendChild(row);
@@ -253,6 +246,8 @@ async function add_row() {
 document.addEventListener("DOMContentLoaded", () => {
   init();
 });
+
+
 
 function getElement(id) {
   return document.getElementById(id);
@@ -458,27 +453,34 @@ catch(e)
 
 async function select_rcvr_orgs() {
   try {
-      const rcvrOrgSpan = getElement("rcvr_org_span");
-      rcvrOrgSpan.innerHTML = "";
+    const rcvrOrgSpan = getElement("rcvr_org_span");
+    rcvrOrgSpan.innerHTML = "";
 
-      const selectRcvrOrg = document.createElement("select");
-      selectRcvrOrg.id = "bill_rcvr_org";
-      selectRcvrOrg.name = "bill_rcvr_org";
-      selectRcvrOrg.required = true;
+    const selectRcvrOrg = document.createElement("select");
+    selectRcvrOrg.id = "bill_rcvr_org";
+    selectRcvrOrg.name = "bill_rcvr_org";
+    selectRcvrOrg.required = true;
 
-      const response = await fetch("/organizations/all/");
-      const data = await response.json();
+    const response = await fetch("/organizations/all/");
+    const data = await response.json();
 
-      data.forEach(org => {
-          const option = document.createElement("option");
-          option.value = org.id;
-          option.innerText = org.name;
-          selectRcvrOrg.appendChild(option);
-      });
+    data.forEach(org => {
+      const option = document.createElement("option");
+      option.value = org.id;
+      option.innerText = org.name;
+      selectRcvrOrg.appendChild(option);
+    });
 
-      rcvrOrgSpan.appendChild(selectRcvrOrg);
+    rcvrOrgSpan.appendChild(selectRcvrOrg);
+
+    // ✅ Attach event listener after element is in the DOM
+    selectRcvrOrg.addEventListener("change", () => {
+      generate_total_amount_bill();
+      select_bill_no();
+    });
+
   } catch (e) {
-      console.log("Error selecting receiver organizations", e);
+    console.log("Error selecting receiver organizations", e);
   }
 }
 
@@ -515,3 +517,5 @@ try {
 } catch (e) {
   console.log("Error handling bill_type change", e);
 }
+
+

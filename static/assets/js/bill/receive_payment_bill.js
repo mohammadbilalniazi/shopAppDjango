@@ -19,10 +19,7 @@ function add_events_to_elements()
         bill_type.addEventListener("change",e=>{
             select_bill_no();
         });
-       
-          
-            bill_rcvr_org=document.getElementById("bill_rcvr_org");
-              
+        bill_rcvr_org=document.getElementById("bill_rcvr_org");
     }
     catch(err)
     {
@@ -30,7 +27,6 @@ function add_events_to_elements()
     }
     return;
 }
-
 
 try
 {
@@ -184,11 +180,11 @@ async function select_rcvr_orgs(){
         // console.log("plus ",plus);
         rcvr_org_span.appendChild(select_rcvr_org_in_div);   
         rcvr_org_span.appendChild(plus);   
-        select_rcvr_org_in_div.addEventListener("change",e=>{
-            document.getElementById("table_body").innerHTML="";
-        }); 
-        
         organization=document.getElementById("organization");
+        select_rcvr_org_in_div.addEventListener("change", () => {
+        select_bill_no();
+        });
+        select_bill_no();
     });
 }
 

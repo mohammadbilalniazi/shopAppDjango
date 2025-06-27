@@ -38,7 +38,6 @@ def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
         bill_query=Bill.objects.filter(Q(year=int(year)),Q(Q(bill_type=bill_type),Q(organization=parent_organization),Q(bill_receiver2__bill_rcvr_org=parent_bill_rcvr_org)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=parent_organization),Q(organization=parent_bill_rcvr_org)))
 
     if bill_query.count()>0:  
-        bill=bill_query[0] 
         bill_no=bill_query.aggregate(Max('bill_no'))['bill_no__max']+1
     else:
         bill_no=1
@@ -546,8 +545,9 @@ from django.db import transaction
 def finalize_ledger_api(request):
     org_id = request.data.get("organization",None)
     bill_rcvr_org_id = request.data.get("bill_rcvr_org",None)
-    if org_id:
-        return JsonResponse({'success': False, 'message': str("d")}, status=400)
+    print("finalize_ledger_api org_id ",org_id," bill_rcvr_org_id ",bill_rcvr_org_id)
+    if org_id==None or org_id=="all" or org_id=="" or org_id=="null" or bill_rcvr_org_id==None or bill_rcvr_org_id=="all" or bill_rcvr_org_id=="" or bill_rcvr_org_id=="null":
+        return JsonResponse({'success': False, 'message': str("شرکت را انتخاب کنید")}, status=400)
     try:
         organization = Organization.objects.get(pk=int(org_id))
         bill_rcvr_org = Organization.objects.get(pk=int(bill_rcvr_org_id))
@@ -581,21 +581,21 @@ def finalize_ledger_api(request):
                 bill_no=bill_no,
                 organization=organization,
                 creator=request.user,
-                total=amount,
+                total=0,
                 payment=amount,
                 profit=0
             )
 
-            bill_description,desct_created=Bill_Description.objects.create(bill=bill, status=1)
-
-            bill_rcvr,receiver_created=Bill_Receiver2.objects.create(
+            bill_description=Bill_Description.objects.create(bill=bill, status=1)
+            print("bill_description ",bill_description)
+            bill_rcvr=Bill_Receiver2.objects.create(
                 bill=bill,
                 bill_rcvr_org=bill_rcvr_org,
                 is_approved=True,
-                approval_date=date2jalali(datetime.now()),
+                approval_date=str(date2jalali(datetime.now())),
                 approval_user=request.user
             )
-            print("bill ",bill," bill_description ",bill_description," desct_created ",desct_created," bill_rcvr ",bill_rcvr," receiver_created ",receiver_created)
+            print("bill ",bill," bill_description "," bill_rcvr ",bill_rcvr)
             # Optional: create/update the OrganizationBillSummary
             # create_bill_summary(bill)  # ← Your own summary function
 
@@ -607,4 +607,5 @@ def finalize_ledger_api(request):
     except Organization.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Organization not found'}, status=404)
     except Exception as e:
+        print("Error in finalize_ledger_api: ", str(e))
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
