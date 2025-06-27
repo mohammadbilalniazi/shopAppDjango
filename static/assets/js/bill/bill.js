@@ -230,6 +230,7 @@ async function add_row() {
     const removeBtn = createElement("input", {
         type: "button",
         value: "remove",
+        style:"background-color:red",
         className: "remove_btn btn btn-danger",
         onclick: () => remove_row(row, 0)
     });

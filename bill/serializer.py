@@ -30,7 +30,7 @@ class Bill_Receiver2_Serializer(serializers.ModelSerializer):
         return obj.bill_rcvr_org.name
 
 
-class Bill_search_Serializer(serializers.ModelSerializer):
+class BillSearchSerializer(serializers.ModelSerializer):
     # bill_description=Bill_Description_Serializer()
     bill_receiver2=Bill_Receiver2_Serializer()
     organization=serializers.SerializerMethodField()

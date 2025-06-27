@@ -44,7 +44,6 @@ async function search_product(url=null,search_by_org=false)
         return;
     }
     for(key in data['serializer_data']){     
-        var organization="";
         if(data['serializer_data'][key]['product_detail']!=undefined && data['serializer_data'][key]['product_detail']!=null )
         {
         organization=data['serializer_data'][key]['product_detail']['organization'];
@@ -83,11 +82,9 @@ async function search_product(url=null,search_by_org=false)
                 <button class="btn btn-primary" onclick="return update_stock(event, ${data['serializer_data'][key]['id']});">Update Stock</button>
                 </td>
             </tr>`;
- 
         bill_tbody.insertAdjacentHTML('beforeend', row);
     }
     console.log("product response ",response); 
-    
 }
 
 

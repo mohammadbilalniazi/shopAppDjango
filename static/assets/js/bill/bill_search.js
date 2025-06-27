@@ -126,7 +126,11 @@ async function search_bills(url=null)
     var start_date=document.getElementById("start_date_input").value;
     var end_date=document.getElementById("end_date_input").value;
     var bill_no=document.getElementById("bill_no").value;
-    var opposit_shirkat=document.getElementById("opposit_shirkat").value;
+    var bill_rcvr_org=document.getElementById("bill_rcvr_org").value;
+    var organization=document.getElementById("organization").value;
+    if(organization==""){
+        organization="all";
+    }
     
     var bill_type=document.getElementById("bill_type").value;
     if(bill_no=="" || bill_no==null)
@@ -134,23 +138,48 @@ async function search_bills(url=null)
         bill_no=0;
     }
 
-    if(opposit_shirkat=="")
+    if(bill_rcvr_org=="")
     {
-        opposit_shirkat="all";
+        bill_rcvr_org="all";
     }
 
-    
-
-    method="GET"; 
     if(url==null){
     url=`/bill/search/`;  
     }
-    const data={bill_type:bill_type,bill_no:bill_no,opposit_shirkat:opposit_shirkat,start_date:start_date,end_date:end_date}
+    const data={bill_type:bill_type,organization:organization,bill_no:bill_no,bill_rcvr_org:bill_rcvr_org,start_date:start_date,end_date:end_date}
     let response=await call_shirkat(url,"POST",data);
     console.log("search resutls",response.data)
     make_table(response.data);
 }
 
+
+async function finalizeLedger() {
+
+    var bill_rcvr_org=document.getElementById("bill_rcvr_org").value;
+    var organization=document.getElementById("organization").value;
+    if(organization==""){
+        organization="all";
+    }
+
+    if(bill_rcvr_org=="")
+    {
+        bill_rcvr_org="all";
+    }
+
+    
+
+    if (!bill_rcvr_org || bill_rcvr_org == "all" || bill_rcvr_org == "undefined" || organization=="all" || organization == "undefined") {
+        alert("Please select an organization to finalize the ledger.");
+        return;
+    }
+
+    const data= {
+        bill_rcvr_org: bill_rcvr_org,
+        organization: organization
+    };
+
+    let response=await call_shirkat(`/organizations/finalize-ledger`,"POST",data);
+}
 
 document.getElementById("search_kahatha").addEventListener("click",e=>{e.preventDefault();search_bills(); return  false;});
 

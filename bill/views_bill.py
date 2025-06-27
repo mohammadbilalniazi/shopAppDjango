@@ -16,9 +16,13 @@ from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q,Max
 from django.db import transaction
-from .serializer import Bill_search_Serializer
+from .serializer import BillSearchSerializer
 import re
 from rest_framework.pagination import PageNumberPagination
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     date = date2jalali(datetime.now()) 
@@ -419,63 +423,28 @@ def bill_insert(request):
     else:  
         messages.success(request,message)
     return Response({"message":message,"ok":ok,"data":model_to_dict(bill_obj),"bill_id":bill_obj.id})    
-
-@api_view(('POST',)) 
-def search(request,page=None):
-    bill_type=request.data.get("bill_type",None)
-    bill_no=request.data.get("bill_no",None)
-    bill_rcvr_org=request.data.get("bill_rcvr_org",None)
-    start_date=request.data.get("start_date",None)
-    end_date=request.data.get("end_date",None)
-    print("#####bill_type ",bill_type,"bill_no ",bill_no," bill_rcvr_org ",bill_rcvr_org," start_date ",start_date," end_date ",end_date)
-    start_date=re.sub('\t','',str(start_date))
-    end_date=re.sub('\t','',str(end_date))
-    (self_organization,parent_organization)=find_organization(request)
-    query=Bill.objects.filter(Q(date__range=[start_date,end_date]),Q(organization=parent_organization)|Q(bill_receiver2__bill_rcvr_org=parent_organization))
-    print("1 query coutn ",query.count())
-    if int(bill_no)!=0:
-        query=query.filter(bill_no=int(bill_no))
-        # print("########bill_no 2",query)
-    if bill_type!=None and bill_type!="" and bill_type!="all":
-        query=query.filter(
-        bill_type=bill_type)
-        # print("#############bill_type 2",query)
- 
-    payment_sum_expense=query.filter(organization=parent_organization,
+def get_statistics_bill(query):
+        
+    payment_sum_expense=query.filter(
     bill_type='EXPENSE').aggregate(Sum("payment"))['payment__sum']
-    # total_sum_expense=query.filter(orgasnization=parent_organization,
-    # bill_type='EXPENSE').aggregate(Sum("total"))['total__sum']
     
-    if bill_rcvr_org!=None and bill_rcvr_org!="" and bill_rcvr_org!="null" and bill_rcvr_org!="all":
-        query=query.filter(Q(organization__id=int(bill_rcvr_org))|Q(bill_receiver2__bill_rcvr_org__id=int(bill_rcvr_org)))
-    # if bill_type=="all":
-    paginator=PageNumberPagination()
-    paginator.page_size=8
-    query_set=paginator.paginate_queryset(query.order_by("-pk"),request)
-    serializer=Bill_search_Serializer(query_set,many=True)
-    # serializer=Bill_search_Serializer(query.order_by("-pk"),many=True)
-
-    total_sum_purchase=query.filter(organization=parent_organization,
+    total_sum_purchase=query.filter(
     bill_type='PURCHASE').aggregate(Sum("total"))['total__sum']
-    payment_sum_purchase=query.filter(organization=parent_organization,
+    payment_sum_purchase=query.filter(
     bill_type='PURCHASE').aggregate(Sum("payment"))['payment__sum']
 
-    total_sum_selling=query.filter(organization=parent_organization,
+    total_sum_selling=query.filter(
     bill_type='SELLING').aggregate(Sum("total"))['total__sum']
-    payment_sum_selling=query.filter(organization=parent_organization,
+    payment_sum_selling=query.filter(
     bill_type='SELLING').aggregate(Sum("payment"))['payment__sum']
 
-    # total_sum_payment=query.filter(organization=parent_organization,
-    # bill_type='PAYMENT').aggregate(Sum("total"))['total__sum']
-    payment_sum_payment=query.filter(organization=parent_organization,
+    payment_sum_payment=query.filter(
     bill_type='PAYMENT').aggregate(Sum("payment"))['payment__sum']
 
-    # total_sum_receivement=query.filter(organization=parent_organization,
-    # bill_type='RECEIVEMENT').aggregate(Sum("total"))['total__sum']
-    receivement_sum=query.filter(organization=parent_organization,
+    receivement_sum=query.filter(
     bill_type='RECEIVEMENT').aggregate(Sum("payment"))['payment__sum']
  
-    profit_sum=query.filter(bill_type='SELLING',organization=parent_organization).aggregate(Sum("profit"))['profit__sum']
+    profit_sum=query.filter(bill_type='SELLING').aggregate(Sum("profit"))['profit__sum']
     bill_count=query.count()
     
     if total_sum_purchase==None:
@@ -488,88 +457,27 @@ def search(request,page=None):
     if payment_sum_selling==None:
         payment_sum_selling=0
 
-    # if total_sum_payment==None:
-    #     total_sum_payment=0
     if payment_sum_payment==None:
         payment_sum_payment=0
     
-    # if total_sum_expense==None:
-    #     total_sum_expense=0
     if payment_sum_expense==None:
         payment_sum_expense=0
     
-    
-    # if total_sum_receivement==None:
-    #     total_sum_receivement=0
     if receivement_sum==None:
         receivement_sum=0 
     if profit_sum==None:
         profit_sum=0
-    
-    ################################################opposit##############################
-    # total_sum_purchase_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='SELLING').aggregate(Sum("total"))['total__sum']
-    # payment_sum_purchase_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='SELLING').aggregate(Sum("payment"))['payment__sum']
-    
-
-    # total_sum_selling_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='PURCHASE').aggregate(Sum("total"))['total__sum']
-    # payment_sum_selling_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='PURCHASE').aggregate(Sum("payment"))['payment__sum']
-
-
-    # total_sum_payment_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='RECEIVEMENT').aggregate(Sum("total"))['total__sum']
-    # payment_sum_payment_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='RECEIVEMENT').aggregate(Sum("payment"))['payment__sum']
-
-    # total_sum_receivement_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='PAYMENT').aggregate(Sum("total"))['total__sum']
-    # receivement_sum_from_bill_of_bill_rcvr_org=query.filter(bill_receiver2__bill_rcvr_org=parent_organization,
-    # bill_type='PAYMENT').aggregate(Sum("payment"))['payment__sum']
-    
-    # profit_sum_from_bill_of_bill_rcvr_org=query.filter(bill_type='PURCHASE',bill_receiver2__bill_rcvr_org=parent_organization).aggregate(Sum("profit"))['profit__sum']
-    
-    # if total_sum_purchase_from_bill_of_bill_rcvr_org!=None:
-    #     total_sum_purchase=total_sum_purchase+total_sum_purchase_from_bill_of_bill_rcvr_org
-    # if payment_sum_purchase_from_bill_of_bill_rcvr_org!=None:
-    #     payment_sum_purchase=payment_sum_purchase+payment_sum_purchase_from_bill_of_bill_rcvr_org
-    
-    # if total_sum_selling_from_bill_of_bill_rcvr_org!=None:
-    #     total_sum_selling=total_sum_selling+total_sum_selling_from_bill_of_bill_rcvr_org
-
-    # if payment_sum_selling_from_bill_of_bill_rcvr_org!=None:
-    #     payment_sum_selling=payment_sum_selling+payment_sum_selling_from_bill_of_bill_rcvr_org
-
-    # if total_sum_payment_from_bill_of_bill_rcvr_org!=None:  
-    #     total_sum_payment=total_sum_payment+total_sum_payment_from_bill_of_bill_rcvr_org
-
-    # if payment_sum_payment_from_bill_of_bill_rcvr_org!=None:
-    #     payment_sum_payment=payment_sum_payment+payment_sum_payment_from_bill_of_bill_rcvr_org
-
-    # if total_sum_receivement_from_bill_of_bill_rcvr_org!=None:
-    #     total_sum_receivement=total_sum_receivement+total_sum_receivement_from_bill_of_bill_rcvr_org
-    
-    # if receivement_sum_from_bill_of_bill_rcvr_org!=None:
-    #     receivement_sum=receivement_sum+receivement_sum_from_bill_of_bill_rcvr_org
-    
-    # if profit_sum_from_bill_of_bill_rcvr_org!=None:
-    #     profit_sum=profit_sum+profit_sum_from_bill_of_bill_rcvr_org
-    print("profit_sum",profit_sum)
+    # print("profit_sum",profit_sum)
     #####################################summation of bill created by organization and by opposit organization#################
-   
     notpaid_purchase=total_sum_purchase-payment_sum_purchase
     notpaid_sell=total_sum_selling-payment_sum_selling
     total_upon_opposit_org=total_sum_selling+payment_sum_payment+payment_sum_purchase
     total_upon_self_org=total_sum_purchase+payment_sum_selling+receivement_sum
     total_summary=total_upon_opposit_org-total_upon_self_org
-    
     possessed_cash_asset=(payment_sum_selling+receivement_sum)-(payment_sum_purchase+payment_sum_expense+payment_sum_payment)
     possessed_non_cash_asset=total_sum_purchase-total_sum_selling
     total_asset=possessed_cash_asset+possessed_non_cash_asset
     net_profit_sum=profit_sum-payment_sum_expense
-
     #current_profit=total_asset-initial_total_asset
 
     statistics=dict({
@@ -583,21 +491,120 @@ def search(request,page=None):
                     "total_sum_selling":total_sum_selling,
                     "payment_sum_selling":payment_sum_selling,
                     "notpaid_sell":notpaid_sell,
-                    # "total_sum_payment":total_sum_payment,
                     "payment_sum_payment":payment_sum_payment,
-                    # "total_sum_expense":total_sum_expense,
                     "payment_sum_expense":payment_sum_expense,
-                    # "total_sum_receivement":total_sum_receivement,
                     "payment_sum_receivement":receivement_sum,
                     "possessed_cash_asset":possessed_cash_asset,
                     "possessed_non_cash_asset":possessed_non_cash_asset,
                     "total_asset":total_asset,
                     "profit_sum":profit_sum,
                     "net_profit_sum":net_profit_sum
-                    # "current_profit":current_profit,
                     })      
-    print("#####################################",query)
+    # print("#####################################",query)
     # query=query.order_by("-pk").values()
-    
+    return statistics
+@api_view(('POST',)) 
+def search(request,page=None):
+    bill_type=request.data.get("bill_type",None)
+    bill_no=request.data.get("bill_no",None)
+    bill_rcvr_org=request.data.get("bill_rcvr_org",None)
+    organization=request.data.get("organization",None)
+    if organization==None or organization=="" or organization=="null":
+        (self_organization,parent_organization)=find_organization(request)
+    else:
+        (self_organization,parent_organization)=find_organization(request,organization)
+    start_date=request.data.get("start_date",None)
+    end_date=request.data.get("end_date",None)
+    print("#####bill_type ",bill_type,"bill_no ",bill_no," bill_rcvr_org ",bill_rcvr_org," start_date ",start_date," end_date ",end_date)
+    start_date=re.sub('\t','',str(start_date))
+    end_date=re.sub('\t','',str(end_date))
+    # (self_organization,parent_organization)=find_organization(request)
+    query=Bill.objects.filter(Q(date__range=[start_date,end_date]),Q(organization=parent_organization)|Q(bill_receiver2__bill_rcvr_org=parent_organization))
+    print("1 query coutn ",query.count())
+    if int(bill_no)!=0:
+        query=query.filter(bill_no=int(bill_no))
+        # print("########bill_no 2",query)
+    if bill_type!=None and bill_type!="" and bill_type!="all":
+        query=query.filter(
+        bill_type=bill_type)
+        # print("#############bill_type 2",query)
+    if bill_rcvr_org!=None and bill_rcvr_org!="" and bill_rcvr_org!="null" and bill_rcvr_org!="all":
+        query=query.filter(Q(bill_receiver2__bill_rcvr_org__id=int(bill_rcvr_org)))
+    paginator=PageNumberPagination()
+    paginator.page_size=8
+    query_set=paginator.paginate_queryset(query.order_by("-pk"),request)
+    serializer=BillSearchSerializer(query_set,many=True)
+    statistics=get_statistics_bill(query)    
     serializer_context={"message":"OK","ok":True,"statistics":statistics,"serializer_data":serializer.data}
     return paginator.get_paginated_response(serializer_context)
+
+from decimal import Decimal
+from django.db import transaction
+
+@login_required(login_url='/admin')
+@api_view(['POST'])
+def finalize_ledger_api(request):
+    org_id = request.data.get("organization",None)
+    bill_rcvr_org_id = request.data.get("bill_rcvr_org",None)
+    if org_id:
+        return JsonResponse({'success': False, 'message': str("d")}, status=400)
+    try:
+        organization = Organization.objects.get(pk=int(org_id))
+        bill_rcvr_org = Organization.objects.get(pk=int(bill_rcvr_org_id))
+
+        query = Bill.objects.filter(
+            organization=organization,
+            bill_receiver2__bill_rcvr_org=bill_rcvr_org
+        )
+        statistics = get_statistics_bill(query)
+        total_summary = Decimal(statistics.get('total_summary') or 0)
+
+        if total_summary == 0:
+            return JsonResponse({'success': False, 'message': 'No balance to finalize.'}, status=400)
+
+        # Decide bill type and amount
+        if total_summary < 0:
+            bill_type = 'PAYMENT'
+            amount = abs(total_summary)
+        else:
+            bill_type = 'RECEIVEMENT'
+            amount = total_summary
+
+        bill_no = getBillNo(request, organization.id, bill_rcvr_org.id, bill_type)
+
+        with transaction.atomic():
+            # Create the bill
+            bill = Bill.objects.create(
+                bill_type=bill_type,
+                date=date2jalali(datetime.now()),
+                year=int(date2jalali(datetime.now()).strftime('%Y')),
+                bill_no=bill_no,
+                organization=organization,
+                creator=request.user,
+                total=amount,
+                payment=amount,
+                profit=0
+            )
+
+            bill_description,desct_created=Bill_Description.objects.create(bill=bill, status=1)
+
+            bill_rcvr,receiver_created=Bill_Receiver2.objects.create(
+                bill=bill,
+                bill_rcvr_org=bill_rcvr_org,
+                is_approved=True,
+                approval_date=date2jalali(datetime.now()),
+                approval_user=request.user
+            )
+            print("bill ",bill," bill_description ",bill_description," desct_created ",desct_created," bill_rcvr ",bill_rcvr," receiver_created ",receiver_created)
+            # Optional: create/update the OrganizationBillSummary
+            # create_bill_summary(bill)  # ← Your own summary function
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Ledger finalized with {amount} ({bill_type}) for {bill_rcvr_org.name}'
+        })
+
+    except Organization.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Organization not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)

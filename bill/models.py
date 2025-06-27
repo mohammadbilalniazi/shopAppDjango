@@ -54,7 +54,6 @@ class Bill_detail(models.Model):
     class Meta:
         # unique_together =("bill","product",)
         verbose_name_plural = "Bill detail" 
-
  
 @receiver(post_delete, sender=Bill_detail)
 def update_stock_on_delete(sender, instance, **kwargs):

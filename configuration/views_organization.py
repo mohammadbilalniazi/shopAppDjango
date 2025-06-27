@@ -20,6 +20,7 @@ from rest_framework.decorators import api_view
 from common.file_handle import delete_file
 from common.organization import find_organization
 import random
+from django.db.models import Q
 
 @login_required
 @api_view(('GET','DELETE'))
@@ -37,27 +38,29 @@ def rcvr_org_show(request,id="all"):
         print("query set ",query_set)
     else:
         query_set=Organization.objects.filter(name=str(id))
-
     serializer=OrganizationSerializer(query_set,many=True)
-    # print("serialzier ",serializer)
     return Response(serializer.data)
-@login_required(login_url='/admin') 
-def show(request,page=None):
-    print("organization id =",page)
-    context={}
-    organizations=Organization.objects.all().order_by("-pk")
-    template=loader.get_template('configurations/organization_show.html')
-    organizations=Paginator(organizations,per_page=10)
-    if page==None:
-        page=1
-    organizations=organizations.get_page(page)
-    # print("organizations ",organizations.next_page_number())
-    context['organizations']=organizations
-    return HttpResponse(template.render(context,request))
+
+@login_required(login_url='/admin')
+def show(request):
+    q = request.GET.get('q', '')
+    organizations = Organization.objects.all().order_by("-pk")
+    if q:
+        organizations = organizations.filter(Q(name__icontains=q))
+    
+    paginator = Paginator(organizations, per_page=10)
+    page = request.GET.get('page') or 1
+    organizations = paginator.get_page(page)
+
+    template = loader.get_template('configurations/organization_show.html')
+    return HttpResponse(template.render({
+        'organizations': organizations,
+        'request': request,  # So you can use request.GET.q in the template
+    }, request))
+
 @login_required()
 def delete(request,id=None):
     print("delete is called ","id!=None ",id!=None," id ",id)
-    
     if id!=None:
         query=Organization.objects.filter(id=int(id))
         print("query ",query," request.user.is_superuser ",request.user.is_superuser)
