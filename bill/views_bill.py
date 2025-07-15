@@ -28,7 +28,7 @@ def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     date = date2jalali(datetime.now()) 
     year=date.strftime('%Y')
     (self_organization,parent_organization)=find_organization(request,organization_id)
-    print("self_organization , parent_organization ",self_organization,parent_organization)
+    # print("self_organization , parent_organization ",self_organization,parent_organization)
     (bill_rcvr_org,parent_bill_rcvr_org)=find_organization(request,bill_rcvr_org_id)
     opposit_bill=get_opposit_bill(bill_type)
     print("opposit_bill ",opposit_bill)
@@ -73,13 +73,15 @@ def bill_show(request,bill_id=None):
     print("bill_id =",bill_id)
     context={}
     form=Bill_Form()
+    form.set_start_date()
+    print(f"############ start_date {form.fields["start_date"].initial}")
     context['form']=form
     (self_organization,parent_organization)=find_organization(request)
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
         context['rcvr_orgs']=Organization.objects.all() 
         template=loader.get_template('bill/bill_show.html')
-    else: 
+    else:  
         bill=Bill.objects.get(id=int(bill_id))
         form.fields['date'].initial=str(bill.date) #before  hawala.mustharadi_file
         # print("bill_obj",bill_obj.bill_detail_set.all().order_by("id"))
@@ -109,7 +111,6 @@ def bill_show(request,bill_id=None):
     else:
         organizations=Organization.objects.filter(id=parent_organization.id)
     context['organizations']=organizations
-    
     return HttpResponse(template.render(context,request))
 
 
@@ -123,8 +124,8 @@ def bill_delete(request,id=None):
         bill_query=Bill.objects.filter(id=int(id))
         if bill_query.count()>0:
             bill_obj=bill_query[0]
-            if bill_obj.organization!=parent_organization:
-                message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
+            if  not request.user.is_superuser:
+                message="The Organization {} can not delete the bill id {} because it is not admin".format(parent_organization.name,id)
                 messages.error(request,message=message)
                 return bill_show(request,bill_id=id)
             bill_obj.delete()
@@ -542,16 +543,15 @@ from django.db import transaction
 
 @login_required(login_url='/admin')
 @api_view(['POST'])
-def finalize_ledger_api(request):
+def finalize_ledger(request):
     org_id = request.data.get("organization",None)
     bill_rcvr_org_id = request.data.get("bill_rcvr_org",None)
-    print("finalize_ledger_api org_id ",org_id," bill_rcvr_org_id ",bill_rcvr_org_id)
+    print("finalize_ledger org_id ",org_id," bill_rcvr_org_id ",bill_rcvr_org_id)
     if org_id==None or org_id=="all" or org_id=="" or org_id=="null" or bill_rcvr_org_id==None or bill_rcvr_org_id=="all" or bill_rcvr_org_id=="" or bill_rcvr_org_id=="null":
         return JsonResponse({'success': False, 'message': str("شرکت را انتخاب کنید")}, status=400)
     try:
         organization = Organization.objects.get(pk=int(org_id))
         bill_rcvr_org = Organization.objects.get(pk=int(bill_rcvr_org_id))
-
         query = Bill.objects.filter(
             organization=organization,
             bill_receiver2__bill_rcvr_org=bill_rcvr_org
@@ -563,10 +563,10 @@ def finalize_ledger_api(request):
             return JsonResponse({'success': False, 'message': 'No balance to finalize.'}, status=400)
 
         # Decide bill type and amount
-        if total_summary < 0:
+        if total_summary < 0: #should be paid the amount
             bill_type = 'PAYMENT'
             amount = abs(total_summary)
-        else:
+        else:  #should be received the amount to finalize
             bill_type = 'RECEIVEMENT'
             amount = total_summary
 
@@ -595,6 +595,7 @@ def finalize_ledger_api(request):
                 approval_date=str(date2jalali(datetime.now())),
                 approval_user=request.user
             )
+            # a="abc"/2
             print("bill ",bill," bill_description "," bill_rcvr ",bill_rcvr)
             # Optional: create/update the OrganizationBillSummary
             # create_bill_summary(bill)  # ← Your own summary function
@@ -607,5 +608,5 @@ def finalize_ledger_api(request):
     except Organization.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Organization not found'}, status=404)
     except Exception as e:
-        print("Error in finalize_ledger_api: ", str(e))
+        print("Error in finalize_ledger: ", str(e))
         return JsonResponse({'success': False, 'message': str(e)}, status=400)

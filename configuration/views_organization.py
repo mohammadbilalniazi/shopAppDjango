@@ -47,11 +47,9 @@ def show(request):
     organizations = Organization.objects.all().order_by("-pk")
     if q:
         organizations = organizations.filter(Q(name__icontains=q))
-    
     paginator = Paginator(organizations, per_page=10)
     page = request.GET.get('page') or 1
     organizations = paginator.get_page(page)
-
     template = loader.get_template('configurations/organization_show.html')
     return HttpResponse(template.render({
         'organizations': organizations,
@@ -87,7 +85,7 @@ def form(request,id=None):
     template=loader.get_template('configurations/organization_form.html')
     
     (self_organization,parent_organization)=find_organization(request)
-    print("self_organization ",self_organization," parent_organization ",parent_organization)
+    # print("self_organization ",self_organization," parent_organization ",parent_organization)
     context['self_organization']=self_organization
     context['parent_organization']=parent_organization
     # HttpResponse("TES") 
@@ -158,7 +156,6 @@ def create(request,id=None):
                 # if owner_user_query.count()==0:
                 user_query= User.objects.filter(username=owner)
                 if user_query.count()>0:
-                    # owner=user_query[0]
                     owner=owner+str(random.randint(2,1000))
                 else:
                     owner = User.objects.create_user(username=owner,first_name=name,last_name=last_name,email=email,is_staff=True,is_active=is_active) 

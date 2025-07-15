@@ -171,3 +171,6 @@ def bill_insert(request):
         messages.success(request,message)
     return Response({"message":message,"ok":ok,"data":model_to_dict(bill_obj),"bill_id":bill_obj.id})    
 
+
+
+

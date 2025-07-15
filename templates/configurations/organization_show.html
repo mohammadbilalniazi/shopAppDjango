@@ -93,15 +93,6 @@
                   {% for org in organizations %}
                     <tr>
                       <td>{{ org.name }}</td>
-
-                      <!-- Receive Pay + Finalize Button -->
-                      <!-- <td> -->
-                        <!-- <div class="input-group"> -->
-                          <!-- <input type="number" id="amount-{{ org.id }}" class="form-control form-control-sm" placeholder="Amount" required> -->
-                          <!-- <button class="btn btn-sm btn-warning" onclick="finalizeLedger({{ org.id }})">Finalize Ledger</button> -->
-                        <!-- </div> -->
-                      <!-- </td> -->
-
                       <td>
                         <a href="/configuration/organization/form/{{ org.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
                       </td>

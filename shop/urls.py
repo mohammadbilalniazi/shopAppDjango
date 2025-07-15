@@ -21,12 +21,11 @@ from product import views_product,views_unit,views_stock
 from user import views_login
 from configuration import views_organization,views_location
 # from qrapp import views_qr 
-
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings #new
 from django.conf.urls.static import static #new
-from user import views_login
+from user import views_login,views_organization_user
 from expenditure import views as expenditure_view
 
 urlpatterns = [ 
@@ -34,7 +33,7 @@ urlpatterns = [
     path('expenditure/bill/form/',expenditure_view.expense_form),
     path('expenditure/bill/form/<id>/',expenditure_view.expense_form),
     path('expenditure/bill/insert/',expenditure_view.expense_insert),
-     path('organizations/finalize-ledger', views_bill.finalize_ledger_api, name='finalize_ledger_api'),
+     path('organizations/finalize-ledger', views_bill.finalize_ledger, name='finalize_ledger'),
     path('organizations/<id>/',views_organization.rcvr_org_show,name='rcvr_org_show'),
     path('conifgurations/organization/',views_organization.show,name='organization_show'),
     path('admin/configuration/organization/',views_organization.show,name='organization_show'),
@@ -54,8 +53,6 @@ urlpatterns = [
     path('receive_payment/bill/',views_bill_receive_payment.bill_form),
     path('admin/bill/bill/',views_bill.bill_show),
     path('bill/detail/<bill_id>/',views_bill.bill_show),
-    path('bill/update/<bill_id>/',views_bill.bill_show),
-
     path('products/',views_product.show,name='product_show'),
     path('products/product_form/',views_product.form,name='product_form'),
     path('product/product/add/<id>',views_product.form,name='product_form'),
@@ -68,6 +65,15 @@ urlpatterns = [
     path('products/product/add/<id>',views_product.form,name='product_form'),
     path('product/product_form/create/',views_product.create,name='product_form_create'),
     path('product/product_form/create/<id>',views_product.create,name='product_form_create'),
+
+    path('admin/user/organizationuser/add/',views_organization_user.form,name='organization_user_form'),
+    path('admin/user/organizationuser/',views_organization_user.form,name='organization_user_form'),
+    path('user/organization_user/add/<id>',views_organization_user.form,name='organization_user_form'),
+    path('user/organization_user/insert/',views_organization_user.insert,name='organization_user_insert'),
+    path('user/organization_user/get/',views_organization_user.get,name='organization_user_get'),
+    path('user/organization_user/get/<id>',views_organization_user.get,name='organization_user_get_by_id'),
+    path('user/organization_user/search/',views_organization_user.search,name='organization_user_search'),
+
     path('units/<id>/',views_unit.show,name='unit_show'), 
     path('admin/', admin.site.urls),
     path('',admin.site.urls),

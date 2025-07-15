@@ -42,7 +42,7 @@ async function make_table(data)
          bill_rcvr_org=null;
         }
      
-        let update_href=`/bill/update/${data['serializer_data'][key]['id']}/`;
+        let update_href=`/bill/detail/${data['serializer_data'][key]['id']}/`;
         if(data['serializer_data'][key]['bill_type']=="EXPENSE"){
             update_href=`/expenditure/bill/form/${data['serializer_data'][key]['id']}/`;
         }

@@ -11,6 +11,7 @@ import pytz
 class Bill_Form(forms.Form):
     start_date = forms.CharField(label='شروع', max_length=100,widget=forms.TextInput(attrs={"placeholder":"شروع"}))
     end_date = forms.CharField(label='ختم', max_length=100,widget=forms.TextInput(attrs={"placeholder":"ختم"}))
+    
     def __init__(self,*args, **kwargs):
         super(Bill_Form,self).__init__(*args,**kwargs)
         date=pytz.timezone("Asia/Kabul").localize(datetime.now()).strftime('%Y-%m-%d')
@@ -44,3 +45,8 @@ class Bill_Form(forms.Form):
         self.fields["date"].widget.attrs['id']="date"
         self.fields['date'].initial=today
     
+    def set_start_date(self,date=None):
+        if date:
+            self.fields['start_date'].initial=date
+        else:
+            self.fields['start_date'].initial='1402-01-01'

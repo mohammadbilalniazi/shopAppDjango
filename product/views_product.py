@@ -32,7 +32,7 @@ def show_html(request,id=None):
 def form(request,id=None):
     context={}
     (self_organization,parent_organization)=find_organization(request)
-    stock_query=Stock.objects.filter(organization=self_organization)
+    stock_query=Stock.objects.filter(organization=parent_organization)
     if id!=None:
         product=Product.objects.get(id=int(id))
         context['product']=product
@@ -119,12 +119,12 @@ def create(request, id=None):
         product_detail_query.update(**product_detail)
     else:
         Product_Detail.objects.create(product=product, **product_detail)
-    stock, created = Stock.objects.get_or_create(product=product, organization=self_organization)
+    stock, created = Stock.objects.get_or_create(product=product, organization=parent_organization)
     if not created:
         stock.current_amount = stock_detail["current_amount"]
         stock.save()
     return Response({"message": message, "ok": ok, "id": product.id})
-
+ 
 @api_view(['POST'])
 def show(request):
     # print("method",request.method,"data",request.data)
@@ -135,9 +135,9 @@ def show(request):
         query_set=Product.objects.order_by('-pk')
     else:
         query_set=Product.objects.filter(product_detail__organization=parent_organization)
-    if item_name:
+    if item_name: 
         query_set=query_set.filter(item_name__icontains=item_name)
-    context={'organization':self_organization.id if hasattr(self_organization,'id') else None}
+    context={'organization':parent_organization.id if hasattr(parent_organization,'id') else None}
     is_paginate=int(request.data.get("is_paginate",0))
     if  is_paginate==1:
         paginator=PageNumberPagination()

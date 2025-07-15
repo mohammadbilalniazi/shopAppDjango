@@ -19,7 +19,7 @@ async function search_product(url=null,search_by_org=false)
     nex=response.data['next']
     let data=response.data.results;
     // console.log("data ",data);
-    const bill_tbody = document.querySelector('#product_body');
+    const product_tbody = document.querySelector('#product_body');
     pagination = document.querySelector("#pagination_id");
     // console.log("pagination ",pagination.innerHTML)
     pagination.innerHTML = "";
@@ -33,7 +33,7 @@ async function search_product(url=null,search_by_org=false)
     }
     html = next + previous
     pagination.insertAdjacentHTML('beforeend', html);
-    bill_tbody.innerHTML="";
+    product_tbody.innerHTML="";
     // console.log(data)
     
     //console.log('data ',data);
@@ -82,7 +82,7 @@ async function search_product(url=null,search_by_org=false)
                 <button class="btn btn-primary" onclick="return update_stock(event, ${data['serializer_data'][key]['id']});">Update Stock</button>
                 </td>
             </tr>`;
-        bill_tbody.insertAdjacentHTML('beforeend', row);
+        product_tbody.insertAdjacentHTML('beforeend', row);
     }
     console.log("product response ",response); 
 }

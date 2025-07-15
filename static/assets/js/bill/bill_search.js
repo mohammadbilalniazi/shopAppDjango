@@ -105,7 +105,7 @@ async function make_table(data)
          bill_rcvr_org=null;
         }
      
-        let update_href=`/bill/update/${data['serializer_data'][key]['id']}/`;
+        let update_href=`/bill/detail/${data['serializer_data'][key]['id']}/`;
         if(data['serializer_data'][key]['bill_type']=="EXPENSE"){
             update_href=`/expenditure/bill/form/${data['serializer_data'][key]['id']}/`;
         }
@@ -153,7 +153,7 @@ async function search_bills(url=null)
 }
 
 
-async function finalizeLedger() {
+async function finalize_ledger() {
 
     var bill_rcvr_org=document.getElementById("bill_rcvr_org").value;
     var organization=document.getElementById("organization").value;
@@ -166,8 +166,6 @@ async function finalizeLedger() {
         bill_rcvr_org="all";
     }
 
-    
-
     if (!bill_rcvr_org || bill_rcvr_org == "all" || bill_rcvr_org == "undefined" || organization=="all" || organization == "undefined") {
         alert("Please select an organization to finalize the ledger.");
         return;
@@ -178,7 +176,8 @@ async function finalizeLedger() {
         organization: organization
     };
 
-    let response=await call_shirkat(`/organizations/finalize-ledger`,"POST",data);
+    let response=await call_shirkat(`/organizations/finalize-ledger`,"POST",data); 
+    search_bills();
 }
 
 document.getElementById("search_kahatha").addEventListener("click",e=>{e.preventDefault();search_bills(); return  false;});
