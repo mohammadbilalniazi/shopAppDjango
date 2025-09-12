@@ -26,7 +26,7 @@ def show_html(request,id=None):
     self_organization,parent_organization,user_orgs = find_userorganization(request)
 
     context['products']=query.order_by("-pk")
-    context['organizations']=Organization.objects.all()
+    context['organizations']=user_orgs
     context['products_length']=query.count()
     return render(request,'products/products.html',context)
 
@@ -51,6 +51,7 @@ def form(request,id=None):
     template=loader.get_template('products/product_form.html')
     context['self_organization']=self_organization
     context['parent_organization']=parent_organization
+    context['organizations']=user_orgs
     context['categories']=Category.objects.all()
     return HttpResponse(template.render(context,request))
 
@@ -132,7 +133,7 @@ def create(request, id=None):
 @api_view(['POST'])
 def show(request):
     item_name=request.data.get("item_name",None)
-    organization_id = request.data.get("organization", "all")
+    organization_id = request.data.get("organization", None)
     self_organization,parent_organization,user_orgs = find_userorganization(request,None if organization_id=="all" else organization_id)
     if organization_id=="all":
         query_set=Product.objects.order_by('-pk')
@@ -140,7 +141,8 @@ def show(request):
         query_set=Product.objects.filter(product_detail__organization=parent_organization)
     if item_name: 
         query_set=query_set.filter(item_name__icontains=item_name)
-    context={'organization':parent_organization.id if hasattr(parent_organization,'id') else None}
+    print("parent_organization ",parent_organization)
+    context={'organization':parent_organization.id if hasattr(parent_organization,'id') else None,'request':request}
     is_paginate=int(request.data.get("is_paginate",0))
     if  is_paginate==1:
         paginator=PageNumberPagination()

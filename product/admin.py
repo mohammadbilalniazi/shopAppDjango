@@ -14,52 +14,6 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product) 
 class ProductAdmin(admin.ModelAdmin):
-    list_display=("item_name","model","category","get_minimum_requirement","get_row","get_column","get_purchased_price","get_selling_price")
+    list_display=("item_name","model","category")
     list_filter=("category","item_name")
-    def get_column(self, obj):
-        if obj.row_column_address:
-            return obj.row_column_address.column
-        else:
-            return None
-    def get_row(self, obj):
-        if obj.row_column_address:
-            return obj.row_column_address.row
-        else:
-            return None
-
-    
-
  
-    def get_minimum_requirement(self, obj):
-        if obj.product_detail:
-            return obj.product_detail.minimum_requirement
-        else:
-            return 1
-    
-    def get_purchased_price(self, obj):
-        if obj.product_detail:
-            return obj.product_detail.purchased_price
-        else:
-            return 0
-
-    def get_selling_price(self, obj):
-        if obj.product_detail:
-            return obj.product_detail.selling_price
-        else:
-            return 0
-
-
- 
-# @admin.register(Service) 
-# class ServiceAdmin(admin.ModelAdmin):
-#     list_display=("name","category","dest","detail","html_id","is_active")
-
- 
-# @admin.register(SubService) 
-# class SubSerivceAdmin(admin.ModelAdmin):
-#     list_display=("service","sub_service_name","dest","detail","html_id","is_active")
-
-
-    
-
-    # Service=("service","uploader","file","is_active") 

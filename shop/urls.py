@@ -39,6 +39,8 @@ urlpatterns = [
     path('receive_payment/bill/save/', views_bill_receive_payment.bill_insert),
     path('receive_payment/bill/', views_bill_receive_payment.bill_form),
     path('bill/detail/<bill_id>/', views_bill.bill_show),
+    path('admin/bill/bill/', views_bill.bill_show),
+    path('admin/bill/bill/add/', views_bill.bill_form),
 
     # Products
     path('products/', views_product.show, name='product_show'),
@@ -46,12 +48,15 @@ urlpatterns = [
     path('product/product/add/<id>', views_product.form, name='product_form'),
     path('stock/update/', views_stock.update, name='update_stock'),
     path('product/product/', views_product.show_html, name='product_show_html'),
+    path('admin/product/product/', views_product.show_html, name='product_show_html'),
+    path('admin/product/product/add/', views_product.form, name='product_form'),
     path('products/product/add/', views_product.form, name='product_form'),
     path('products/product/add/<id>', views_product.form, name='product_form'),
     path('product/product_form/create/', views_product.create, name='product_form_create'),
     path('product/product_form/create/<id>', views_product.create, name='product_form_create'),
 
     # Users & Organization Users
+    path('admin/user/organizationuser/add/', views_organization_user.form, name='organization_user_form'),
     path('user/organization_user/add/<id>', views_organization_user.form, name='organization_user_form'),
     path('user/organization_user/insert/', views_organization_user.insert, name='organization_user_insert'),
     path('user/organization_user/get/', views_organization_user.get, name='organization_user_get'),

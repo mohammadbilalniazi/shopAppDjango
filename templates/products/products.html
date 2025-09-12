@@ -151,6 +151,16 @@
    <div class="text"><span> selling price</span></div>
    <div class="clear"></div>
 </th>
+<th scope="col" class="column-get_image">
+   
+   <div class="text"><span> Image</span></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="column-actions">
+   
+   <div class="text"><span> Actions</span></div>
+   <div class="clear"></div>
+</th>
 </tr>
 <tr ><div id='pagination_id'></div></tr>
 </thead>
@@ -194,9 +204,13 @@
 <script src="/static/assets/js/product/product.js"></script>
 <script>
      const item_name=document.getElementById("item_name");
+     const organization=document.getElementById("organization");
       const search_by_org=true;
     search_product(null,search_by_org);
      item_name.addEventListener("input",(e)=>{
+         search_product(null,search_by_org);
+     });
+      organization.addEventListener("change",(e)=>{
          search_product(null,search_by_org);
      });
      

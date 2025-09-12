@@ -16,32 +16,30 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
     category=serializers.SerializerMethodField()
     purchase_amount=serializers.SerializerMethodField()
     selling_amount=serializers.SerializerMethodField()
+    img=serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields =['id','item_name','model','product_detail','category','purchase_amount','selling_amount','current_amount']
+        fields =['id','item_name','model','img','product_detail','category','purchase_amount','selling_amount','current_amount']
 
     def get_purchase_amount(self,obj):
         organization=Organization.objects.get(id=int(self.context.get('organization')))
         self.stock,_=Stock.objects.get_or_create(organization=organization,product=obj) 
-        # self.all_purchasing_amount=Bill_detail.objects.filter(bill__bill_type="PURCHASE",product=obj).aggregate(Sum("item_amount"))['item_amount__sum']
-        # if self.all_purchasing_amount is None:
-        # self.all_purchasing_amount=0
         return self.stock.purchasing_amount
-    
+    def get_img(self,obj):
+        request=self.context.get("request",None)
+        if obj.img and hasattr(obj.img,"url"):
+            if request:
+                return request.build_absolute_uri(obj.img.url)
+            else:
+                return obj.img.url
+        return None
+
     def get_selling_amount(self,obj):
-        # self.all_selling_amount=Bill_detail.objects.filter(bill__bill_type="SELLING",product=obj).aggregate(Sum("item_amount"))['item_amount__sum']
-        # if self.all_selling_amount is None:
-        #     self.all_selling_amount=0
         return self.stock.selling_amount
     def get_category(self,obj):
         return obj.category.name
 
     def get_current_amount(self,obj):
-        # self.all_bill_current_amt=self.all_purchasing_amount-self.all_selling_amount
-        # if self.all_bill_current_amt!=self.stock.current_amount:
-        #     stock_current_amount=self.all_bill_current_amt
-        #     self.stock.current_amount=stock_current_amount
-        #     self.stock.save()
         return self.stock.current_amount
   
 

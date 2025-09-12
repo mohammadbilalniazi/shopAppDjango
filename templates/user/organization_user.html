@@ -1,220 +1,244 @@
-<html lang="en-us" dir="ltr"><head>
-<title>Add User To Organization </title>
-    <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
-    <link rel="stylesheet" type="text/css" href="/static/admin/css/nav_sidebar.css">
-    <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
-    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-    <link rel="stylesheet" type="text/css" href="/static/assets/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/assets/css/fontawesome.min.css">
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
-    <script src="/static/assets/js/alert.js"></script>
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Add User To Organization</title>
+  
+  <!-- Core Styles -->
+  <link rel="stylesheet" href="/static/admin/css/base.css">
+  <link rel="stylesheet" href="/static/admin/css/forms.css">
+  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
+  <link rel="stylesheet" href="/static/admin/css/responsive.css">
+  <link rel="stylesheet" href="/static/assets/css/common.css">
+  <link rel="stylesheet" href="/static/assets/css/fontawesome.min.css">
 
+  <!-- Meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="NONE,NOARCHIVE">
+
+  <!-- Scripts -->
+  <script src="/static/assets/js/alert.js"></script>
   <script src="/static/assets/js/axios.min.js"></script>
   <script src="/static/assets/js/cookie.js"></script>
   <script src="/static/assets/js/common_entities/create_element.js"></script>
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <link rel="stylesheet" href="/static/admin/css/responsive.css">
-    <meta name="robots" content="NONE,NOARCHIVE">
-    <style>
-        .inputs{
-            width:100%;
 
-        }
+  <!-- Custom Styling -->
+  <style>
+    body {
+      background-color: antiquewhite;
+      font-family: Arial, sans-serif;
+    }
 
-        select{
-            font-weight: 900;
-            /* color:blue */
-        }
-        
-        input[type=number],input[type=text]{
-            font-weight: 900;
-            /* font-size: large; */
-            /* color:blue */
-        }
-        td{
-              font-weight: 900;
-             font-size:17px; 
-             color:darkred;
-        }
-    </style>
+    .inputs {
+      width: 100%;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    select, input[type=text], input[type=number] {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    td {
+      font-weight: 700;
+      font-size: 16px;
+      color: darkred;
+      padding: 8px;
+    }
+
+    .alert {
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .alert-danger {
+      background-color: crimson;
+    }
+
+    .alert-success {
+      background-color: seagreen;
+    }
+
+    .header-title {
+      color: rgb(255, 174, 0);
+      font-weight: bold;
+      text-align: center;
+      font-size: 40px;
+      margin: 10px 0;
+    }
+
+    .breadcrumbs {
+      margin: 15px;
+      font-size: 14px;
+    }
+
+    .results table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .results th, .results td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .results th {
+      background: #f4f4f4;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .btn-success { background: seagreen; }
+    .btn-danger { background: crimson; }
+    .btn:hover { opacity: 0.85; }
+  </style>
 </head>
 
-<body class=" app-product model-product change-form" data-admin-utc-offset="16200" style="background-color:antiquewhite">
-<!-- Container -->
-<div id="container">
-    <!-- Header -->
-    <div id="header">
-        <div id="branding">
-        <h1 id="site-name"><a href="/admin/"></a><a href="/admin"><h1 style="color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px">Shirkat</h1></a></h1>
-        </div>
-        <div id="user-tools">
-                Welcome,
-                 <strong>{{user}}</strong>            
-                    <a href="/">View site</a> /
-                    <a href="/admin/password_change/">Change password</a> /
-                <form id="logout-form" method="post" action="/admin/logout/">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="8LP5v6xU4Ej19AeHnMIgx5oG3jZcHtckqlxNAjjB365TVjgKCgOTE84m3awem81F">
-                    <button type="submit">Log out</button>
-                </form>
-        </div>
+<body class="app-product model-product change-form" data-admin-utc-offset="16200">
+
+  <!-- Header -->
+  <header id="header">
+    <div id="branding">
+      <h1 class="header-title">Shirkat</h1>
     </div>
-    <!-- END Header -->
-<div class="breadcrumbs">
-<a href="/admin/">Home</a>
-› <a href="/admin/user/organizationuser/">Organization Users</a>
-›
-  <a href="/admin/user/organizationuser/add/" >
-        Add Organization User
-  </a>
-</div>
-    <div class="main shifted" id="main">
-<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
-<!-- <nav class="sticky" id="nav-sidebar">
-     <div class="app-purchase module">
+    <div id="user-tools">
+      Welcome, <strong>{{user}}</strong>
+      <a href="/">View site</a> /
+      <a href="/admin/password_change/">Change password</a> /
+      <form id="logout-form" method="post" action="/admin/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Log out</button>
+      </form>
+    </div>
+  </header>
+
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumbs" style="font-weight: bolder; font-size: 15px; color: darkred;">
+    <a href="/admin/">Home</a> › 
+    <a href="/admin/user/organizationuser/add">Organization Users</a> ›
+    <span><a href="/admin/user/organizationuser/add"> Add Organization User</a></span>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="main" class="main shifted">
+    <fieldset class="module aligned">
+      <!-- Form -->
+      <form id="organization_user_form" method="post" action="{{request.META.HTTP_NAME}}/user/organization_user/insert/" enctype="multipart/form-data">
+        {% csrf_token %}
         
-       <table style="margin-top:20%">
-             <thead>    
-            <tr ><div id='pagination_id'></div></tr>
-            </thead> 
-        <tbody id='product_body'>
-            
-        </tbody>
-       </table>
-    </div>
-  
-</nav>  -->
-    
-  <fieldset class="module aligned ">
-       
-<table style="margin-bottom: 10vh;">
-     <form method="post" id="organization_user_form" action='{{request.META.HTTP_NAME}}/user/organization_user/insert/' enctype="multipart/form-data"  >                  
-    {% csrf_token %}  
-    <tr>
-        <div>
-            {% if messages %}
-                {% for message in messages %}
-                    {% if message.tags == "error" %}
-                        <div class='alert alert-danger' style="background-color:red">
-                    
-                    {% else %}
-                    <div class='alert alert-success' dir="ltr"  style="background-color:green">
-                    {%endif%}
-                    {{message}}
-                    </div>
+        <!-- Messages -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <table>
+          <tr>
+            <td>System Id</td>
+            <td colspan="2">
+              {{organization_user.id}}
+              <input type="hidden" class="inputs" name="id" id="id" value="{{organization_user.id}}" disabled>
+            </td>
+          </tr>
+
+          <tr>
+            <td>First Name</td>
+            <td colspan="2">
+              <input type="text" class="inputs" oninput="search()" name="first_name" id="first_name" value="{{organization_user.user.first_name|default:''}}">
+            </td>
+            <td>Last Name</td>
+            <td colspan="2">
+              <input type="text" class="inputs" oninput="search()" name="last_name" id="last_name" value="{{organization_user.user.last_name|default:''}}">
+            </td>
+          </tr>
+
+          <tr>
+            <td>User Name</td>
+            <td colspan="2">
+              <input type="text" class="inputs" oninput="search()" name="username" id="username" value="{{organization_user.user.username|default:''}}">
+            </td>
+            <td>Password</td>
+            <td colspan="2">
+              <input type="text" class="inputs" name="password" id="password">
+            </td>
+          </tr>
+
+          <tr>
+            <td>Upload Image</td>
+            <td colspan="2">
+              <input type="file" class="inputs" name="img" id="img">
+            </td>
+            <td>Organization</td>
+            <td colspan="2">
+              <select name="organization" class="inputs" id="organization" onchange="search()">
+                {% for organization in organizations %}
+                  <option value="{{organization.id}}" {% if organization_user.organization == organization %}selected{% endif %}>
+                    {{organization}}
+                  </option>
                 {% endfor %}
-            {% endif %}
-        </div>
-    </tr>
-    <tr><td>System Id</td><td colspan="2">{{organization_user.id}}<input type="hidden" class="inputs" name="id"  disabled id="id" value='{{organization_user.id}}'></td></tr>
-     <tr>
-        <td>First Name</td>
-        <td colspan="2">
-        <input type="text" class="inputs" oninput="search()" name="first_name" id="first_name" {% if organization_user %} value="{{organization_user.user.first_name}}" {% endif %}>
-        </td>
-    
-        <td>Last Name</td>
-        <td colspan="2">
-        <input type="text" class="inputs" oninput="search()" name="last_name" id="last_name" {% if organization_user %} value="{{organization_user.user.last_name}}" {% endif %}>
-        </td>
-    </tr>
-    <tr>
-        <td>User Name</td>
-        <td colspan="2">
-        <input type="text" class="inputs" oninput="search()" name="username" id="username" {% if organization_user %} value="{{organization_user.user.username}}" {% endif %}>
-        </td>
-    
-        <td>Password</td>
-        <td colspan="2">
-        <input type="text" class="inputs" name="password" id="password" >
-        </td>
-    </tr>
-    <tr>
-        <td>Upload Image</td>
-        <td colspan="2">
-        <input type="file" class="inputs" name="img" id="img" >
-        </td>
-    <td>Organization</td>
-        <td colspan="2">
-        <select naLme="organization
-        33 /3 " onchange="search()" class="organization" id="organization">
-            {% for organization in organizations %}
-                <option {% if organization_user.organization == organization %} selected {% endif %} value='{{organization.id}}'>{{organization}}</option>
-            {% endfor %}
-        </select>
-        </td>
-    </tr>
-     <tr>
-        <td>Role</td>
-         <td colspan="2">
-        <select name="role" class="role" id="role">
-                <option {% if organization_user.role == "employee" %} selected {% endif %} value='employee'>Employee</option>
-                <option {% if organization_user.role == "admin" %} selected {% endif %} value='admin'>Admin</option>
-                <option {% if organization_user.role == "superuser" %} selected {% endif %} value='superuser'>Super User</option>
-                <option {% if organization_user.role == "owner" %} selected {% endif %} value='owner'>Organization Owner</option>
-       
-                
-            </select>
-        </td>
-        <td colspan="2">
-        <input type="submit" title="create user" value="create user" class="default" id="create_user">
-        </td>
-    </tr>
- </form> 
-</table>
-<div class="results">
-<table id="result_list">
-<thead>
-<tr>
-{% csrf_token %}       
+              </select>
+            </td>
+          </tr>
 
-<th scope="col" class="sortable column-organization">
-   
-   <div class="text"><a href="?o=1">Organization</a></div>
-   <div class="clear"></div>
-</th>
-<th scope="col" class="column-get_detail">
-   <div class="text"><span>User</span></div>
-   <div class="clear"></div>
-</th>
-<th scope="col" class="column-get_detail">
-   <div class="text"><span>first_name</span></div>
-   <div class="clear"></div>
-</th>
-<th scope="col" class="column-get_detail">
-   <div class="text"><span>last_name</span></div>
-</th>
+          <tr>
+            <td>Role</td>
+            <td colspan="2">
+              <select name="role" class="inputs" id="role">
+                <option value="employee" {% if organization_user.role == "employee" %}selected{% endif %}>Employee</option>
+                <option value="admin" {% if organization_user.role == "admin" %}selected{% endif %}>Admin</option>
+                <option value="superuser" {% if organization_user.role == "superuser" %}selected{% endif %}>Super User</option>
+                <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
+              </select>
+            </td>
+            <td colspan="2">
+              <input type="submit" value="{% if organization_user   %} Update User {% else %} Create User  {% endif %}" class="btn btn-success" id="create_user">
+            </td>
+          </tr>
+        </table>
+      </form>
 
-<th scope="col" class="column-get_detail">
-   <div class="text"><span>Role</span></div>
-   <div class="clear"></div>
-</th>
-<th scope="col" class="sortable column-category">
-   <div class="text"><a href="?o=3">Action</a></div>
-   <div class="clear"></div>
-</th>
-
-</tr>
-<tr ><div id='pagination_id'></div></tr>
-</thead>
-<tbody id="organization_user_body">
-</tbody>
-</table>
-</fieldset>
-</div>
-</div>
-</div>
-          <br class="clear">
-        </div>
-        <!-- END Content -->
-        <div id="footer"></div>
+      <!-- Results Table -->
+      <div class="results">
+        <table id="result_list">
+          <thead>
+            <tr>
+              <th>Organization</th>
+              <th>User</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Role</th>
+               <th>Profile</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="organization_user_body"></tbody>
+        </table>
+        <div id="pagination_id"></div>
       </div>
-    </div>
-</div>
-<!-- END Container -->
+    </fieldset>
+  </main>
 
+  <!-- Footer -->
+  <footer id="footer"></footer>
 
-<div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;"><div><a href="#" class="calendarnav-previous">&lt;</a><a href="#" class="calendarnav-next">&gt;</a></div><div id="calendarin0" class="calendar"><table><caption>March 2023</caption><tbody><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr><tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr><tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr><tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class=""><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="today"><a href="#">31</a></td><td class="nonday"> </td></tr></tbody></table></div><div class="calendar-shortcuts"><a href="#">Yesterday</a>&nbsp;|&nbsp;<a href="#">Today</a>&nbsp;|&nbsp;<a href="#">Tomorrow</a></div><p class="calendar-cancel"><a href="#">Cancel</a></p></div></body></html>
-  
-  <script src="/static/assets/js/common_entities/call_shirkat.js"></script> 
- <script src="/static/assets/js/user/organization_user.js"></script>  
+  <!-- Scripts -->
+  <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
+  <script src="/static/assets/js/user/organization_user.js"></script>
+</body>
+</html>

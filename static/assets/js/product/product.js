@@ -2,11 +2,11 @@ async function search_product(url=null,search_by_org=false)
 {
     let item_name=document.getElementById("item_name");
     let formdata={"item_name":item_name.value,'is_paginate':1}
+    let organization=null;
     if(search_by_org){
-        let organization=document.getElementById("organization").value;
+         organization=document.getElementById("organization").value;
         formdata['organization']=organization;
     }
-    console.log("data product search",formdata);
     if(url==null){
         url='/products/'
     }
@@ -18,10 +18,8 @@ async function search_product(url=null,search_by_org=false)
     prv=response.data['previous']
     nex=response.data['next']
     let data=response.data.results;
-    // console.log("data ",data);
     const product_tbody = document.querySelector('#product_body');
     pagination = document.querySelector("#pagination_id");
-    // console.log("pagination ",pagination.innerHTML)
     pagination.innerHTML = "";
     previous = ``;
     next = ``;
@@ -35,15 +33,12 @@ async function search_product(url=null,search_by_org=false)
     html = next + previous
     pagination.insertAdjacentHTML('beforeend', html);
     product_tbody.innerHTML="";
-    // console.log(data)
-    
-    //console.log('data ',data);
     if(!data['ok'])
     {
         alert("data['message'] ",data['message'])
         // show_message(data['message'],"error");
         return;
-    }
+    } 
     for(key in data['serializer_data']){     
         if(data['serializer_data'][key]['product_detail']!=undefined && data['serializer_data'][key]['product_detail']!=null )
         {
@@ -78,14 +73,16 @@ async function search_product(url=null,search_by_org=false)
                     <input type="number" id="stock_input_${data['serializer_data'][key]['id']}" value="${data['serializer_data'][key]['current_amount']}" class="form-control" />
                 </td>
                 <td>${purchased_price}</td><td>${selling_price}</td>
-                <td> <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update</a> </td>
                 <td>
+                <img  src="${data['serializer_data'][key]['img']}"  width="80" height="80"/>
+                </td>
+                <td> <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update product</a> 
                 <button class="btn btn-primary" onclick="return update_stock(event, ${data['serializer_data'][key]['id']});">Update Stock</button>
                 </td>
+                
             </tr>`;
         product_tbody.insertAdjacentHTML('beforeend', row);
     }
-    console.log("product response ",response); 
 }
 
 

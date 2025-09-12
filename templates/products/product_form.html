@@ -179,9 +179,16 @@
         </select>
         </td>
     </tr>
-    <tr><td>organization</td>
+    <tr>
+        <td>organization</td>
         <td colspan="2">
-        <input type="text" id="organization" class="inputs" disabled name="organization" value="{{self_organization}}"  maxlength="20" required=""  id="name"></td></tr>
+            <select name="organization" class="organization" id="organization">
+                {% for org in organizations %}
+                    <option {% if org.id == product.organization.id %} selected {% endif %} value='{{org.id}}'>{{org}}</option>
+                {% endfor %}
+            </select>
+        </td>
+    </tr>
     <tr><td>Product Image</td><td colspan="2"><input type="file"  name="img" id="img" ></td></tr>
     <!-- <tr><td>Description</td><td><textarea  name="description" id="description" value="{{product.product_detail.description}}"  required=""></textarea></td></tr> -->
     <tr><td>Model</td><td colspan="2"><input type="text" class="inputs"  name="model" id="model" value="{{product.model}}"  required=""></td></tr>
@@ -303,8 +310,6 @@ product_form.addEventListener("submit",async function(e){
         else
         {
             show_message(response.data.message,"error");   
-            alert(response.data.message);
-         
         }
     }
     else{
@@ -335,7 +340,7 @@ product_form.addEventListener("submit",async function(e){
 
 <script src="/static/assets/js/product/product.js"></script>
 <script>
-    const search_by_org=false;
+    const search_by_org=true;
     search_product(null,search_by_org);
      item_name.addEventListener("input",(e)=>{
          search_product(null,search_by_org);
