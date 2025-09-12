@@ -26,6 +26,7 @@ async function search_product(url=null,search_by_org=false)
     previous = ``;
     next = ``;
     if (prv) {
+        
         previous = `<tr><td>  <a href="${prv}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;'  class="btn btn-success" role="button"> Previous </a> </td></tr>`;
     }
     if (nex) {

@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
-from common.organization import find_organization
+from common.organization import find_userorganization
 from common.date import handle_day_out_of_range
 from configuration.models import Organization
 from configuration.models import *
@@ -21,7 +21,7 @@ def bill_form(request):
     template=loader.get_template('bill/bill_form_receive_payment.html')
     date = date2jalali(datetime.now())
     # year=date.strftime('%Y')
-    (self_organization,parent_organization)=find_organization(request)
+    self_organization,parent_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     form.fields['date'].initial=date
     context={
@@ -44,7 +44,7 @@ def bill_insert(request):
     ############before request.data  and request.data.getlist
     organization_id=request.data.get("organization",0)
     organization=Organization.objects.get(id=int(organization_id))
-    (self_organization,parent_organization)=find_organization(request,organization_id)
+    self_organization,parent_organization,user_orgs = find_userorganization(request,organization_id)
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -124,7 +124,6 @@ def bill_insert(request):
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
         bill_obj.profit=0
-        # bill_obj.organization=organization   #because organization=find_organization in opposit organization approval will be changed
         ####################### bill_description update bill_receiver2 update####################
         if previous_bill_type!="EXPENSE":
             # bill_description=bill_obj.bill_description

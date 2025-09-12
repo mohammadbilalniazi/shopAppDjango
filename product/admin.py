@@ -14,25 +14,13 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product) 
 class ProductAdmin(admin.ModelAdmin):
-    # list_display=("organization","item_name","get_detail","category","get_minimum_requirement","get_item_amount_available","get_row","get_column","get_purchased_price","get_selling_price","image_tag")
     list_display=("item_name","model","category","get_minimum_requirement","get_row","get_column","get_purchased_price","get_selling_price")
     list_filter=("category","item_name")
-    # fields = ['image_tag']
-    # readonly_fields = ['image_tag']
-    # def queryset(self, request):
-    #     qs = super(Product, self).queryset(request)
-    #     (self_organization,=find_organization(request)
-    #     print("organization ",organization)
-    #     # if request.user.is_superuser:
-    #     #     return qs
-    #     return qs.filter(product_detail__organization=organization)
-
     def get_column(self, obj):
         if obj.row_column_address:
             return obj.row_column_address.column
         else:
             return None
-
     def get_row(self, obj):
         if obj.row_column_address:
             return obj.row_column_address.row

@@ -20,24 +20,26 @@ def form(request,id=None):
         context['organizations']=Organization.objects.all() 
     else:
         context['organizations']=Organization.objects.filter(id=parent_organization.id)
-    if id!="null" and id:
+    if id:
         context['organization_user']=OrganizationUser.objects.get(id=int(id))
     return render(request,"user/organization_user.html",context)
 
-
 @api_view(['POST'])
 def insert(request):
-    id = request.data.get("id")
-    first_name = request.data.get("first_name")
-    last_name = request.data.get("last_name")
-    username = request.data.get("username")
-    password = request.data.get("password")
-    role = request.data.get("role")
-    organization = request.data.get("organization")
+    data = request.data.copy()
+    id = data.get("id")
+    first_name = data.get("first_name")
+    last_name = data.get("last_name")
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role")
+
+    organization = data.get("organization")
+    img = request.FILES.get('img')
 
     with transaction.atomic():
         try:
-            if id:  # 🔹 UPDATE
+            if id:
                 instance = OrganizationUser.objects.get(id=int(id))
                 user = instance.user
                 user.username = username
@@ -47,17 +49,14 @@ def insert(request):
                     user.set_password(password)
                 user.save()
 
-                # shallow dict (safe, avoids deepcopy of files)
-                update_data = request.data.dict()
-                update_data["user"] = user.id
-                update_data["organization"] = organization
-                update_data["role"] = role
-
-                serializer = OrganizationUserCreateSerializer(
-                    instance, data=update_data, partial=True
-                )
-
-            else:  # 🔹 CREATE
+                payload = {
+                    "user": user.id,  # ✅ pass user.id
+                    "organization": organization,
+                    "img": img,
+                    "role":role,
+                }
+                serializer = OrganizationUserCreateSerializer(instance, data=payload)
+            else:
                 if User.objects.filter(username=username).exists():
                     return Response({"error": "Username already taken."}, status=400)
 
@@ -74,32 +73,31 @@ def insert(request):
 
                 if OrganizationUser.objects.filter(user=user, organization_id=organization).exists():
                     return Response({"error": "User already exists in this organization."}, status=400)
-
-                create_data = request.data.dict()
-                create_data["user"] = user.id
-                create_data["organization"] = organization
-                create_data["role"] = role
-
-                serializer = OrganizationUserCreateSerializer(data=create_data)
-
+                payload = {
+                    "user": user.id,  # ✅ pass user.id
+                    "organization": organization,
+                    "img": img,
+                    "role":role,
+                }
+                serializer = OrganizationUserCreateSerializer(data=payload)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
             transaction.set_rollback(True)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        except OrganizationUser.DoesNotExist:
+        except Exception:
             transaction.set_rollback(True)
+            return Response({"error": "Integrity error: possibly duplicate user + organization."}, status=400)
+        except OrganizationUser.DoesNotExist:
             return Response({"error": "OrganizationUser not found."}, status=404)
-
         except Exception as e:
             transaction.set_rollback(True)
             return Response({"error": str(e)}, status=500)
-        
+
 @api_view(['DELETE'])
-def delete(request,id=None):
-    organization_user=OrganizationUser.objects.get(id=int(id))
+def delete(request,pk=None):
+    organization_user=OrganizationUser.objects.get(id=int(pk))
     try:
         organization_user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -114,6 +112,35 @@ def get(request,id=None):
     except Exception as e:
         return Response(errors=str(e),status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+def get_users(request):
+    organization=request.data.get("organization",None)
+    username=request.data.get("username",None)
+    first_name=request.data.get("first_name",None)
+    last_name=request.data.get("last_name",None)
+    query=User.objects.all()
+    # print("**query ",query)
+    if organization:
+        query=query.filter(user__organizationuser__id=int(organization))
+        # print("^^query org ",query)
+    if username:
+        query=query.filter(username__icontains=username)
+        # print("$query username ",query)
+    if first_name:
+        query=query.filter(first_name__icontains=first_name)
+        # print("#query first ",query)
+    if last_name:
+        query=query.filter(last_name__icontains=last_name)
+        # print("query lastname ",query)
+    is_paginate=int(request.data.get("is_paginate",0))
+    if  is_paginate==1:
+        paginator=PageNumberPagination() 
+        paginator.page_size=5
+        query_set=paginator.paginate_queryset(query.order_by('-pk'),request)
+        serializer=UserSerializer(query_set,many=True)
+        return paginator.get_paginated_response({'ok':True,'serializer_data':serializer.data})
+    serializer=UserSerializer(query_set,many=True)
+    return Response(serializer.data,status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def search(request):
@@ -141,9 +168,9 @@ def search(request):
         paginator=PageNumberPagination() 
         paginator.page_size=5
         query_set=paginator.paginate_queryset(query.order_by('-pk'),request)
-        serializer=OrganizationUserSerializer(query_set,many=True,context={'request':request})
+        serializer=OrganizationUserSerializer(query_set,many=True)
         return paginator.get_paginated_response({'ok':True,'serializer_data':serializer.data})
-    serializer=OrganizationUserSerializer(query_set,many=True,context={'request':request})
+    serializer=OrganizationUserSerializer(query_set,many=True)
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 

@@ -1,26 +1,33 @@
 from configuration.models import Organization
-from django.db import IntegrityError
+from user.models import OrganizationUser
+
 
 def top_parent(organization):
-    for i in range(5):
-        if organization.parent!=None:
-            organization=organization.parent
-        else:
-            break
-    
+    while organization.parent is not None:
+        organization=organization.parent
     return organization
-def find_organization(request,organization_id=None):
-    # A: Find Organization through Organization or Member_User 
-    # B: then find if it has parent so find parent through three levels grand father organization (org.org.org)
+
+
+def find_userorganization(request, organization_id=None):
+    """
+    Returns:
+        (organization, parent_organization, user_organizations)
+        organization: Organization instance (if exactly one found, else None)
+        parent_organization: Top parent organization (if found, else None)
+        user_organizations: QuerySet of Organization objects the user belongs to
+    """
     if organization_id is not None:
-        query = Organization.objects.filter(id=int(organization_id))
+        user_orgs = OrganizationUser.objects.filter(organization_id=organization_id)
     elif request.user.is_superuser:
-        query = Organization.objects.all()
+        user_orgs = OrganizationUser.objects.all()
     else:
-        query = Organization.objects.filter(owner=request.user)
-    if query.count() == 1:
-        self_organization = query[0]
-        parent_organization = top_parent(self_organization)
-        return (self_organization, parent_organization)
+        user_orgs = OrganizationUser.objects.filter(user=request.user)
+    # Get actual Organization objects
+    orgs = Organization.objects.filter(id__in=user_orgs.values_list("organization_id", flat=True))
+    if orgs.count() == 1:
+        organization = orgs.first()
+        parent_organization = top_parent(organization)
     else:
-        return (None,None)
+        organization = None
+        parent_organization = None
+    return organization, parent_organization, orgs

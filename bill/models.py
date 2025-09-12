@@ -11,6 +11,8 @@ BILL_TYPES=(("purchase","purchase"),("sell","sell"),("expense","expense"),("paym
 
 def get_year():
     return int(current_shamsi_date().split("-")[0])
+def get_date():
+    return current_shamsi_date()
 class Bill(models.Model):
     bill_no=models.IntegerField()
     bill_type=models.CharField(max_length=11,default="PURCHASE")  
@@ -21,7 +23,7 @@ class Bill(models.Model):
     total=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     payment=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     year=models.SmallIntegerField(default=get_year)
-    date=models.CharField(max_length=10,default=current_shamsi_date())  
+    date=models.CharField(max_length=10,default=get_date)  
     profit=models.IntegerField(default=0)
 
 

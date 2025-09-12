@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from .serializer import *
 from .models import *
-from common.organization import find_organization
+from common.organization import find_userorganization
 from django.http import HttpResponse
 from django.template import loader 
 from django.contrib.auth.decorators import login_required
@@ -14,7 +14,8 @@ from django.db import transaction
     
 def show_html(request,id=None):
     context={}
-    (self_organization,parent_organization)=find_organization(request)
+    self_organization,parent_organization,user_orgs = find_userorganization(request)
+
     if id==None or id=="all":
         if request.user.is_superuser:
             query=Product.objects.all()
@@ -22,7 +23,8 @@ def show_html(request,id=None):
             query=Product.objects.filter(product_detail__organization=parent_organization)
     else:
         query=Product.objects.filter(id=int(id))
-    (self_organization,parent_organization)=find_organization(request)
+    self_organization,parent_organization,user_orgs = find_userorganization(request)
+
     context['products']=query.order_by("-pk")
     context['organizations']=Organization.objects.all()
     context['products_length']=query.count()
@@ -31,7 +33,8 @@ def show_html(request,id=None):
 @login_required(login_url='/admin')
 def form(request,id=None):
     context={}
-    (self_organization,parent_organization)=find_organization(request)
+    self_organization,parent_organization,user_orgs = find_userorganization(request)
+
     stock_query=Stock.objects.filter(organization=parent_organization)
     if id!=None:
         product=Product.objects.get(id=int(id))
@@ -50,7 +53,6 @@ def form(request,id=None):
     context['parent_organization']=parent_organization
     context['categories']=Category.objects.all()
     return HttpResponse(template.render(context,request))
-
 
 
 
@@ -82,7 +84,8 @@ def create(request, id=None):
         "current_amount": float(data.get("current_amount", 0))
     }
     # Fetch parent organization
-    (self_organization, parent_organization) = find_organization(request)
+    self_organization,parent_organization,user_orgs = find_userorganization(request)
+
     product_detail["organization"] = parent_organization
     # Create or update Product
     if not product["id"] or str(product["id"]).strip() == "":
@@ -125,12 +128,12 @@ def create(request, id=None):
         stock.save()
     return Response({"message": message, "ok": ok, "id": product.id})
  
+
 @api_view(['POST'])
 def show(request):
-    # print("method",request.method,"data",request.data)
     item_name=request.data.get("item_name",None)
     organization_id = request.data.get("organization", "all")
-    (self_organization,parent_organization)=find_organization(request,None if organization_id=="all" else organization_id)      
+    self_organization,parent_organization,user_orgs = find_userorganization(request,None if organization_id=="all" else organization_id)
     if organization_id=="all":
         query_set=Product.objects.order_by('-pk')
     else:

@@ -1,8 +1,15 @@
 <html lang="en-us" dir="ltr"><head>
-<title>Add Product </title>
-<link rel="stylesheet" href="/static/admin/css/base.css">
-  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
-  <script src="/static/assets/js/toastr.min.js"></script>
+<title>Add User To Organization </title>
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/nav_sidebar.css">
+    <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
+    <link rel="stylesheet" type="text/css" href="/static/assets/css/common.css">
+    <link rel="stylesheet" type="text/css" href="/static/assets/css/fontawesome.min.css">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
+    <script src="/static/assets/js/alert.js"></script>
+
   <script src="/static/assets/js/axios.min.js"></script>
   <script src="/static/assets/js/cookie.js"></script>
   <script src="/static/assets/js/common_entities/create_element.js"></script>
@@ -80,7 +87,7 @@
     
   <fieldset class="module aligned ">
        
-<table>
+<table style="margin-bottom: 10vh;">
      <form method="post" id="organization_user_form" action='{{request.META.HTTP_NAME}}/user/organization_user/insert/' enctype="multipart/form-data"  >                  
     {% csrf_token %}  
     <tr>
@@ -105,8 +112,7 @@
         <td colspan="2">
         <input type="text" class="inputs" oninput="search()" name="first_name" id="first_name" {% if organization_user %} value="{{organization_user.user.first_name}}" {% endif %}>
         </td>
-    </tr>
-     <tr>
+    
         <td>Last Name</td>
         <td colspan="2">
         <input type="text" class="inputs" oninput="search()" name="last_name" id="last_name" {% if organization_user %} value="{{organization_user.user.last_name}}" {% endif %}>
@@ -117,8 +123,7 @@
         <td colspan="2">
         <input type="text" class="inputs" oninput="search()" name="username" id="username" {% if organization_user %} value="{{organization_user.user.username}}" {% endif %}>
         </td>
-    </tr>
-     <tr>
+    
         <td>Password</td>
         <td colspan="2">
         <input type="text" class="inputs" name="password" id="password" >
@@ -129,18 +134,10 @@
         <td colspan="2">
         <input type="file" class="inputs" name="img" id="img" >
         </td>
-    </tr>
-    {% if organization_user.img %} 
-    <tr>
-        <td>Image</td>
+    <td>Organization</td>
         <td colspan="2">
-            <img src="{{organization_user.img}}" />
-        </td>
-    </tr>
-    {% endif %}
-    <tr><td>Organization</td>
-        <td colspan="2">
-        <select name="organization" class="organization" id="organization">
+        <select naLme="organization
+        33 /3 " onchange="search()" class="organization" id="organization">
             {% for organization in organizations %}
                 <option {% if organization_user.organization == organization %} selected {% endif %} value='{{organization.id}}'>{{organization}}</option>
             {% endfor %}
@@ -148,8 +145,19 @@
         </td>
     </tr>
      <tr>
+        <td>Role</td>
+         <td colspan="2">
+        <select name="role" class="role" id="role">
+                <option {% if organization_user.role == "employee" %} selected {% endif %} value='employee'>Employee</option>
+                <option {% if organization_user.role == "admin" %} selected {% endif %} value='admin'>Admin</option>
+                <option {% if organization_user.role == "superuser" %} selected {% endif %} value='superuser'>Super User</option>
+                <option {% if organization_user.role == "owner" %} selected {% endif %} value='owner'>Organization Owner</option>
+       
+                
+            </select>
+        </td>
         <td colspan="2">
-        <input type="submit" >
+        <input type="submit" title="create user" value="create user" class="default" id="create_user">
         </td>
     </tr>
  </form> 
@@ -169,6 +177,18 @@
    <div class="text"><span>User</span></div>
    <div class="clear"></div>
 </th>
+<th scope="col" class="column-get_detail">
+   <div class="text"><span>first_name</span></div>
+   <div class="clear"></div>
+</th>
+<th scope="col" class="column-get_detail">
+   <div class="text"><span>last_name</span></div>
+</th>
+
+<th scope="col" class="column-get_detail">
+   <div class="text"><span>Role</span></div>
+   <div class="clear"></div>
+</th>
 <th scope="col" class="sortable column-category">
    <div class="text"><a href="?o=3">Action</a></div>
    <div class="clear"></div>
@@ -183,10 +203,7 @@
 </fieldset>
 </div>
 </div>
-
 </div>
-
-          
           <br class="clear">
         </div>
         <!-- END Content -->
@@ -198,7 +215,6 @@
 
 
 <div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;"><div><a href="#" class="calendarnav-previous">&lt;</a><a href="#" class="calendarnav-next">&gt;</a></div><div id="calendarin0" class="calendar"><table><caption>March 2023</caption><tbody><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr><tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr><tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr><tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class=""><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="today"><a href="#">31</a></td><td class="nonday"> </td></tr></tbody></table></div><div class="calendar-shortcuts"><a href="#">Yesterday</a>&nbsp;|&nbsp;<a href="#">Today</a>&nbsp;|&nbsp;<a href="#">Tomorrow</a></div><p class="calendar-cancel"><a href="#">Cancel</a></p></div></body></html>
-
-  <script src="/static/assets/js/show_message.js"></script>
+  
   <script src="/static/assets/js/common_entities/call_shirkat.js"></script> 
  <script src="/static/assets/js/user/organization_user.js"></script>  

@@ -1,3 +1,4 @@
+
 var organization_user_form=document.getElementById('organization_user_form');
 organization_user_form.addEventListener("submit",async function(e){
     e.preventDefault();
@@ -14,6 +15,7 @@ organization_user_form.addEventListener("submit",async function(e){
     last_name=document.getElementById("last_name");
     username=document.getElementById("username");
     password=document.getElementById("password");
+    role=document.getElementById("role");
     // prev_selling_price=document.getE
     // ementById("prev_selling_price");
     // const organization_user = new FormData();
@@ -21,6 +23,7 @@ organization_user_form.addEventListener("submit",async function(e){
     
     formData.append("id",id.value);
     formData.append("first_name",first_name.value);
+    formData.append("role",role.value);
     formData.append("last_name",last_name.value);
     formData.append("organization",organization.value);
     formData.append("img",img.files[0]);
@@ -33,14 +36,18 @@ organization_user_form.addEventListener("submit",async function(e){
      if(response.status==200 || response.status==201){
         if(response.data)
         { 
-            alert("Organization_User Saved")
+            // alert("Organization_User Saved")
+            show_message("User Saved","success");
+            // wait 5 seconds then redirect
             id.value=response.data.id;
-            window.location.href="/user/organization_user/add/"+id.value;
+
+            setTimeout(function(){
+                window.location.href="/user/organization_user/add/"+id.value;
+            }, 5000);
         }
         else
         {
             show_message(response.data.message,"error");   
-            alert(response.data.message);
         }
     }
     else{
@@ -56,7 +63,7 @@ async function search(url=null){
     last_name=document.getElementById("last_name");
     username=document.getElementById("username");
     headers={'X-CSRFToken':getCookie('csrftoken')} 
-    if(!url){
+    if(url==null){
         url="/user/organization_user/search/";
     } 
     const data={"is_paginate":1};
@@ -91,33 +98,64 @@ async function search(url=null){
         previous = ``;
         next = ``;
         if (prv) {
-            previous = `<tr><td>  <a href="${prv}" onclick='search(this.getAttribute("href")); return false;'  class="btn btn-success" role="button"> Previous </a> </td></tr>`;
+            previous = `<tr><td> <a href="${prv}" class="btn btn-success" role="button" data-url="${prv}" onclick="handlePaginationClick(event)">Previous</a></td></tr>`;
         }
         if (nex) {
-            next = `<tr><td> <a  href="${nex}" onclick='search(this.getAttribute("href")); return false;' class="btn btn-success" role="button"> Next </a>  </td></tr>`;
+            next = `<tr><td> <a href="${nex}" class="btn btn-success" role="button" data-url="${nex}" onclick="handlePaginationClick(event)">Next</a></td></tr>`;
         }
         html = next + previous
         pagination.insertAdjacentHTML('beforeend', html);
         organization_user_tbody.innerHTML="";
-        // console.log(data)
-        
-        //console.log('data ',data);
         if(!data['ok'])
         {
             alert("data['message'] ",data['message'])
-            // show_message(data['message'],"error");
             return;
         }
         for(key in data['serializer_data']){     
             let row=`
                 <tr>
                     <td>${data['serializer_data'][key]['organization']}</td>
-                    <td>${data['serializer_data'][key]['user']}</td>
-                    <td> <a href="/user/organization_user/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update</a> </td>
+                    <td>${data['serializer_data'][key]['username']}</td>
+                    <td>${data['serializer_data'][key]['first_name']}</td>
+                    <td>${data['serializer_data'][key]['last_name']}</td>
+                    <td>${data['serializer_data'][key]['role']}</td>
+                      <td>
+                        <img src="${data['serializer_data'][key]['img'] || '/static/default.png'}" width="50" height="50"/>
+                      </td>
+
+                    <td> <a href="/user/organization_user/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update</a>
+                    <a class="btn btn-danger" onclick="deleteOrganizationUser(${data['serializer_data'][key]['id']});return false">Delete</a>
+                    </td>
                 </tr>`;
             organization_user_tbody.insertAdjacentHTML('beforeend', row);
         }
         console.log("product response ",response);
         }
     }
+}
+search();
+
+function handlePaginationClick(event) {
+    event.preventDefault();  // Prevent default GET request
+    const url = event.currentTarget.getAttribute("data-url");
+    search(url); // Call your function with correct URL (still uses POST)
+}
+
+function deleteOrganizationUser(id){
+    if(!confirm("Are you sure you want to delete this user?")){
+        return;
+    }
+    url="/user/organization_user/delete/"+id;
+    headers={'X-CSRFToken':getCookie('csrftoken')} 
+    call_shirkat(url,'DELETE',{},headers).then((response)=>{
+        console.log('res ',response)
+        if(response.status==204){
+            show_message("User Deleted","success");
+            search();
+        }
+        else{
+            show_message("User Not Deleted ","error")
+        }
+        return false;
+    });
 }
