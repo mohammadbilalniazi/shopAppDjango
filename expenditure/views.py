@@ -67,7 +67,6 @@ def expense_insert(request):
             message="The Bill with Id {} not exist ".format(id)
             return Response({"message":message,"ok":ok})
         bill_obj=bill_query[0] 
-
         bill_obj.total=total
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
@@ -78,7 +77,7 @@ def expense_insert(request):
             message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
             return Response({"message":message,"ok":ok})
         bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
-    try:
+    try:  
         bill_obj.save()
         expense_query=Expense.objects.filter(bill=bill_obj)
         # print("expense",expense_query)

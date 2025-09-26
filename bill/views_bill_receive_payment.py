@@ -140,7 +140,7 @@ def bill_insert(request):
         bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
     try:
         bill_obj.save()
-        if bill_type!="EXPENSE":  # in expense we do not need bill_description and bill_receiver2
+        if bill_type!="EXPENSE":  # in expense we do not need  and bill_receiver2
             bill_receiver2_query=Bill_Receiver2.objects.filter(bill=bill_obj)
             if bill_receiver2_query.count()>0:
                 bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)

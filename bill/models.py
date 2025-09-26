@@ -7,7 +7,6 @@ from django.db.models.signals import post_delete,pre_save,post_save
 from django.dispatch import receiver
 from product.models import Stock,Product_Detail
 STATUS=((0,"CANCELLED"),(1,"CREATED"))
-BILL_TYPES=(("purchase","purchase"),("sell","sell"),("expense","expense"),("payment","payment"))
 
 def get_year():
     return int(current_shamsi_date().split("-")[0])
