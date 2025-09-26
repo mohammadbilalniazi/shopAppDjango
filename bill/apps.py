@@ -10,7 +10,6 @@ class BillConfig(AppConfig):
         from .models import Bill
         from configuration.models import Organization
         from django.contrib.auth.models import User
-        from .models import Bill_Description
         
         # for bill in Bill.objects.all():
         #     try:
@@ -28,12 +27,6 @@ class BillConfig(AppConfig):
         #         bill.save()
         #     except User.DoesNotExist:
         #         print("User not found",bill.creator)
-        # for bill_desc in Bill_Description.objects.all():
-        #     try:
-        #         bill_desc.currency=1
-        #         bill_desc.save()
-        #     except Bill_Description.DoesNotExist:
-        #         print("Store not found")
                 
         # for product_detail in Product_Detail.objects.all():
         #     try:

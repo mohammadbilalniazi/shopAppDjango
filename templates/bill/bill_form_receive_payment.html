@@ -201,10 +201,10 @@
                             <input type="checkbox" {% if bill.bill_receiver2.is_approved %} checked {% endif %}  name="is_approved" id="is_approved">
 
                             <select name="status" placeholder="status"  required id="status">     
-                                <option value="0" {% if bill.bill_description.status == 0 %} selected {% endif %}>CREATED </option>    
-                                <option value="1" {% if bill.bill_description.status == 1 %} selected {% endif %}>APPROVED</option>  
-                                <option value="2" {% if bill.bill_description.status == 2 %} selected {% endif %}>REVERSED</option>
-                                <option value="3" {% if bill.bill_description.status == 3 %} selected {% endif %}>REJECTED</option>
+                                <option value="0" {% if bill.status == 0 %} selected {% endif %}>CREATED </option>    
+                                <option value="1" {% if bill.status == 1 %} selected {% endif %}>APPROVED</option>  
+                                <option value="2" {% if bill.status == 2 %} selected {% endif %}>REVERSED</option>
+                                <option value="3" {% if bill.status == 3 %} selected {% endif %}>REJECTED</option>
                             </select>
                             </span>
                         </td>

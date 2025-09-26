@@ -30,6 +30,14 @@ async function call_shirkat(url,method,data,headers=null)
         }
         );  
     }
+    if((response.status==200 || response.status==201 || response.data.success) && response.data.message){
+        show_message(response.data.message,"success");
+    }
+    else{
+      if(response.data.message){
+        show_message(response.data.message,"error");
+      }
+    }
     console.log("data ",data," method ",method,"++++response ",response,' response.data ',response.data)
     return response;
 }

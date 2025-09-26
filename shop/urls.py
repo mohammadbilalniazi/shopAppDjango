@@ -34,13 +34,15 @@ urlpatterns = [
     path('bill/delete/<id>/', views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>', views_bill.select_bill_no),
     path('bill/search/', views_bill.search),
-    path('bill/detail/delete/<bill_detail_id>', views_bill.bill_detail_delete),
-    path('bill/insert/', views_bill.bill_insert, name="bill_insert"),
+
     path('receive_payment/bill/save/', views_bill_receive_payment.bill_insert),
     path('receive_payment/bill/', views_bill_receive_payment.bill_form),
     path('bill/detail/<bill_id>/', views_bill.bill_show),
     path('admin/bill/bill/', views_bill.bill_show),
-    path('admin/bill/bill/add/', views_bill.bill_form),
+    path('admin/bill/bill/add/', views_bill.bill_form_sell_purchase),
+    path('loss_degrade_product/bill/add/', views_bill.bill_form_loss_degrade_product),
+    path('bill/detail/delete/<bill_detail_id>', views_bill.bill_detail_delete),
+    path('bill/insert/', views_bill.bill_insert, name="bill_insert"),
 
     # Products
     path('products/', views_product.show, name='product_show'),

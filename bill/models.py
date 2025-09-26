@@ -25,6 +25,9 @@ class Bill(models.Model):
     year=models.SmallIntegerField(default=get_year)
     date=models.CharField(max_length=10,default=get_date)  
     profit=models.IntegerField(default=0)
+    status=models.SmallIntegerField(choices=STATUS,default=0) # 0 created 1 approved 2 reversed  3  rejected
+    currency=models.CharField(max_length=7,default="afg")
+    shipment_location=models.ForeignKey(Location,on_delete=models.PROTECT,null=True,default=None)
 
 
 class Bill_Receiver2(models.Model):
@@ -33,14 +36,6 @@ class Bill_Receiver2(models.Model):
     is_approved=models.BooleanField(default=False,null=True,blank=True)
     approval_date=models.DateField(null=True,blank=True)
     approval_user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,default=None)
-
-class Bill_Description(models.Model):
-    bill=models.OneToOneField(Bill,on_delete=models.CASCADE)
-    status=models.SmallIntegerField(choices=STATUS,default=0) # 0 created 1 approved 2 reversed  3  rejected
-    currency=models.CharField(max_length=7,default="afg")
-    shipment_location=models.ForeignKey(Location,on_delete=models.PROTECT,null=True,default=None)
-    # def __str__(self):
-    #     return f"{self.bill}"
 
 class Bill_detail(models.Model):
     bill=models.ForeignKey(Bill,on_delete=models.CASCADE)

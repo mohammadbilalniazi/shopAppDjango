@@ -8,7 +8,7 @@ from configuration.models import Organization
 from configuration.models import *
 from datetime import datetime
 from django.contrib import messages
-from .models import Bill,Bill_Description,Bill_Receiver2
+from .models import Bill,Bill_Receiver2
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -124,14 +124,11 @@ def bill_insert(request):
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
         bill_obj.profit=0
-        ####################### bill_description update bill_receiver2 update####################
         if previous_bill_type!="EXPENSE":
-            # bill_description=bill_obj.bill_description
             if hasattr(bill_obj,'bill_receiver2'):
                 bill_receiver2=bill_obj.bill_receiver2
         if previous_bill_type!="EXPENSE" and bill_type=="EXPENSE":
             bill_receiver2.delete()
-            bill_description.delete()
     else: ############### new insert Bill if not in system#############
         # opposit_bill=get_opposit_bill(bill_type)
         # bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=year),Q(Q(bill_type=bill_type),Q(organization=organization)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=organization)))
@@ -144,13 +141,7 @@ def bill_insert(request):
     try:
         bill_obj.save()
         if bill_type!="EXPENSE":  # in expense we do not need bill_description and bill_receiver2
-            bill_description_query=Bill_Description.objects.filter(bill=bill_obj) 
             bill_receiver2_query=Bill_Receiver2.objects.filter(bill=bill_obj)
-            if bill_description_query.count()>0:
-                bill_description_query.update(status=status)
-            else:
-                bill_description=Bill_Description(bill=bill_obj,status=status)
-                bill_description.save()  
             if bill_receiver2_query.count()>0:
                 bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
             else:

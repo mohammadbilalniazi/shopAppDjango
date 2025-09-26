@@ -1,6 +1,5 @@
 let data;
 let product_data;
-let selling_price_obj = {};
 let purchasing_price_obj = {};
 let purchased_price;
 
@@ -42,15 +41,12 @@ async function get_products(organization = "all", change_price = true) {
     for (const key in product_data) {
         let product = product_data[key];
         if (product.product_detail) {
-            selling_price_obj[product.id] = product.product_detail.selling_price;
             purchasing_price_obj[product.id] = product.product_detail.purchased_price;
         } else {
             product_data[key]['product_detail'] = { selling_price: 0, purchased_price: 0, minimum_requirement: 0 };
-            selling_price_obj[product.id] = 0;
             purchasing_price_obj[product.id] = 0;
         }
     }
-    localStorage.setItem("selling_price_obj",JSON.stringify(selling_price_obj));
     localStorage.setItem("purchasing_price_obj",JSON.stringify(purchasing_price_obj));
     localStorage.setItem("product_data", JSON.stringify(product_data));
     add_events_to_elements(change_price);
@@ -61,15 +57,8 @@ async function get_products(organization = "all", change_price = true) {
  */
 function change_price_field(item_db_id, index, bill_type_field) {
     const item_price = document.getElementsByClassName("item_price")[index];
-    selling_price_obj = JSON.parse(localStorage.getItem("selling_price_obj"));
     purchasing_price_obj = JSON.parse(localStorage.getItem("purchasing_price_obj"));
-    
-    if (bill_type_field.value === "SELLING") {
-        item_price.value = selling_price_obj[parseInt(item_db_id)];
-    } else if (bill_type_field.value === "PURCHASE") {
-        item_price.value = purchasing_price_obj[parseInt(item_db_id)];
-    }
-
+    item_price.value = purchasing_price_obj[parseInt(item_db_id)];
     generate_total_amount_bill();
 }
 
@@ -86,7 +75,6 @@ function add_events_to_elements(change_price = true) {
         let return_qty = document.getElementsByClassName("return_qty");
         let bill_type = document.getElementById("bill_type");
         let item_name = document.getElementsByClassName("item_name");
-
         for (let i = 0; i < item_amount.length; i++) {
             item_amount[i].addEventListener("keyup", generate_total_amount_bill);
             return_qty[i].addEventListener("input", generate_total_amount_bill);
@@ -261,13 +249,7 @@ async function init() {
   addNawajans.disabled = false;
 }
 
-try {
-  if (getElement("detail_or_update")?.value === "0") {
-      select_rcvr_orgs();
-  }
-} catch (ex) {
-  console.log("detail_or_update not found");
-}
+
 
 function generate_total_amount_bill() {
   console.log("Generating total amount bill...");
@@ -328,7 +310,6 @@ try{
     e.preventDefault();
     date=document.getElementById("date");
     organization=document.getElementById("organization");
-    bill_rcvr_org=document.getElementById("bill_rcvr_org");
     creator=document.getElementById("creator");
     total=document.getElementById("total");
     total_payment=document.getElementById("total_payment");
@@ -378,7 +359,6 @@ try{
         "total_payment":total_payment.value,
         "bill_no":bill_no.value,
         "bill_type":bill_type.value,
-        "bill_rcvr_org":bill_rcvr_org.value,
         "is_approved":is_approved.value,
         "status":status_bill.value,
         "approval_date":approval_date.value,
@@ -432,71 +412,10 @@ catch(e)
  console.log("getElementById(bill) error")
 }
 
-async function select_rcvr_orgs() {
-  try {
-    const rcvrOrgSpan = getElement("rcvr_org_span");
-    rcvrOrgSpan.innerHTML = "";
 
-    const selectRcvrOrg = document.createElement("select");
-    selectRcvrOrg.id = "bill_rcvr_org";
-    selectRcvrOrg.name = "bill_rcvr_org";
-    selectRcvrOrg.required = true;
-
-    const response = await fetch("/organizations/all/");
-    const data = await response.json();
-
-    data.forEach(org => {
-      const option = document.createElement("option");
-      option.value = org.id;
-      option.innerText = org.name;
-      selectRcvrOrg.appendChild(option);
-    });
-
-    rcvrOrgSpan.appendChild(selectRcvrOrg);
-
-    // ✅ Attach event listener after element is in the DOM
-    selectRcvrOrg.addEventListener("change", () => {
-      generate_total_amount_bill();
-      select_bill_no();
-    });
-
-  } catch (e) {
-    console.log("Error selecting receiver organizations", e);
-  }
-}
 
 getElement("total_payment")?.addEventListener("input", total_and_paid_validation);
 
-try {
-  getElement("bill_type").addEventListener("change", (e) => {
-      select_bill_no();
-      const totalBill = getElement("total");
-      const totalPayment = getElement("total_payment");
-      const addNawajans = getElement("addnawajans");
-      const removeBtns = document.getElementsByClassName("remove_btn");
 
-      totalBill.value = "0";
-      totalPayment.value = "0";
-
-      if (["PAYMENT", "RECEIVEMENT", "EXPENSE"].includes(e.target.value)) {
-          [...removeBtns].forEach(btn => btn.click());
-          totalBill.disabled = true;
-          addNawajans.disabled = true;
-      } else {
-          totalBill.disabled = false;
-          addNawajans.disabled = false;
-          
-          const items = document.getElementsByClassName("item_name");
-          const itemPrices = document.getElementsByClassName("item_price");
-      
-          for (let i = 0; i < items.length; i++) {
-              let item_db_id = items[i].value;
-              change_price_field(item_db_id,i,e.target);
-          }
-      }
-  });
-} catch (e) {
-  console.log("Error handling bill_type change", e);
-}
 
 

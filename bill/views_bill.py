@@ -9,7 +9,7 @@ from common.date import handle_day_out_of_range
 from configuration.models import *
 from datetime import datetime
 from django.contrib import messages
-from .models import Bill, Bill_detail,Bill_Description,Bill_Receiver2
+from .models import Bill, Bill_detail,Bill_Receiver2
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -84,11 +84,15 @@ def bill_show(request,bill_id=None):
         # print("bill_obj",bill_obj.bill_detail_set.all().order_by("id"))
         context['bill_detail_set']=bill.bill_detail_set.all().order_by("id")
         context['bill']=bill
+        print("bill 0",model_to_dict(bill))
         #handle_difference_profit_loss(bill)        
         if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
+        elif bill.bill_type in ("LOSSDEGRADE"):
+            template=loader.get_template('bill/expenditure/bill_form_loss.html')
+            context['products']=Product.objects.all()
         else:
-            template=loader.get_template('bill/bill_form.html')
+            template=loader.get_template('bill/bill_form_sell_purchase.html')
             # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
             context['products']=Product.objects.all()
         context['units']=Unit.objects.all()
@@ -188,10 +192,9 @@ def bill_detail_delete(request,bill_detail_id=None):
     return Response({"Message":message,"is_success":is_success})
 
 @login_required(login_url='/admin')
-def bill_form(request):
-    template=loader.get_template('bill/bill_form.html')
+def bill_form_sell_purchase(request):
+    template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
-    year=date.strftime('%Y')
     self_organization,parent_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     context={}
@@ -210,8 +213,31 @@ def bill_form(request):
     # print("context=",context)
     return HttpResponse(template.render(context,request))
 
+@login_required(login_url='/admin')
+def bill_form_loss_degrade_product(request):
+    template=loader.get_template('bill/expenditure/bill_form_loss.html')
+    date = date2jalali(datetime.now())
+    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    form=Bill_Form()
+    context={}
+    form.fields['date'].initial=date
+    # bill_no=getBillNo(request,parent_organization.id,'PURCHASE')
+    if request.user.is_superuser:
+        organizations=Organization.objects.all()
+    else:
+        organizations=Organization.objects.filter(id=parent_organization.id)
+    context={
+        'form':form,
+        'organization':parent_organization,
+        'organizations':organizations,
+        'date':date,
+    } 
+    # print("context=",context)
+    return HttpResponse(template.render(context,request))
+
+
 def get_opposit_bill(bill_type):
-    opposit_bills={"SELLING":"PURCHASE","PURCHASE":"SELLING","PAYMENT":"RECEIVEMENT","RECEIVEMENT":"PAYMENT","EXPENSE":"EXPENSE"}
+    opposit_bills={"SELLING":"PURCHASE","PURCHASE":"SELLING","PAYMENT":"RECEIVEMENT","RECEIVEMENT":"PAYMENT","EXPENSE":"EXPENSE","LOSSDEGRADE":"LOSSDEGRADE"}
     return opposit_bills[bill_type]
 
 def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
@@ -268,10 +294,13 @@ def bill_insert(request):
     bill_detail_id=request.data.get('bill_detail_id',"")#getlist=> get
     ################## bill_receiver2#######################
     bill_rcvr_org=request.data.get("bill_rcvr_org",None) #id
-    try:
-        bill_rcvr_org=Organization.objects.get(id=int(bill_rcvr_org))
-    except Exception as e:
-        return Response({"message":str(e),"ok":False,"data":None,"bill_id":None}) 
+    if bill_type!="LOSSDEGRADE":
+        try:
+            bill_rcvr_org=Organization.objects.get(id=int(bill_rcvr_org))
+        except Exception as e:
+            return Response({"message":str(e),"ok":False,"data":None,"bill_id":None}) 
+    else:
+        bill_rcvr_org=None
     is_approved=request.data.get("is_approved",False)
     if is_approved==1 or is_approved=="1" or is_approved=="on":
         is_approved=True
@@ -341,19 +370,16 @@ def bill_insert(request):
         bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
     try:
         bill_obj.save()
-        bill_description_query=Bill_Description.objects.filter(bill=bill_obj)
-        bill_receiver2_query=Bill_Receiver2.objects.filter(bill=bill_obj)
-        if bill_description_query.count()>0:
-            bill_description_query.update(status=status)
-        else:
-            bill_description=Bill_Description(bill=bill_obj,status=status)
-            bill_description.save()  
-        if bill_receiver2_query.count()>0:
-            bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
-            bill_receiver2=bill_receiver2_query[0]
-        else:
-            bill_receiver2=Bill_Receiver2(bill=bill_obj,bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
-            bill_receiver2.save() 
+        if bill_type!='LOSSDEGRADE':
+            bill_receiver2_query=Bill_Receiver2.objects.filter(bill=bill_obj)
+            if bill_receiver2_query.count()>0:
+                bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
+                bill_receiver2=bill_receiver2_query[0]
+            else:
+                bill_receiver2=Bill_Receiver2(bill=bill_obj,bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
+                bill_receiver2.save() 
+        elif hasattr(bill_obj,'bill_receiver2'):
+            bill_obj.bill_receiver2.delete()
         ok=True
         message="bill No {} Successfully Insert".format(bill_no)
     except Exception as e:
@@ -361,7 +387,7 @@ def bill_insert(request):
         message=str(e)
         print("e ",e)
         return Response({"message":message,"ok":ok})
-    t=0
+    eachdetailtotal=0
     for i in range(len(product)):
         try:
             unit_obj=Unit.objects.get(id=unit[i])
@@ -381,6 +407,10 @@ def bill_insert(request):
                     profit=(float(item_price[i])-float(purchased_price))*net_amount
                     # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
                     ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
+                elif bill_obj.bill_type=='LOSSDEGRADE':
+                    profit=float(item_price[i])*net_amount
+                    ok=handle_profit_loss(bill_detail,profit,operation='DECREASE')
+                
             except Exception as e:
                 ok=False
                 message=str(e)
@@ -391,9 +421,7 @@ def bill_insert(request):
                 purchased_price=bill_detail.product.product_detail.purchased_price
                 bill_detail.bill=bill_obj
                 bill_detail.unit=unit_obj
-                if product_obj.id==bill_detail.product.id:
-                    bill_detail.product=bill_detail.product
-                else: 
+                if product_obj.id!=bill_detail.product.id: # if product item is changed to another then change  in detail
                     bill_detail.product=product_obj
                 bill_detail.item_amount=item_amount[i]
                 bill_detail.item_price=item_price[i]
@@ -406,14 +434,16 @@ def bill_insert(request):
                             purchased_price=0
                         profit=(float(item_price[i])-float(purchased_price))*net_amount
                         ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
+                    elif bill_obj.bill_type=='LOSSDEGRADE':
+                        profit=float(item_price[i])*net_amount
+                        ok=handle_profit_loss(bill_detail,profit,operation='DECREASE')
                 except Exception as e:
                     ok=False
                     message=str(e)
                     print("e ",e)
-
-        t=t+net_amount*float(item_price[i])
-    if float(t)!=float(total):
-        bill_obj.total=float(t)
+        eachdetailtotal=eachdetailtotal+net_amount*float(item_price[i])
+    if float(eachdetailtotal)!=float(total):
+        bill_obj.total=float(eachdetailtotal)
         bill_obj.save()
     
     if ok==False:
@@ -584,8 +614,6 @@ def finalize_ledger(request):
                 profit=0
             )
 
-            bill_description=Bill_Description.objects.create(bill=bill, status=1)
-            print("bill_description ",bill_description)
             bill_rcvr=Bill_Receiver2.objects.create(
                 bill=bill,
                 bill_rcvr_org=bill_rcvr_org,
@@ -594,10 +622,7 @@ def finalize_ledger(request):
                 approval_user=request.user
             )
             # a="abc"/2
-            print("bill ",bill," bill_description "," bill_rcvr ",bill_rcvr)
-            # Optional: create/update the OrganizationBillSummary
             # create_bill_summary(bill)  # ← Your own summary function
-
         return JsonResponse({
             'success': True,
             'message': f'Ledger finalized with {amount} ({bill_type}) for {bill_rcvr_org.name}'

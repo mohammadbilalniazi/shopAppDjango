@@ -165,18 +165,26 @@ async function finalize_ledger() {
     {
         bill_rcvr_org="all";
     }
-
+    let total_summary=document.getElementById("total_summary").value;
     if (!bill_rcvr_org || bill_rcvr_org == "all" || bill_rcvr_org == "undefined" || organization=="all" || organization == "undefined") {
         alert("Please select an organization to finalize the ledger.");
         return;
     }
-
+    if(!total_summary || String(total_summary)=="0"){
+        alert("kahatha is zero or may not shown");
+        return;
+    }
     const data= {
         bill_rcvr_org: bill_rcvr_org,
         organization: organization
     };
-
+    try{
     let response=await call_shirkat(`/organizations/finalize-ledger`,"POST",data); 
+    }
+    catch(e){
+        // console.log("no finalize ",String(e));
+        show_message("can not finalize it may already zero kahatha ","error");
+    }
     search_bills();
 }
 
@@ -186,4 +194,5 @@ function date_change()
 {
     search_bills(); 
 }
+
 // search_bills();
