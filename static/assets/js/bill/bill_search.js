@@ -1,25 +1,35 @@
 var data;
 
-async function make_table(data)
+async function make_table(response_data)
 {
-    console.log("make_table data",data)
-    // return;
-    prv=data['previous']
-    nex=data['next']
-
-    data=data.results;
+    console.log("make_table response_data", response_data)
+    
+    // Extract pagination and main data
+    const prv = response_data['previous'];
+    const nex = response_data['next'];
+    const data = response_data.results; // This contains {ok, message, statistics, serializer_data}
+    
+    // Access statistics from the results object
+    const statistics = data.statistics;
+    const bills = data.serializer_data;
+    
     const bill_tbody = document.querySelector('#bill_tbody');
+    
+    // Update statistics fields
     total_upon_self_org=document.getElementById("total_upon_self_org");
-    total_upon_self_org.value=data.statistics.total_upon_self_org;
+    if(total_upon_self_org) total_upon_self_org.value = statistics.total_upon_self_org || 0;
+    
     total_upon_opposit_org=document.getElementById("total_upon_opposit_org");
-    total_upon_opposit_org.value=data.statistics.total_upon_opposit_org;
+    if(total_upon_opposit_org) total_upon_opposit_org.value = statistics.total_upon_opposit_org || 0;
+    
     total_summary=document.getElementById("total_summary");
     net_profit_sum=document.getElementById("net_profit_sum");
-    net_profit_sum.value=data.statistics.net_profit_sum
+    net_profit_sum.value = statistics.net_profit_sum || 0;
     profit_sum=document.getElementById("profit_sum");
-    profit_sum.value=data.statistics.profit_sum
-    total_summary.value=data.statistics.total_summary;
-    if(total_summary.value<0)
+    profit_sum.value = statistics.profit_sum || 0;
+    total_summary.value = statistics.total_summary || 0;
+    
+    if(total_summary.value < 0)
     {
      total_summary.style.color="black";
      total_summary.style.background="red";
@@ -30,7 +40,7 @@ async function make_table(data)
      total_summary.style.background="lightgreen";
     }
     
-    if(net_profit_sum.value<0)
+    if(net_profit_sum.value < 0)
     {
      net_profit_sum.style.color="black";
      net_profit_sum.style.background="red";
@@ -40,39 +50,35 @@ async function make_table(data)
      net_profit_sum.style.color="black";
      net_profit_sum.style.background="lightgreen";
     }
+    
     total_sum_purchase=document.getElementById("total_sum_purchase");
-    total_sum_purchase.value=data.statistics.total_sum_purchase;
+    total_sum_purchase.value = statistics.total_sum_purchase || 0;
     payment_sum_purchase=document.getElementById("payment_sum_purchase");
-    payment_sum_purchase.value=data.statistics.payment_sum_purchase;
+    payment_sum_purchase.value = statistics.payment_sum_purchase || 0;
     notpaid_purchase=document.getElementById("notpaid_purchase");
-    notpaid_purchase.value=data.statistics.notpaid_purchase;
+    notpaid_purchase.value = statistics.notpaid_purchase || 0;
 
     total_sum_selling=document.getElementById("total_sum_selling");
-    total_sum_selling.value=data.statistics.total_sum_selling;
+    total_sum_selling.value = statistics.total_sum_selling || 0;
     payment_sum_selling=document.getElementById("payment_sum_selling");
-    payment_sum_selling.value=data.statistics.payment_sum_selling;
+    payment_sum_selling.value = statistics.payment_sum_selling || 0;
     notpaid_sell=document.getElementById("notpaid_sell");
-    notpaid_sell.value=data.statistics.notpaid_sell;
-    // console.log("data.statistics.notpaid_sell ",data.statistics.notpaid_sell)
+    notpaid_sell.value = statistics.notpaid_sell || 0;
 
-    
-    // total_sum_payment=document.getElementById("total_sum_payment");
-    // total_sum_payment.value=data.statistics.total_sum_payment;
     payment_sum_payment=document.getElementById("payment_sum_payment");
-    payment_sum_payment.value=data.statistics.payment_sum_payment;
+    payment_sum_payment.value = statistics.payment_sum_payment || 0;
 
-    // total_sum_receivement=document.getElementById("total_sum_receivement");
-    // total_sum_receivement.value=data.statistics.total_sum_receivement;
     receivement_sum=document.getElementById("receivement_sum");
-    receivement_sum.value=data.statistics.payment_sum_receivement;
+    receivement_sum.value = statistics.payment_sum_receivement || 0;
     
-    // total_sum_expense=document.getElementById("total_sum_expense");
-    // total_sum_expense.value=data.statistics.total_sum_expense;
     payment_sum_expense=document.getElementById("payment_sum_expense");
-    payment_sum_expense.value=data.statistics.payment_sum_expense;
+    payment_sum_expense.value = statistics.payment_sum_expense || 0;
+    
+    payment_sum_loss=document.getElementById("payment_sum_loss");
+    payment_sum_loss.value = statistics.payment_sum_loss || 0;
 
+    // Handle pagination
     pagination = document.querySelector("#pagination_id");
-    // console.log("pagination ",pagination.innerHTML)
     pagination.innerHTML = "";
     previous = ``;
     next = ``;
@@ -84,42 +90,49 @@ async function make_table(data)
     }
     html = next + previous;
     pagination.insertAdjacentHTML('beforeend', html);
-    bill_tbody.innerHTML="";
-    // console.log(data)
     
-    //console.log('data ',data);
+    // Clear table body
+    bill_tbody.innerHTML="";
+    
+    // Check if request was successful
     if(!data['ok'])
     {
-        alert("data['message'] ",data['message'])
+        console.error("Error: ", data['message']);
         show_message(data['message'],"error");
         return;
     }
-    for(key in data['serializer_data']){     
+    
+    // Populate table rows
+    for(key in bills){     
         var bill_rcvr_org="";
         
-        if(data['serializer_data'][key]['bill_receiver2']!=undefined && data['serializer_data'][key]['bill_receiver2']!=null )
+        if(bills[key]['bill_receiver2']!=undefined && bills[key]['bill_receiver2']!=null )
         {
-         bill_rcvr_org=data['serializer_data'][key]['bill_receiver2']['bill_rcvr_org'];
+         bill_rcvr_org=bills[key]['bill_receiver2']['bill_rcvr_org'];
         }
         else{
          bill_rcvr_org=null;
         }
      
-        let update_href=`/bill/detail/${data['serializer_data'][key]['id']}/`;
-        if(data['serializer_data'][key]['bill_type']=="EXPENSE"){
-            update_href=`/expenditure/bill/form/${data['serializer_data'][key]['id']}/`;
+        let update_href=`/bill/detail/${bills[key]['id']}/`;
+        if(bills[key]['bill_type']=="EXPENSE"){
+            update_href=`/expenditure/bill/form/${bills[key]['id']}/`;
         }
         let row=`
             <tr>
-                <td>${data['serializer_data'][key]['organization']}</td>
-                <td>${data['serializer_data'][key]['bill_no']}(<span style="color:green;font-weight:600">${data['serializer_data'][key]['bill_type']}</span>)</td>
-                <td>${bill_rcvr_org}</td><td>${data['serializer_data'][key]['total']}</td>
-                <td>${data['serializer_data'][key]['payment']}</td><td>${data['serializer_data'][key]['date']}</td>
-                <td> <a href="${update_href}"  class="btn btn-success" role="button">update</a> | <a href="/bill/delete/${data['serializer_data'][key]['id']}"  onclick="return confirm('do you want to delete');" role="button" class="btn btn-success">delete</a>
+                <td>${bills[key]['organization']}</td>
+                <td>${bills[key]['bill_no']}(<span style="color:green;font-weight:600">${bills[key]['bill_type']}</span>)</td>
+                <td>${bill_rcvr_org}</td>
+                <td>${bills[key]['total']}</td>
+                <td>${bills[key]['payment']}</td>
+                <td>${bills[key]['date']}</td>
+                <td> <a href="${update_href}"  class="btn btn-success" role="button">update</a> | <a href="/bill/delete/${bills[key]['id']}"  onclick="return confirm('do you want to delete');" role="button"  class="btn btn-danger">delete</a>
                 </td>
             </tr>`; 
         bill_tbody.insertAdjacentHTML('beforeend', row);
     }
+    
+    console.log(`✓ Loaded ${Object.keys(bills).length} bills`);
 }
 async function search_bills(url=null)
 {

@@ -8,25 +8,27 @@ from product import views_product, views_unit, views_stock
 from user import views_login, views_organization_user
 from configuration import views_organization, views_location
 from expenditure import views as expenditure_view
-
+from asset import views as asset_view
 from django.shortcuts import redirect
 
 urlpatterns = [
     path('login/check', views_login.host_to_heroku_submit),
 
     # Expenditure
-    path('expenditure/bill/form/', expenditure_view.expense_form),
+    path('expenditure/bill/form/', expenditure_view.expense_form,name="expense_form"),
     path('expenditure/bill/form/<id>/', expenditure_view.expense_form),
     path('expenditure/bill/insert/', expenditure_view.expense_insert),
 
     # Organizations
     path('organizations/finalize-ledger', views_bill.finalize_ledger, name='finalize_ledger'),
+    path('organizations/calculate-purchased-asset/',asset_view.calculate_total_purchased_asset_from_products_using, name='calculate_purchased_asset'),
     path('organizations/<id>/', views_organization.rcvr_org_show, name='rcvr_org_show'),
     path('configuration/organization/form/', views_organization.form, name='organization_form'),
     path('configuration/organization/form/<id>', views_organization.form, name='organization_form'),
     path('configuration/organization/form/create/', views_organization.create, name='organization_form_save'),
     path('configuration/organization/form/create/<id>', views_organization.create, name='organization_form'),
-
+    path('admin/configuration/organization/', views_organization.show, name='organization_show'),
+    path('configuration/organization/', views_organization.show, name='organization_show'),
     # Location
     path('configuration/location/', views_location.show, name='location_show'),
 
@@ -36,11 +38,11 @@ urlpatterns = [
     path('bill/search/', views_bill.search),
 
     path('receive_payment/bill/save/', views_bill_receive_payment.bill_insert),
-    path('receive_payment/bill/', views_bill_receive_payment.bill_form),
+    path('receive_payment/bill/', views_bill_receive_payment.bill_form, name="bill_form_receive_payment"),
     path('bill/detail/<bill_id>/', views_bill.bill_show),
-    path('admin/bill/bill/', views_bill.bill_show),
-    path('admin/bill/bill/add/', views_bill.bill_form_sell_purchase),
-    path('loss_degrade_product/bill/add/', views_bill.bill_form_loss_degrade_product),
+    path('admin/bill/bill/', views_bill.bill_show,name="bill_show_html"),
+    path('admin/bill/bill/add/', views_bill.bill_form_sell_purchase,name="bill_form_sell_purchase"),
+    path('loss_degrade_product/bill/add/', views_bill.bill_form_loss_degrade_product,name="bill_form_loss_degrade_product"),
     path('bill/detail/delete/<bill_detail_id>', views_bill.bill_detail_delete),
     path('bill/insert/', views_bill.bill_insert, name="bill_insert"),
 
@@ -55,7 +57,7 @@ urlpatterns = [
     path('products/product/add/', views_product.form, name='product_form'),
     path('products/product/add/<id>', views_product.form, name='product_form'),
     path('product/product_form/create/', views_product.create, name='product_form_create'),
-    path('product/product_form/create/<id>', views_product.create, name='product_form_create'),
+    path('product/product_form/create/<id>', views_product.create, name='product_form_update'),
 
     # Users & Organization Users
     path('admin/user/organizationuser/add/', views_organization_user.form, name='organization_user_form'),

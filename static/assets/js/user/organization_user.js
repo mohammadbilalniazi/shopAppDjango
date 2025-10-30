@@ -66,11 +66,22 @@ async function search(url = "/user/organization_user/search/") {
   const firstName = $("first_name").value;
   const lastName = $("last_name").value;
   const username = $("username").value;
+  const searchInput = $("search_user_input");
+  const searchTerm = searchInput ? searchInput.value : "";
 
   if (organization) data.organization = organization;
-  if (firstName) data.first_name = firstName;
-  if (lastName) data.last_name = lastName;
-  if (username) data.username = username;
+  
+  // If search input has value, use it for all search fields
+  if (searchTerm) {
+    data.first_name = searchTerm;
+    data.last_name = searchTerm;
+    data.username = searchTerm;
+  } else {
+    // Otherwise use individual field values
+    if (firstName) data.first_name = firstName;
+    if (lastName) data.last_name = lastName;
+    if (username) data.username = username;
+  }
 
   const response = await call_shirkat(url, "POST", data, csrfHeaders());
   console.log("search res", response);

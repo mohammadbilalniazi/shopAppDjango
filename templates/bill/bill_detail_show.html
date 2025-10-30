@@ -1,214 +1,293 @@
-  {% load jalali_tags %}
+{% extends "master.html" %}
 {% load static %}
-<html lang="en-us" dir="ltr">
-    <head> 
-        <title>Add Bill | Django site admin</title>
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/nav_sidebar.css">
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-        <link rel="stylesheet" type="text/css" href="/static/assets/css/common.css">
-        <link rel="stylesheet" type="text/css" href="/static/assets/css/fontawesome.min.css">
-        <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/fontawesome.min.css"> -->
-        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
-        <link rel="stylesheet" href="/static/assets/css/toastr.min.css">
-        <script src="/static/assets/js/jquery.min.js"></script>
-    <meta name="robots" content="NONE,NOARCHIVE">
-    <style>
-        .danger-btn{
-            font-weight: 900; 
-            font-size: 16px; 
-            background-color: red; 
-            color: black; 
-            padding: 0px; 
-            margin: 0px;
-            padding:0.4%;
-        }
-        .bill_creator{
-            font-size:xx-large;
-            font-weight: 900;
-            color:black
-        }
-        .bill_acceptor{
-            font-size:xx-large;
-            font-weight: 900;
-            color:crimson
-        }
 
-        select{
-            font-weight: 900;
-            /* color:blue */
-        }
-        
-        input[type=number],input[type=text]{
-            font-weight: 900;
-            /* color:blue */
-        }
-    </style>
-    </head>
+{% block title %}Bills | Shirkat{% endblock %}
 
-<body class=" app-shopapp model-Bill change-form" data-admin-utc-offset="0" style="background-color:antiquewhite">
-<!-- Container -->
-<div id="container"> 
-    <!-- Header -->
+{% block head_extra %}
+{{ block.super }}
+{% if form %}{{ form.media.css }}{% endif %}
+<style>
+    /* Consistent button sizing */
+    .btn {
+        min-width: 120px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
     
-    <div id="header">
-        <div id="branding">
-             <h1 id="site-name"><a href='/'><h1 style='color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px'>{{organization}}</h1></a></h1>
-       </div>
- 
-        <div id="user-tools">
-                Welcome,
-                <strong>{{user}}</strong>.
-                    <a href="/">View site</a> /
-                <a href="/admin/password_change/">Change password</a> /
-                <a href="/admin/logout/">Log out</a>   
+    .btn-lg {
+        min-width: 150px;
+        height: 45px;
+    }
+    
+    .btn-sm {
+        min-width: 90px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="gradient-card mb-4">
+    <h1><i class="bi bi-receipt-cutoff"></i> Bill Management & Analytics</h1>
+</div>
+
+<!-- Summary Statistics Section -->
+<div class="card-custom mb-4">
+    <div class="card-custom-header">
+        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Financial Summary</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th>اخستنی مجموعه</th>
+                        <th><input type="number" name="total_sum_purchase" id="total_sum_purchase" class="form-control-custom"></th>
+                        <th>اخستنی په وخت نغدی اداشوی</th>
+                        <th><input type="number" name="payment_sum_purchase" id="payment_sum_purchase" class="form-control-custom"></th>
+                        <th>په قرضو اخستل شوی مال مجموعه</th>
+                        <th><input type="number" name="notpaid_purchase" id="notpaid_purchase" class="form-control-custom"></th>
+                    </tr>
+                    <tr>
+                        <th>مجموعه خرڅلاو</th>
+                        <th><input type="number" name="total_sum_selling" id="total_sum_selling" class="form-control-custom"></th>
+                        <th>دخرڅلاو په وخت نغدی اخستل شوی</th>
+                        <th><input type="number" name="payment_sum_selling" id="payment_sum_selling" class="form-control-custom"></th>
+                        <th>په قرضو خرڅلاو شوی مجموعه</th>
+                        <th><input type="number" name="notpaid_sell" id="notpaid_sell" class="form-control-custom"></th>
+                    </tr>
+                    <tr>
+                        <th>مجموعه نغدی اداشوی</th>
+                        <th><input type="number" name="payment_sum_payment" id="payment_sum_payment" class="form-control-custom"></th>
+                        <th>مجموعه نغدی ترلاسه شوی</th>
+                        <th><input type="number" name="receivement_sum" id="receivement_sum" class="form-control-custom"></th>
+                        <th>خلاصه کهاته</th>
+                        <th><input type="number" name="total_summary" id="total_summary" class="form-control-custom"></th>
+                    </tr>
+                    <tr>
+                        <th>مصرف</th>
+                        <th><input type="number" name="payment_sum_expense" id="payment_sum_expense" class="form-control-custom"></th>
+                        <th>مات شوی تاوان شوی</th>
+                        <th><input type="number" name="payment_sum_loss" id="payment_sum_loss" class="form-control-custom bg-danger text-white"></th>
+                        <th>مجموعه ګټه</th>
+                        <th><input type="number" name="profit_sum" id="profit_sum" class="form-control-custom"></th>
+                    </tr>
+                    <tr>
+                        <th colspan="4"></th>
+                        <th>خلاصه ګټه (مجموعه ګټه - مصرف)</th>
+                        <th><input type="number" name="net_profit_sum" id="net_profit_sum" class="form-control-custom"></th>
+                    </tr>
+                    <tr>
+                        <th colspan="2">
+                            <select name="purchased_asset_organization" class="form-select-custom" id="purchased_asset_organization">
+                                <option value="">Select Organization</option>
+                                {% for row in organizations %}
+                                    <option value="{{ row.id }}">{{ row }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                        <th>
+                            <button class="btn btn-info-gradient" id="calculate_purchased_asset_btn" onclick="calculate_purchased_asset()">
+                                <i class="bi bi-calculator"></i> Calculate Asset
+                            </button>
+                        </th>
+                        <th>
+                            <input type="number" name="purchased_asset_total" id="purchased_asset_total" class="form-control-custom bg-info text-white" readonly placeholder="Purchased Asset Total">
+                        </th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
-    
-    <!-- END Header -->
-        
-    <div class="breadcrumbs">
-    <a href="/admin/">Home</a>
-    › <a href="/admin/bill/bill/">Bill</a>
-    › <a href="/admin/bill/bill/add">Add Bill</a>
+</div>
+
+<!-- Filter Section -->
+<div class="card-custom mb-4">
+    <div class="card-custom-header">
+        <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Bill Filters</h5>
     </div>
-    <div class="main shifted" id="main"> 
-        <div class="content">
-                    <div class="colM">{% if messages %} {% for message in messages %} {% if message.tags == "error" %} <div class='alert alert-danger' style="background-color:red"> {%  else %} <div class='alert alert-danger' style="background-color:green"> {%endif%}  {{ message}} </div> {% endfor %} {% endif %}</div>
-            <!-- Content -->
-            <div id="content" class="colM">   
-                    <div id="content-main">
-                                <div>
-                                    <fieldset class="module aligned ">    
-                                        
-                                        <table style="width:100%" id="table_form">
-                                                <caption>
-                                                    <a href="/admin/shopapp/" class="section" title="Models in the Shopapp application">Shopapp</a>
-                                                </caption>
-                                
-                                                <thead>
-                                                    <tr>
-                                                        <th>
-                                                            <label style="float:left"> Item name <a href="/admin/product/product/add/" class="addlink"></a></label>                      
-                                                        </th>
-                                                        <th>
-                                                            <label >  Unit <a href="/admin/product/unit/add/" class="addlink"></a></label>   
-                                                    </th>
-                                                        <th>
-                                                            <label > Item amount</label>   
-                                                        </th>
-                                                        <th>
-                                                            <label>Item price</label>           
-                                                        </th>
-                                                        <th>
-                                                            <label for="id_return_qty">Return qty</label>                     
-                                                        </th>
-                                                    
-                                                    </tr>
-                                                    {% if bill.bill_detail_set %}
-                                                    
-                                                    {% for detail in bill.bill_detail_set.all %}
-                                                    <tr>
-                                                        <td> 
-                                                            <div>
-                                                            <select class="item_name" name="item_name">
-                                                                {% for row in products %}
-                                                            <option value="{{row.id}}"  {% if detail.product.id == row.id %} selected {% endif %}>{{row.item_name}}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                            </div>
-                                                        </td>
-                                                        <td> 
-                                                            <div>
-                                                            <select class="unit" name="unit">
-                                                            {% for row in units %}
-                                                            <option value="{{row.id}}"  {% if detail.unit.id == row.id %} selected {% endif %}>{{row.name}}</option>
-                                                            {% endfor %}
-                                                            </select>
-                                                            </div>
-                                                        </td>
-                                                        <td><div><input type="number"  value="{{detail.item_amount}}" name="item_amount" class="item_amount"></div></td>
-                                                    
-                                                        <td><div><input type="number"  value="{{detail.item_price}}" name="item_price" class="item_price"></div></td>
-                                                        <td><div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty"></div></td>
-                                                        <td><div><input disabled type="number"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id"></td>
-                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="remove_row(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
-                                                    
-                                                    
-                                                        </tr>
-                                                    {% endfor %}
-                                                    {% endif %}
-                                                </thead>
-                                                <tbody id="table_body">
-
-                                                </tbody>
-                                        </table>
-                                    </fieldset>
-                                    <div class="submit-row">
-
-                                        {% if bill %}
-                                        
-                                        <input type="submit" value="Update" style="background-color:green; color:white" class="default" name="_save">
-                                        {% else %}
-                                        <input type="submit" value="Save" class="default" name="_save">
-                                        {% endif %}
-                                        <input type="button" value="جنس ډیرول" id="addnawajans" onclick="add_row()" name="addnawajans">
-                                        <!-- {% if bill %}
-                                        <a href="/bill/delete/{{bill.id}}/" role="button" class="danger-btn" style="background-color:red; color:white" >delete</a>
-                                        {% endif %}     -->
-                                    </div> 
-                            </div>
-                   
-                </div>  <!--end of div content-main-->
-                    <br class="clear">
-            </div>     <!--end of div colM-->
-            <!-- END Content -->
-            <div id="footer"></div>
-        </div><!-- end of div content-->
-    </div> <!--- end of div main shifted -->
-</div><!-- end of div container -->
-<!-- END Container -->
-
-
-<div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;">
-    <div>
-        <a href="#" class="calendarnav-previous">&lt;</a>
-        <a href="#" class="calendarnav-next">&gt;</a>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="organization" class="form-label-custom">
+                    <i class="bi bi-building"></i> Organization
+                </label>
+                <select name="organization" class="form-select-custom" required id="organization">
+                    <option value="">Select Organization</option>
+                    {% for row in organizations %}
+                        <option value="{{ row.id }}">{{ row }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="bill_no" class="form-label-custom">
+                    <i class="bi bi-hash"></i> Bill No
+                </label>
+                <input class="form-control-custom" type="number" placeholder="Bill Number" name="bill_no" id="bill_no">
+            </div>
+            <div class="col-md-2">
+                <label for="bill_type" class="form-label-custom">
+                    <i class="bi bi-tag"></i> Bill Type
+                </label>
+                <select class="form-select-custom" name="bill_type" id="bill_type">
+                    <option value="all">All bills</option>
+                    <option value="PURCHASE">PURCHASE</option>
+                    <option value="SELLING">SELLING</option>
+                    <option value="PAYMENT">PAYMENT</option>
+                    <option value="RECEIVEMENT">RECEIVEMENT</option>
+                    <option value="LOSSDEGRADE">مات شوی تاوان</option>
+                    <option value="EXPENSE">EXPENSE</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="bill_rcvr_org" class="form-label-custom">
+                    <i class="bi bi-shop"></i> Receiver Organization
+                </label>
+                <select class="form-select-custom" name="bill_rcvr_org" id="bill_rcvr_org">
+                    <option value="">All Shirkat/Shop</option>
+                    {% for row in rcvr_orgs %}
+                        <option value="{{ row.id }}">{{ row }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button id="search_kahatha" class="btn btn-success-gradient flex-grow-1">
+                    <i class="bi bi-search"></i> کهاته لـټول
+                </button>
+            </div>
+        </div>
+        <div class="row g-3 mt-2">
+            <div class="col-md-4">
+                <label class="form-label-custom">
+                    <i class="bi bi-calendar-check"></i> From Date
+                </label>
+                <div>{{ form.start_date }}</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-custom">
+                    <i class="bi bi-calendar-x"></i> To Date
+                </label>
+                <div>{{ form.end_date }}</div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button class="btn btn-warning-gradient flex-grow-1" id="finalize_ledger" onclick="finalize_ledger()">
+                    <i class="bi bi-arrow-counterclockwise"></i> کهاته صفر کول
+                </button>
+                <span id="pagination_id" class="badge-custom badge-success-custom fs-6"></span>
+            </div>
+        </div>
+        <input type="hidden" id="organization_hidden" name="organization">
     </div>
-    <div id="calendarin0" class="calendar">
-        <table>
-        <caption>June 2022</caption>
-        <tbody>
-        <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
-        <tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr>
-        <tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr>
-        <tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class="today"><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="nonday"> </td><td class="nonday"> </td>
-        </tr>
-        </tbody>
-        </table>
+</div>
+
+<!-- Bills Table Section -->
+<div class="card-custom">
+    <div class="card-custom-header">
+        <h5 class="mb-0"><i class="bi bi-table"></i> Bills List</h5>
     </div>
-   
-    <p class="calendar-cancel"><a href="#">Cancel</a></p>
-</div><!-- end of  calendarbox module div-->
-</body>
-</html>
- {{ form.media }}
-  <script src="/static/assets/js/toastr.min.js"></script>
-  <script src="/static/assets/js/axios.min.js"></script>
-  <script src="/static/assets/js/cookie.js"></script>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th><i class="bi bi-building"></i> Organization</th>
+                        <th><i class="bi bi-hash"></i> Bill No</th>
+                        <th><i class="bi bi-people"></i> (Opposit) Vendors</th>
+                        <th><i class="bi bi-currency-dollar"></i> Total Bill</th>
+                        <th><i class="bi bi-cash"></i> Payment</th>
+                        <th><i class="bi bi-calendar-event"></i> Date</th>
+                        <th><i class="bi bi-gear"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bill_tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{% if form %}{{ form.media.js }}{% endif %}
 <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
-<script src="/static/assets/js/common_entities/create_element.js"></script>
-
-<script src="/static/assets/js/show_message.js"></script>
-<script src="/static/assets/js/bill/bill_delete.js"></script>
-<script src='/static/assets/js/common_entities/generate_ihsaya.js'></script>
-<script src="/static/assets/js/bill/bill.js"></script>
-
 <script src="/static/assets/js/bill/select_bill_no.js"></script>
-
-{% if detail %}
-<script>add_event_to_total()</script>
-{% endif %}
+<script src="/static/assets/js/common_entities/create_element.js"></script>
+<script src="/static/assets/js/configuration/organization.js"></script>
+<script src="/static/assets/js/vendor/show_vendor.js"></script>
+<script src="/static/assets/js/bill/bill_search.js"></script>
+<script src="/static/assets/js/bill/translate_persian_months.js"></script>
+<script src="/static/assets/js/bill/searchable_selects.js"></script>
 <script>
+    // Initialize Select2 for the purchased asset organization dropdown
+    $(document).ready(function() {
+        $('#purchased_asset_organization, #organization, #bill_rcvr_org').select2({
+            placeholder: 'Select Organization',
+            allowClear: true,
+            width: '100%',
+            theme: 'bootstrap-5'
+        });
+        
+        $('#bill_type').select2({
+            placeholder: 'Select Bill Type',
+            allowClear: true,
+            width: '100%',
+            theme: 'bootstrap-5',
+            minimumResultsForSearch: Infinity
+        });
+    });
+
+    // Function to calculate purchased asset
+    async function calculate_purchased_asset() {
+        const organization_id = document.getElementById('purchased_asset_organization').value;
+        const purchased_asset_total_input = document.getElementById('purchased_asset_total');
+        const calculate_btn = document.getElementById('calculate_purchased_asset_btn');
+        
+        if (!organization_id || organization_id === '') {
+            toastr.error('Please select an organization first!');
+            return;
+        }
+        
+        // Disable button and show loading state
+        calculate_btn.disabled = true;
+        calculate_btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Calculating...';
+        
+        try {
+            const response = await call_shirkat(
+                '/organizations/calculate-purchased-asset/',
+                'POST',
+                JSON.stringify({ organization: organization_id })
+            );
+            
+            console.log('Calculate Purchased Asset Response:', response);
+            
+            if (response.success) {
+                // Display the calculated total
+                purchased_asset_total_input.value = response.data.total_purchased_asset.toFixed(2);
+                
+                // Show success message
+                toastr.success(
+                    `Purchased Asset ${response.data.action} for ${response.data.organization}: ` +
+                    `${response.data.total_purchased_asset.toFixed(2)} (${response.data.products_calculated} products)`
+                );
+            } else {
+                toastr.error(response.message || 'Failed to calculate purchased asset');
+                purchased_asset_total_input.value = '';
+            }
+        } catch (error) {
+            console.error('Error calculating purchased asset:', error);
+            toastr.error('Error calculating purchased asset: ' + error.message);
+            purchased_asset_total_input.value = '';
+        } finally {
+            // Re-enable button
+            calculate_btn.disabled = false;
+            calculate_btn.innerHTML = '<i class="bi bi-calculator"></i> Calculate Asset';
+        }
+    }
 </script>
+{% endblock %}

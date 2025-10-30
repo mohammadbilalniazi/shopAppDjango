@@ -1,28 +1,513 @@
-<html>
-    <head>
-        <style>
-        #footer {
-            height: 50px; /* the footer's total height */
-          }
-          
-          #footer-content {
-            background-color: #f3e5f5;
-            border: 1px solid #ab47bc;
-            height: 32px; /* height + top/bottom paddding + top/bottom border must add up to footer height */
-            padding: 8px;
-          }
-        </style>
-    </head>
-<body>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Shirkat{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="Shirkat - Business Management System">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Unified Styles - Consistent buttons, colors, and components -->
+    <link rel="stylesheet" href="{% static 'assets/css/unified-styles.css' %}">
+    <!-- Select2 CSS for searchable dropdowns (common across templates) -->
+    <link href="{% static 'assets/css/select2.min.css' %}" rel="stylesheet" />
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
+    <!-- Toastr notifications -->
+    <link rel="stylesheet" href="{% static 'assets/css/toastr.min.css' %}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
+    <!-- Responsive CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
+    
+    {% block head_extra %}{% endblock %}
+    
+    <style>
+        /* Body with sidebar layout */
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .page-wrapper {
+            display: flex;
+            flex: 1;
+        }
+        
+        /* Left Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-brand {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sidebar-brand:hover {
+            color: #3498db;
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-size: 0.95rem;
+        }
+        
+        .sidebar-nav a:hover {
+            background: rgba(52, 152, 219, 0.15);
+            border-left-color: #3498db;
+            color: #fff;
+            padding-left: 1.75rem;
+        }
+        
+        .sidebar-nav a.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-left-color: #3498db;
+            color: #fff;
+        }
+        
+        .sidebar-nav .nav-icon {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Sidebar User Section */
+        .sidebar-user {
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+        
+        .sidebar-user-name {
+            color: #ecf0f1;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sidebar-user a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 0.25rem;
+            transition: color 0.3s;
+        }
+        
+        .sidebar-user a:hover {
+            color: #5dade2;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: calc(100% - 260px);
+        }
+        
+        /* Top Header */
+        .top-header {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Mobile Toggle Button */
+        .mobile-toggle {
+            display: none;
+            background: #3498db;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                left: -260px;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .mobile-toggle {
+                display: block;
+            }
+            
+            /* Overlay for mobile */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                z-index: 999;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 1rem;
+            }
+            
+            .header-title {
+                font-size: 1.25rem;
+            }
+            
+            .sidebar {
+                width: 240px;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+        }
+        
+        /* Scrollbar Styling */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Content wrapper */
+        main.container {
+            flex: 1;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    
+    <!-- Left Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <a class="sidebar-brand" href="{% url 'admin:index' %}">
+                <span class="nav-icon">📊</span>
+                <span>{{ organization|default:"Shirkat" }}</span>
+            </a>
+        </div>
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav">
+            <a href="{% url 'admin:index' %}">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'bill_form_sell_purchase' %}">
+                <span class="nav-icon">�</span>
+                <span>Purchase/Sell</span>
+            </a>
+            <a href="{% url 'bill_form_receive_payment' %}">
+                <span class="nav-icon">💳</span>
+                <span>Receive/Payment</span>
+            </a>
+            <a href="{% url 'bill_form_loss_degrade_product' %}">
+                <span class="nav-icon">📉</span>
+                <span>Loss/Degrade</span>
+            </a>
+            <a href="{% url 'expense_form' %}">
+                <span class="nav-icon">💸</span>
+                <span>Expense</span>
+            </a>
+            <a href="{% url 'bill_show_html' %}">
+                <span class="nav-icon">�</span>
+                <span>Bills</span>
+            </a>
+            <a href="{% url 'product_show_html' %}">
+                <span class="nav-icon">📦</span>
+                <span>Products</span>
+            </a>
+            <a href="{% url 'organization_form' %}">
+                <span class="nav-icon">🏢</span>
+                <span>Organizations</span>
+            </a>
+            <a href="{% url 'organization_user_get' %}">
+                <span class="nav-icon">👥</span>
+                <span>Users</span>
+            </a>
+        </nav>
+        
+        <!-- Sidebar User Section -->
+        <div class="sidebar-user">
+            <div class="sidebar-user-name">
+                <span>👤</span>
+                <span>{{ user|default:"Guest" }}</span>
+            </div>
+            <a href="/">View Site</a>
+            <a href="/admin/password_change/">Change Password</a>
+            <a href="/admin/logout/">Logout</a>
+        </div>
+    </aside>
+    
+    <!-- Main Content Wrapper -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="d-flex align-items-center gap-3">
+                <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+                <h1 class="header-title m-0">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="header-user d-none d-md-flex">
+                <div class="user-avatar">{{ user.username|default:"G"|slice:":1"|upper }}</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">{{ user.username|default:"Guest" }}</div>
+                    <div style="font-size: 0.75rem; color: #7f8c8d;">{{ user.email|default:"user@shirkat.com" }}</div>
+                </div>
+            </div>
+        </header>
 
-<h1>Welcome</h1>
+        {% block hero %}{% endblock %}
 
-{% block myheader%}
-{% endblock %}
+        <main class="container my-4">
+            {% block content %}{% endblock %}
+        </main>
 
-{% block mymessage %}
-{% endblock %}
+        <footer class="bg-dark text-white py-4 mt-auto">
+            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <span class="fw-semibold">© {{ current_year|default:2025 }} Shirkat</span>
+                <div class="d-flex gap-3 small">
+                    <a class="text-decoration-none text-warning" href="{% url 'product_show' %}">Product Catalog</a>
+                    <a class="text-decoration-none text-warning" href="{% url 'organization_form' %}">Add Organization</a>
+                    <a class="text-decoration-none text-warning" href="{% url 'host_to_heroku_login_form' %}">Login</a>
+                </div>
+            </div>
+        </footer>
+    </div>
 
-
-
-{% include 'footer.html'%}
+    <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Select2 JS for searchable dropdowns (common) -->
+    <script src="{% static 'assets/js/select2.min.js' %}"></script>
+    <script src="{% static 'assets/js/axios.min.js' %}"></script>
+    <script src="{% static 'assets/js/cookie.js' %}"></script>
+    <script src="{% static 'assets/js/toastr.min.js' %}"></script>
+    <script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
+    <script src="{% static 'assets/js/common_entities/call_shirkat.js' %}"></script>
+    <script src="{% static 'assets/js/show_message.js' %}"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        // Set active link based on current URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+            
+            sidebarLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Add data-label attributes to table cells for mobile view
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => {
+                const headers = table.querySelectorAll('th');
+                const rows = table.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach((cell, index) => {
+                        if (headers[index]) {
+                            cell.setAttribute('data-label', headers[index].textContent.trim());
+                        }
+                    });
+                });
+            });
+        });
+        
+        // Close sidebar when clicking a link on mobile
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 992) {
+                    toggleSidebar();
+                }
+            });
+        });
+    </script>
+    
+    <!-- Select2 JS for searchable dropdowns (loaded globally) -->
+    <script src="{% static 'assets/js/select2.min.js' %}"></script>
+    <script>
+        /**
+         * Global Select2 Initialization
+         * Automatically makes all organization dropdowns searchable
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if jQuery and Select2 are loaded
+            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+                
+                // Initialize all organization select dropdowns
+                function initOrganizationSelects() {
+                    jQuery('.organization-select, select[name="organization"], select[id="organization"], #bill_rcvr_org, #purchased_asset_organization').each(function() {
+                        if (!jQuery(this).hasClass('select2-hidden-accessible')) {
+                            jQuery(this).select2({
+                                placeholder: jQuery(this).data('placeholder') || 'Select Organization',
+                                allowClear: false,
+                                width: '100%',
+                                theme: 'default',
+                                language: {
+                                    noResults: function() {
+                                        return 'No organization found';
+                                    },
+                                    searching: function() {
+                                        return 'Searching...';
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    console.log('✅ Organization dropdowns initialized with Select2');
+                }
+                
+                // Initial load
+                initOrganizationSelects();
+                
+                // Observe DOM changes to reinitialize Select2 on dynamic content
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.addedNodes.length) {
+                            mutation.addedNodes.forEach(function(node) {
+                                if (node.nodeType === 1) { // Element node
+                                    // Check if the added node is a select or contains selects
+                                    if (node.matches && node.matches('select')) {
+                                        initOrganizationSelects();
+                                    } else if (node.querySelectorAll) {
+                                        const selects = node.querySelectorAll('select[name="organization"], .organization-select');
+                                        if (selects.length > 0) {
+                                            initOrganizationSelects();
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                // Start observing the document body for DOM changes
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+                
+            } else {
+                console.warn('⚠️  jQuery or Select2 not loaded. Organization dropdowns will not be searchable.');
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

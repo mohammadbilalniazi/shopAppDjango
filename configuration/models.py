@@ -35,6 +35,7 @@ class Location(models.Model):
         unique_together=(("country","state","city"),)
     def __str__(self):
         return str(self.country)+'_'+self.state
+    
 class Organization(models.Model):
     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="organization_set")
     owner = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)

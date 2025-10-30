@@ -1,29 +1,17 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-  <meta charset="UTF-8">
-  <title>Add User To Organization</title>
-  
-  <!-- Core Styles -->
-  <link rel="stylesheet" href="/static/admin/css/base.css">
-  <link rel="stylesheet" href="/static/admin/css/forms.css">
-  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
-  <link rel="stylesheet" href="/static/admin/css/responsive.css">
-  <link rel="stylesheet" href="/static/assets/css/common.css">
-  <link rel="stylesheet" href="/static/assets/css/fontawesome.min.css">
+{% extends "master.html" %}
+{% load static %}
 
-  <!-- Meta -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="robots" content="NONE,NOARCHIVE">
+{% block title %}Add User To Organization{% endblock %}
 
-  <!-- Scripts -->
-  <script src="/static/assets/js/alert.js"></script>
-  <script src="/static/assets/js/axios.min.js"></script>
-  <script src="/static/assets/js/cookie.js"></script>
-  <script src="/static/assets/js/common_entities/create_element.js"></script>
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'admin/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/nav_sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/responsive.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
+<style>
 
-  <!-- Custom Styling -->
-  <style>
     body {
       background-color: antiquewhite;
       font-family: Arial, sans-serif;
@@ -104,41 +92,31 @@
     .btn-success { background: seagreen; }
     .btn-danger { background: crimson; }
     .btn:hover { opacity: 0.85; }
-  </style>
-</head>
+  
+</style>
+{% endblock %}
 
-<body class="app-product model-product change-form" data-admin-utc-offset="16200">
-
-  <!-- Header -->
-  <header id="header">
-    <div id="branding">
-      <h1 class="header-title">Shirkat</h1>
-    </div>
-    <div id="user-tools">
-      Welcome, <strong>{{user}}</strong>
-      <a href="/">View site</a> /
-      <a href="/admin/password_change/">Change password</a> /
-      <form id="logout-form" method="post" action="/admin/logout/" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit">Log out</button>
-      </form>
-    </div>
-  </header>
-
-  <!-- Breadcrumbs -->
-  <nav class="breadcrumbs" style="font-weight: bolder; font-size: 15px; color: darkred;">
-    <a href="/admin/">Home</a> › 
-    <a href="/admin/user/organizationuser/add">Organization Users</a> ›
-    <span><a href="/admin/user/organizationuser/add"> Add Organization User</a></span>
-  </nav>
-
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
+    
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "error" %}
+                <div class='alert alert-danger' style="background-color:rgb(176, 122, 122);font-weight:bolder;text-align:center;padding:12px;font-size:15px">
+            {% else %}
+                <div class='alert alert-success' style="background-color:lightgreen;font-weight:bolder;text-align:center;padding:12px;font-size:15px">
+            {% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
   <!-- Main Content -->
   <main id="main" class="main shifted">
     <fieldset class="module aligned">
       <!-- Form -->
       <form id="organization_user_form" method="post" action="{{request.META.HTTP_NAME}}/user/organization_user/insert/" enctype="multipart/form-data">
         {% csrf_token %}
-        
+
         <!-- Messages -->
         {% if messages %}
           {% for message in messages %}
@@ -206,8 +184,20 @@
                 <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
               </select>
             </td>
-            <td colspan="2">
-              <input type="submit" value="{% if organization_user   %} Update User {% else %} Create User  {% endif %}" class="btn btn-success" id="create_user">
+            <td colspan="3">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" 
+                       placeholder="🔍 Search by name or username..." 
+                       class="inputs" 
+                       id="search_user_input" 
+                       oninput="search()"
+                       style="flex: 1; padding: 8px 12px; border: 2px solid #3498db; border-radius: 6px; font-size: 14px;">
+                <input type="submit" 
+                       value="{% if organization_user %} Update User {% else %} Create User {% endif %}" 
+                       class="btn btn-success" 
+                       id="create_user"
+                       style="white-space: nowrap;">
+              </div>
             </td>
           </tr>
         </table>
@@ -240,5 +230,25 @@
   <!-- Scripts -->
   <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
   <script src="/static/assets/js/user/organization_user.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'assets/js/alert.js' %}"></script>
+<script src="{% static 'assets/js/axios.min.js' %}"></script>
+<script src="{% static 'assets/js/cookie.js' %}"></script>
+<script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
+<script src="{% static 'assets/js/common_entities/call_shirkat.js' %}"></script>
+<script src="{% static 'assets/js/user/organization_user.js' %}"></script>
+
+<script>
+  // Clear search when form is submitted
+  document.getElementById('organization_user_form').addEventListener('submit', function() {
+    const searchInput = document.getElementById('search_user_input');
+    if (searchInput) {
+      searchInput.value = '';
+    }
+  });
+</script>
+{% endblock %}

@@ -1,52 +1,227 @@
-# Global ignores
-.DS_Store
-.env
-node_modules/
-venv/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django
+*.log
+local_settings.py
 db.sqlite3
 db.sqlite3-journal
-coverage/
+/media
+/staticfiles
+*.pot
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE - VSCode
 .vscode/
+*.code-workspace
+.history/
+
+# IDE - PyCharm
 .idea/
+*.iml
+*.iws
+.idea_modules/
 
-# Backend-specific ignores
-/backend/staticfiles/
-/backend/mediafiles/
-backend/__pycache__/
+# IDE - Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.cache
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Translations
+*.mo
+
+# Django migrations (optional - uncomment if you don't want to track migrations)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Static files (collected)
+/static/
+staticfiles/
+static_collected/
+
+# Media files (uploaded by users)
+media/
+
+# Backup files
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+.*.swp
+
+# Documentation builds
+docs/_build/
+site/
+
+# Node modules (if using frontend tools)
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Sass
+.sass-cache/
+*.css.map
+
+# Compiled translations
+locale/*/LC_MESSAGES/django.po
+
+# Redis dump
+dump.rdb
+
+# Pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Project specific
 *.pyc
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Frontend-specific ignores
-/frontend/node_modules/
-frontend/dist/
-frontend/build/
-frontend/.next/
-frontend/.nuxt/
-frontend/yarn.lock
-frontend/package-lock.json
+# Temporary files
+tmp/
+temp/
+*.tmp
 
-# Ignore media files (images, videos, audio, documents)
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.bmp
-*.tiff
-*.svg
-*.mp4
-*.mp3
-*.wav
-*.avi
-*.mov
-*.mkv
-*.flac
+# Secret keys and sensitive data
+secrets.json
+credentials.json
+*.pem
+*.key
+*.crt
 
-# Ignore document files
-*.doc
-*.docx
-*.xls
-*.xlsx
-*.csv
-*.pdf
-*.ppt
-*.pptx
+# Database backups
+*.sql
+*.dump
+
+# Custom backup files
+*.backup.*
+*_backup.*
+
+# Documentation generated files
+*.md.backup
+BUGFIX_*.md
+FIX_*.md
+QUICK_*.md
+IMPLEMENTATION_*.md
+TEMPLATE_*.md
+UNIFIED_*.md
+VISUAL_*.md
+AUTO_*.md
+PURCHASED_*.md
+ORGANIZATION_*.md
+RESPONSIVE_*.md
+PRODUCT_*.md
+BUTTON_*.md
+
+# Test coverage
+.coverage
+coverage/
+
+# Heroku
+Procfile.local
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# AWS
+.aws/
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/

@@ -2,7 +2,6 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from jalali_date import date2jalali
-from django.template import loader 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from configuration.models import *
@@ -20,7 +19,8 @@ from rest_framework.decorators import api_view
 from common.file_handle import delete_file
 from common.organization import find_userorganization
 import random
-from django.db.models import Q
+from django.db.models import Sum, Q
+from django.template import loader
 
 @login_required
 @api_view(('GET','DELETE'))
@@ -45,15 +45,53 @@ def rcvr_org_show(request,id="all"):
 def show(request):
     q = request.GET.get('q', '')
     organizations = Organization.objects.all().order_by("-pk")
+
     if q:
         organizations = organizations.filter(Q(name__icontains=q))
+
     paginator = Paginator(organizations, per_page=10)
     page = request.GET.get('page') or 1
-    organizations = paginator.get_page(page)
+    organizations_page = paginator.get_page(page)
+
+    # aggregate totals per organization
+    totals = {}
+    for org in organizations_page:
+        receive_amount = (
+            org.assetbillrcvrorg.filter(bill_type='RECEIVEMENT')
+            .aggregate(total=Sum('total'))['total'] or 0
+        )
+        pay_amount = (
+            org.assetbillorganization.filter(bill_type='PAYMENT')
+            .aggregate(total=Sum('total'))['total'] or 0
+        )
+        sell_amount = (
+            org.assetbillorganization.filter(bill_type='SELLING')
+            .aggregate(total=Sum('total'))['total'] or 0
+        )
+        purchase_amount = (
+            org.assetbillrcvrorg.filter(bill_type='PURCHASE')
+            .aggregate(total=Sum('total'))['total'] or 0
+        )
+        sell_amount_received_payment = (
+            org.assetbillorganization.filter(bill_type='SELLING')
+            .aggregate(total=Sum('payment'))['total'] or 0
+        )
+        purchase_amount_payed_payment = (
+            org.assetbillorganization.filter(bill_type='PURCHASE')
+            .aggregate(total=Sum('payment'))['total'] or 0
+        )
+        totals[org.id] = {
+            'receive_amount': receive_amount+sell_amount_received_payment,
+            'pay_amount': pay_amount+purchase_amount_payed_payment,
+            'sell_amount': sell_amount,
+            'purchase_amount': purchase_amount,
+        }
+
     template = loader.get_template('configurations/organization_show.html')
     return HttpResponse(template.render({
-        'organizations': organizations,
-        'request': request,  # So you can use request.GET.q in the template
+        'organizations': organizations_page,
+        'totals': totals,
+        'request': request,
     }, request))
 
 @login_required()
@@ -145,14 +183,17 @@ def create(request,id=None):
     
     if id=='' or id=='None' or id==None: # 1 step create
         org_query=Organization.objects.filter(name=name)
+        print(f"org_query {org_query}")
         if org_query.count()==0:
             try:
                 # if owner_user_query.count()==0:
                 user_query= User.objects.filter(username=owner)
-                if user_query.count()>0:
+                print(f"user_query {user_query}")
+                if user_query.count()==0:
                     owner=owner+str(random.randint(2,1000))
+                    owner,created = User.objects.get_or_create(username=owner,first_name=name,last_name=last_name,email=email,is_staff=True,is_active=is_active) 
                 else:
-                    owner = User.objects.create_user(username=owner,first_name=name,last_name=last_name,email=email,is_staff=True,is_active=is_active) 
+                    owner=user_query[0]
                 group_query=Group.objects.filter(name=group)   
                 if group_query.count()>0:
                     group_obj=group_query[0]
@@ -164,7 +205,7 @@ def create(request,id=None):
                 org.save()
                 
                 for admin in User.objects.filter(is_superuser=True):
-                    adm_org_c=OrganizationUser.objects.get_or_create(user=admin, organization=org,role="superuser")
+                    adm_org_c,created=OrganizationUser.objects.get_or_create(user=admin, organization=org,role="superuser")
                     print(f"adm_org_c {adm_org_c}")
                 stock_query=Stock.objects.filter(organization=org)
                 if stock_query.count()==0:

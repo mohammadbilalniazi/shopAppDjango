@@ -134,8 +134,14 @@ def create(request, id=None):
 def show(request):
     item_name=request.data.get("item_name",None)
     organization_id = request.data.get("organization", None)
-    self_organization,parent_organization,user_orgs = find_userorganization(request,None if organization_id=="all" else organization_id)
-    if organization_id=="all":
+    
+    # Treat empty string as None
+    if organization_id == '' or organization_id == 'all':
+        organization_id = None
+    
+    self_organization,parent_organization,user_orgs = find_userorganization(request, organization_id)
+    
+    if organization_id is None:
         query_set=Product.objects.order_by('-pk')
     else:
         query_set=Product.objects.filter(product_detail__organization=parent_organization)

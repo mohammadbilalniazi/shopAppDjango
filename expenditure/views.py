@@ -24,7 +24,10 @@ def expense_form(request,id=None):
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
-    bill_no=getBillNo(request,parent_organization.id,parent_organization.id,"EXPENSE")
+    if parent_organization:
+        bill_no=getBillNo(request,parent_organization.id,parent_organization.id,"EXPENSE")
+    else:
+        bill_no=getBillNo(request,None,None,"EXPENSE")
     context={
         'form':form,
         'bill_no':bill_no,

@@ -1,0 +1,59 @@
+{% comment %}
+Reusable Organization Dropdown with Select2 Search
+Usage:
+    {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' selected_org=organization %}
+    
+Parameters:
+    - field_name: Name attribute for the select (default: 'organization')
+    - field_id: ID attribute for the select (default: 'organization')
+    - selected_org: Currently selected organization object (optional)
+    - required: Add 'required' attribute (default: False)
+    - css_class: Additional CSS classes (default: 'form-control-custom')
+    - placeholder: Placeholder text (default: 'Select Organization')
+    - organizations_list: Custom list of organizations (default: uses global_organizations)
+{% endcomment %}
+
+{% load static %}
+
+<select 
+    name="{{ field_name|default:'organization' }}" 
+    id="{{ field_id|default:'organization' }}" 
+    class="organization-select {{ css_class|default:'form-control-custom' }}"
+    {% if required %}required{% endif %}
+    data-placeholder="{{ placeholder|default:'Select Organization' }}"
+>
+    {% if not required %}
+    <option value="">{{ placeholder|default:'Select Organization' }}</option>
+    {% endif %}
+    
+    {% comment %} Use custom list if provided, otherwise use global context {% endcomment %}
+    {% if organizations_list %}
+        {% for org in organizations_list %}
+        <option value="{{ org.id }}" {% if selected_org and org.id == selected_org.id %}selected{% endif %}>
+            {{ org.name }}
+        </option>
+        {% endfor %}
+    {% elif organizations %}
+        {% comment %} Fallback to 'organizations' if exists {% endcomment %}
+        {% for org in organizations %}
+        <option value="{{ org.id }}" {% if selected_org and org.id == selected_org.id %}selected{% endif %}>
+            {{ org.name }}
+        </option>
+        {% endfor %}
+    {% elif global_organizations %}
+        {% comment %} Use global organizations from context processor {% endcomment %}
+        {% for org in global_organizations %}
+        <option value="{{ org.id }}" {% if selected_org and org.id == selected_org.id %}selected{% endif %}>
+            {{ org.name }}
+        </option>
+        {% endfor %}
+    {% else %}
+        {% comment %} No organizations available {% endcomment %}
+        <option value="" disabled>No organizations available</option>
+    {% endif %}
+</select>
+
+{% comment %}
+Note: Select2 initialization happens automatically via master.html
+All elements with class 'organization-select' will be converted to searchable dropdowns
+{% endcomment %}

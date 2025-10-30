@@ -25,10 +25,10 @@ async function search_product(url=null,search_by_org=false)
     next = ``;
     if (prv) {
         
-        previous = `<tr><td>  <a href="${prv}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;'  class="btn btn-success" role="button"> Previous </a> </td></tr>`;
+        previous = `<tr><td>  <a href="${prv}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;'  class="btn-success-gradient" role="button"> Previous </a> </td></tr>`;
     }
     if (nex) {
-        next = `<tr><td> <a  href="${nex}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;' class="btn btn-success" role="button"> Next </a>  </td></tr>`;
+        next = `<tr><td> <a  href="${nex}" onclick='search_product(this.getAttribute("href"),${search_by_org}); return false;' class="btn-success-gradient" role="button"> Next </a>  </td></tr>`;
     }
     html = next + previous
     pagination.insertAdjacentHTML('beforeend', html);
@@ -60,15 +60,14 @@ async function search_product(url=null,search_by_org=false)
         let row=`
             <tr>
                 <td>
-                    <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >
                     ${data['serializer_data'][key]['item_name']}  (${purchased_price})
-                    </a>
                 </td>
                 <td>${data['serializer_data'][key]['model']}</td>
                 <td>${data['serializer_data'][key]['category']}</td>
                 <td>${minimum_requirement}</td>
                 <td>${data['serializer_data'][key]['purchase_amount']}</td>
                 <td>${data['serializer_data'][key]['selling_amount']}</td> 
+                <td>${data['serializer_data'][key]['loss_amount']}</td> 
                 <td>
                     <input type="number" id="stock_input_${data['serializer_data'][key]['id']}" value="${data['serializer_data'][key]['current_amount']}" class="form-control" />
                 </td>
@@ -76,8 +75,9 @@ async function search_product(url=null,search_by_org=false)
                 <td>
                 <img  src="${data['serializer_data'][key]['img']}"  width="80" height="80"/>
                 </td>
-                <td> <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn btn-success" >update product</a> 
-                <button class="btn btn-primary" onclick="return update_stock(event, ${data['serializer_data'][key]['id']});">Update Stock</button>
+                <td class="action-buttons"> 
+                    <a href="/product/product/add/${data['serializer_data'][key]['id']}" class="btn-success-gradient" style="text-decoration: none; display: inline-block;">Update Product</a> 
+                    <button class="btn-primary-gradient" onclick="return update_stock(event, ${data['serializer_data'][key]['id']});">Update Stock</button>
                 </td>
                 
             </tr>`;

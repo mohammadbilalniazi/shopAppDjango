@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Project apps
-    'product', 'expenditure', 'bill', 'user', 'configuration',
+    'product', 'expenditure', 'bill', 'user', 'configuration','asset',
 
     # Third-party
     'rest_framework', 'corsheaders', 'jalali_date',
@@ -81,6 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',  # needed for serializers
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'common.context_processors.organizations_processor',  # Global organizations
             ],
         },
     },
@@ -94,7 +95,7 @@ WSGI_APPLICATION = 'shop.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQL_DB', 'shirkat_original_test'),
+        'NAME': os.getenv('MYSQL_DB', 'shirkat_original'),
         'USER': os.getenv('MYSQL_USER', 'root'),
         'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
         'HOST': os.getenv('MYSQL_HOST', 'localhost'),

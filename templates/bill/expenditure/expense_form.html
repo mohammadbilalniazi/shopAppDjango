@@ -1,23 +1,19 @@
-  {% load jalali_tags %}
-{% load static %}
-<html lang="en-us" dir="ltr">
-    <head> 
-        <title>Add Bill | Django site admin</title>
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/nav_sidebar.css">
-        <!-- <script src="/static/admin/js/nav_sidebar.js" defer=""></script> -->
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-        
-        <link rel="stylesheet" type="text/css" href="/static/assets/css/common.css">
-        <link rel="stylesheet" type="text/css" href="/static/assets/css/fontawesome.min.css">
-        <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/fontawesome.min.css"> -->
-        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
-        <link rel="stylesheet" href="/static/assets/css/toastr.min.css">
-        <script src="/static/assets/js/jquery.min.js"></script>
-        
-    <meta name="robots" content="NONE,NOARCHIVE">
-    <style>
+{% extends "master.html" %}
+{% load jalali_tags static %}
+
+{% block title %}Add Bill | Shirkat{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/nav_sidebar.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'assets/css/common.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'assets/css/fontawesome.min.css' %}">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/fontawesome.min.css">
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/responsive.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/toastr.min.css' %}">
+<style>
+
         .danger-btn{
             font-weight: 900; 
             font-size: 16px; 
@@ -47,81 +43,41 @@
             font-weight: 900;
             /* color:blue */
         }
-    </style>
-    </head>
+    
+</style>
+{% endblock %}
 
-<body class=" app-shopapp model-Bill change-form" data-admin-utc-offset="0" style="background-color:antiquewhite">
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
+    
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "error" %}
+                <div class='alert alert-danger' style="background-color:rgb(176, 122, 122);font-weight:bolder;text-align:center;padding:12px;font-size:15px">
+            {% else %}
+                <div class='alert alert-success' style="background-color:lightgreen;font-weight:bolder;text-align:center;padding:12px;font-size:15px">
+            {% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
 <!-- Container -->
 <div id="container"> 
     <!-- Header -->
-    
-    <div id="header">
-        <div id="branding">
-             <h1 id="site-name"><a href='/'><h1 style='color:rgb(255, 174, 0); font-weight:bold; text-align:center; font-size:40px'>{{organization}}</h1></a></h1>
-       </div>
- 
-        <div id="user-tools">
-                Welcome,
-                <strong>{{user}}</strong>.
-                    <a href="/">View site</a> /
-                <a href="/admin/password_change/">Change password</a> /
-                <a href="/admin/logout/">Log out</a>   
-        </div>
-    </div>
-    
-    <!-- END Header -->
-        
-    <div class="breadcrumbs">
-    <a href="/admin/">Home</a>
-    › <a href="/admin/bill/">Purchase</a>
-    › <a href="/admin/bill/bill/">Bills</a>
-     › <a href="/expenditure/bill/form/">New Bill</a>
-    </div>
+
     <div class="main shifted" id="main"> 
         <!-- <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button> -->
-        <!-- <nav class="sticky" id="nav-sidebar">
-            <input type="search" id="nav-filter" placeholder="Start typing to filter…" aria-label="Filter navigation items">
-             
-            
-                <div class="app-shopapp module current-app">
-                <table>
-                    <caption>
-                    <a href="/admin/shopapp/" class="section" title="Models in the Shirkat application">Shirkat</a>
-                    </caption>
-                    
-                    <tbody>
-                        <tr class="model-initial_asset">
-                            <th scope="row"><a href="/admin/shopapp/initial_asset/">Asset</a></th>
-                            <td><a href="/admin/shopapp/initial_asset/add/" class="addlink">Add</a></td> 
-                        </tr>
-   
-                        <tr class="model-unit">  
-                            <th scope="row"><a href="/admin/products/unit/">Units</a></th>
-                            <td><a href="/admin/products/unit/add/" class="addlink">Add</a></td>    
-                        </tr>
-                      
-                        <tr class="model-product">
-                            <th scope="row"><a href="/products/product/">Products</a></th>
-                            <td><a href="/products/product/add/" class="addlink">Add</a></td>   
-                        </tr>
-                        
-                        <tr class="model-Bill current-model">  
-                            <th scope="row"><a href="/admin/bill/bill/" aria-current="page">bills</a></th>
-                            <td><a href="/admin/bill/bill/add/" class="addlink">Add</a></td>    
-                        </tr>
-                    </tbody>
-                </table>
-                </div>
-        </nav> -->
+        <!--  -->
 
         <div class="content">
                     <div class="colM">{% if messages %} {% for message in messages %} {% if message.tags == "error" %} <div class='alert alert-danger' style="background-color:red"> {%  else %} <div class='alert alert-danger' style="background-color:green"> {%endif%}  {{ message}} </div> {% endfor %} {% endif %}</div>
-    
+
             <!-- Content -->
-            
+
             <div id="content" class="colM">   
                 <input type="hidden" id="detail_or_update" {% if bill %}  value="1"  {% else %} value="0"  {% endif %} >
-                
+
                 <form method="post" action='{{request.META.HTTP_NAME}}/bill/insert/'   id="bill" >                 
                         {% csrf_token %}       
                 <table style="margin-left:auto; margin-right:auto">
@@ -165,16 +121,16 @@
                         </span>
                     </td>
                      <!-- </span>  -->
-                  
+
                     <td>Bill Creator User</td>
                     <td>     
                         <span style="display:inline;margin:3%">                   
                             <input type="text" disabled name="creator" {% if bill %} value="{{bill.creator}}" {% else %}  value="{{user.username}}" {% endif %} placeholder="creator"  class="" required="" id="creator">     
                         </span>  
                     </td>
-                   
+
                 </tr>
-            
+
                     <tr class="bill_creator">
                          <td>
                              bill No 
@@ -182,7 +138,7 @@
                         <td>                                       
                             <span > 
                             <input type="number"  name="bill_no" id="bill_no"  {% if bill %} value="{{bill.bill_no}}" {% else %} value="{{bill_no}}" {% endif %} disabled placeholder="بل شمیره" class="" required="" >                      
-                          
+
                             </span> 
                         </td>
                                                <td>
@@ -193,10 +149,10 @@
                                         {{form.date}}                              
                             </span>
                         </td>
-                        
+
                     </tr>  
                     <tr class="bill_creator">    
-                        
+
                         <td>
                             Bill Statuss
                         </td>
@@ -218,8 +174,7 @@
                                 <input type="number" id="total" name="total"  value="{{bill.total}}" placeholder="مجموعه پیسی"   >                      
                             </span>   
                         </td>  -->
-                        
-                        
+
                         <td>Expense</td>
                         <td>
                             <span style="display:inline;margin:3%">
@@ -229,12 +184,11 @@
                     </tr>
                     <tr>
                         <td>
-                            
 
                             {% if bill %}
-                            
+
                             <input type="submit" value="Update" style="background-color:green; color:white" class="default" name="_save">
-                           
+
                             {% else %}
                             <input type="submit" value="Save" class="default" name="_save">
                             {% endif %}
@@ -243,17 +197,17 @@
                             {% endif %}   -->
                         </td>
                     </tr>
-               
+
                     </table>
                     <div id="content-main">
                                 <div>
                                     <!-- <fieldset class="module aligned ">    
-                                        
+
                                         <table style="width:100%" id="table_form">
                                                 <caption>
                                                     <a href="/admin/shopapp/" class="section" title="Models in the Shopapp application">Shopapp</a>
                                                 </caption>
-                                
+
                                                 <thead>
                                                     <tr>
                                                         <th>
@@ -271,10 +225,10 @@
                                                         <th>
                                                             <label for="id_return_qty">Return qty</label>                     
                                                         </th>
-                                                    
+
                                                     </tr>
                                                     {% if bill.bill_detail_set %}
-                                                    
+
                                                     {% for detail in bill.bill_detail_set.all %}
                                                     <tr>
                                                         <td> 
@@ -296,13 +250,12 @@
                                                             </div>
                                                         </td>
                                                         <td><div><input type="number"  value="{{detail.item_amount}}" name="item_amount" class="item_amount"></div></td>
-                                                    
+
                                                         <td><div><input type="number"  value="{{detail.item_price}}" name="item_price" class="item_price"></div></td>
                                                         <td><div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty"></div></td>
                                                         <td><div><input disabled type="number"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id"></div></td>
                                                         <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="remove_row(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
-                                                    
-                                                    
+
                                                         </tr>
                                                     {% endfor %}
                                                     {% endif %}
@@ -314,17 +267,16 @@
                                     </fieldset> -->  
                                 </div>
                         </form>
-                   
+
                 </div>  <!--end of div content-main-->
                     <br class="clear">
             </div>     <!--end of div colM-->
             <!-- END Content -->
-            <div id="footer"></div>
+
         </div><!-- end of div content-->
     </div> <!--- end of div main shifted -->
 </div><!-- end of div container -->
 <!-- END Container -->
-
 
 <div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;">
     <div>
@@ -343,27 +295,25 @@
         </tbody>
         </table>
     </div>
-   
+
     <p class="calendar-cancel"><a href="#">Cancel</a></p>
 </div><!-- end of  calendarbox module div-->
-</body>
-</html>
- {{ form.media }}
-  <script src="/static/assets/js/toastr.min.js"></script>
-  <script src="/static/assets/js/axios.min.js"></script>
-  <script src="/static/assets/js/cookie.js"></script>
-<script src="/static/assets/js/common_entities/call_shirkat.js"></script>
-<script src="/static/assets/js/common_entities/create_element.js"></script>
+</div>
+{% endblock %}
 
-  <script src="/static/assets/js/show_message.js"></script>
-    <script src="/static/assets/js/bill/bill_delete.js"></script>
-<script src="/static/assets/js/expenditure/expense.js"></script>
-
-<script src="/static/assets/js/bill/select_bill_no.js"></script>
-
-{% if detail %}
-<script>add_event_to_total()</script>
-
-{% endif %}
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'admin/js/nav_sidebar.js' %}"></script>
+<script src="{% static 'assets/js/toastr.min.js' %}"></script>
+<script src="{% static 'assets/js/axios.min.js' %}"></script>
+<script src="{% static 'assets/js/cookie.js' %}"></script>
+<script src="{% static 'assets/js/common_entities/call_shirkat.js' %}"></script>
+<script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
+<script src="{% static 'assets/js/show_message.js' %}"></script>
+<script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
+<script src="{% static 'assets/js/expenditure/expense.js' %}"></script>
+<script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <script>
+add_event_to_total()
 </script>
+{% endblock %}

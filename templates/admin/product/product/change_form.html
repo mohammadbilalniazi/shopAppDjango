@@ -1,0 +1,51 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+(function() {
+    // Check if we're in an iframe (inside the product modal)
+    if (window.parent !== window) {
+        // Listen for form submission success
+        document.addEventListener('DOMContentLoaded', function() {
+            // Override form submission to notify parent window
+            const form = document.getElementById('product_form');
+            if (form) {
+                const originalSubmit = form.submit.bind(form);
+                
+                // Monitor for save button clicks
+                const saveButtons = document.querySelectorAll('input[name="_save"], input[name="_addanother"], input[name="_continue"]');
+                saveButtons.forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        // Wait a bit to see if form validates and saves
+                        setTimeout(function() {
+                            // Check if we got redirected or if there are no errors
+                            const errors = document.querySelectorAll('.errorlist, .errornote');
+                            if (errors.length === 0) {
+                                // Notify parent window that product was saved
+                                window.parent.postMessage({
+                                    type: 'product_saved',
+                                    timestamp: new Date().toISOString()
+                                }, '*');
+                                console.log('✓ Product saved notification sent to parent window');
+                            }
+                        }, 500);
+                    });
+                });
+            }
+            
+            // Also check if we're on the success page after redirect
+            const successMessages = document.querySelectorAll('.success, .messagelist .success');
+            if (successMessages.length > 0) {
+                // We successfully saved, notify parent
+                window.parent.postMessage({
+                    type: 'product_saved',
+                    timestamp: new Date().toISOString()
+                }, '*');
+                console.log('✓ Product saved (from success page) notification sent to parent window');
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

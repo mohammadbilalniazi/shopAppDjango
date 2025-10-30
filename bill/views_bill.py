@@ -3,11 +3,12 @@ from django.http import HttpResponse
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
-from product.models import Product,Unit
+from product.models import Product, Unit, Category
 from common.organization import find_userorganization
 from common.date import handle_day_out_of_range
 from configuration.models import *
 from datetime import datetime
+from decimal import Decimal
 from django.contrib import messages
 from .models import Bill, Bill_detail,Bill_Receiver2
 from django.forms.models import model_to_dict
@@ -40,27 +41,6 @@ def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
         bill_no=1
     return bill_no
 
-def handle_difference_profit_loss(bill=None):
-    if bill!=None:
-        bill.profit=0
-        bill.save()
-        print(f"bill ${bill.bill_no} profit ${bill.profit}")
-        for bill_detail in bill.bill_detail_set.all():
-            print(f"{bill_detail.profit}")
-            if bill.bill_type=='SELLING':
-                purchased_price=bill_detail.product.product_detail.purchased_price
-                if purchased_price==None:
-                    purchased_price=0 
-                print("#######purchased_price",purchased_price,"bill_detail.item_price",bill_detail.item_price) 
-                profit=(float(bill_detail.item_price)-float(purchased_price))*(float(bill_detail.item_amount)-float(bill_detail.return_qty))
-                print("#######profit",profit)
-                ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                print(f"######update bill profit {bill.profit} bill_detail.profit {bill_detail.profit} ")
-    else:
-        pass 
-    return 
-
-
 @api_view(("GET",))
 def select_bill_no(request,organization_id,bill_rcvr_org_id,bill_type=None):
     return Response({"bill_no":getBillNo(request,organization_id,bill_rcvr_org_id,bill_type)})
@@ -77,7 +57,7 @@ def bill_show(request,bill_id=None):
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
         context['rcvr_orgs']=Organization.objects.all() 
-        template=loader.get_template('bill/bill_show.html')
+        template=loader.get_template('bill/bill_detail_show.html')
     else:  
         bill=Bill.objects.get(id=int(bill_id))
         form.fields['date'].initial=str(bill.date) #before  hawala.mustharadi_file
@@ -85,7 +65,6 @@ def bill_show(request,bill_id=None):
         context['bill_detail_set']=bill.bill_detail_set.all().order_by("id")
         context['bill']=bill
         print("bill 0",model_to_dict(bill))
-        #handle_difference_profit_loss(bill)        
         if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
         elif bill.bill_type in ("LOSSDEGRADE"):
@@ -209,7 +188,9 @@ def bill_form_sell_purchase(request):
         'organization':parent_organization,
         'organizations':organizations,
         'date':date,
+        'categories':Category.objects.all(),
     } 
+    # print("EEEEEEEEEEEEEEEEEEEE")
     # print("context=",context)
     return HttpResponse(template.render(context,request))
 
@@ -253,8 +234,8 @@ def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
         bill_detail.profit=prev_profit_bill_detail+profit
         bill.profit=prev_bill_profit+profit
     else:
-        bill_detail.profilt=prev_profit_bill_detail-profit
-        bill.profilt=prev_bill_profit-profit
+        bill_detail.profit=prev_profit_bill_detail-profit
+        bill.profit=prev_bill_profit-profit
     try:
         bill_detail.save()
         bill.save()
@@ -418,7 +399,10 @@ def bill_insert(request):
             bill_detail_query=Bill_detail.objects.filter(id=int(bill_detail_id[i]))
             if bill_detail_query.count()>0:       
                 bill_detail=bill_detail_query[0]
-                purchased_price=bill_detail.product.product_detail.purchased_price
+                if hasattr(bill_detail.product,'product_detail'):
+                    purchased_price=bill_detail.product.product_detail.purchased_price
+                else:
+                    purchased_price=bill_detail.item_price
                 bill_detail.bill=bill_obj
                 bill_detail.unit=unit_obj
                 if product_obj.id!=bill_detail.product.id: # if product item is changed to another then change  in detail
@@ -455,7 +439,8 @@ def get_statistics_bill(query):
         
     payment_sum_expense=query.filter(
     bill_type='EXPENSE').aggregate(Sum("payment"))['payment__sum']
-    
+    payment_sum_loss=query.filter(
+    bill_type='LOSSDEGRADE').aggregate(Sum("total"))['total__sum']
     total_sum_purchase=query.filter(
     bill_type='PURCHASE').aggregate(Sum("total"))['total__sum']
     payment_sum_purchase=query.filter(
@@ -487,7 +472,8 @@ def get_statistics_bill(query):
 
     if payment_sum_payment==None:
         payment_sum_payment=0
-    
+    if payment_sum_loss==None:
+        payment_sum_loss=0
     if payment_sum_expense==None:
         payment_sum_expense=0
     
@@ -502,10 +488,10 @@ def get_statistics_bill(query):
     total_upon_opposit_org=total_sum_selling+payment_sum_payment+payment_sum_purchase
     total_upon_self_org=total_sum_purchase+payment_sum_selling+receivement_sum
     total_summary=total_upon_opposit_org-total_upon_self_org
-    possessed_cash_asset=(payment_sum_selling+receivement_sum)-(payment_sum_purchase+payment_sum_expense+payment_sum_payment)
+    possessed_cash_asset=(payment_sum_selling+receivement_sum)-(payment_sum_purchase+payment_sum_expense+payment_sum_payment+payment_sum_loss)
     possessed_non_cash_asset=total_sum_purchase-total_sum_selling
     total_asset=possessed_cash_asset+possessed_non_cash_asset
-    net_profit_sum=profit_sum-payment_sum_expense
+    net_profit_sum=profit_sum-payment_sum_expense-payment_sum_loss
     #current_profit=total_asset-initial_total_asset
 
     statistics=dict({
@@ -521,6 +507,7 @@ def get_statistics_bill(query):
                     "notpaid_sell":notpaid_sell,
                     "payment_sum_payment":payment_sum_payment,
                     "payment_sum_expense":payment_sum_expense,
+                    "payment_sum_loss":payment_sum_loss,
                     "payment_sum_receivement":receivement_sum,
                     "possessed_cash_asset":possessed_cash_asset,
                     "possessed_non_cash_asset":possessed_non_cash_asset,
@@ -528,46 +515,87 @@ def get_statistics_bill(query):
                     "profit_sum":profit_sum,
                     "net_profit_sum":net_profit_sum
                     })      
-    # print("#####################################",query)
     # query=query.order_by("-pk").values()
     return statistics
+
 @api_view(('POST',)) 
-def search(request,page=None):
-    bill_type=request.data.get("bill_type",None)
-    bill_no=request.data.get("bill_no",None)
-    bill_rcvr_org=request.data.get("bill_rcvr_org",None)
-    organization=request.data.get("organization",None)
-    if organization==None or organization=="" or organization=="null":
-        self_organization,parent_organization,user_orgs = find_userorganization(request)
+def search(request, page=None):
+    bill_type = request.data.get("bill_type", None)
+    bill_no = request.data.get("bill_no", None)
+    bill_rcvr_org = request.data.get("bill_rcvr_org", None)
+    organization = request.data.get("organization", None)
+    
+    # Normalize empty values
+    if organization in [None, "", "null", "all"]:
+        organization = None
+    
+    # Determine parent organization
+    if organization is None:
+        if request.user.is_superuser:
+            parent_organization = None  # Will search all organizations
+        else:
+            self_organization, parent_organization, user_orgs = find_userorganization(request)
     else:
-        self_organization,parent_organization,user_orgs = find_userorganization(request,organization)
+        self_organization, parent_organization, user_orgs = find_userorganization(request, organization)
 
-    start_date=request.data.get("start_date",None)
-    end_date=request.data.get("end_date",None)
-    print("#####bill_type ",bill_type,"bill_no ",bill_no," bill_rcvr_org ",bill_rcvr_org," start_date ",start_date," end_date ",end_date)
-    start_date=re.sub('\t','',str(start_date))
-    end_date=re.sub('\t','',str(end_date))
-    query=Bill.objects.filter(Q(date__range=[start_date,end_date]),Q(organization=parent_organization)|Q(bill_receiver2__bill_rcvr_org=parent_organization))
-    print("1 query coutn ",query.count())
-    if int(bill_no)!=0:
-        query=query.filter(bill_no=int(bill_no))
-        # print("########bill_no 2",query)
-    if bill_type!=None and bill_type!="" and bill_type!="all":
-        query=query.filter(
-        bill_type=bill_type)
-        # print("#############bill_type 2",query)
-    if bill_rcvr_org!=None and bill_rcvr_org!="" and bill_rcvr_org!="null" and bill_rcvr_org!="all":
-        query=query.filter(Q(bill_receiver2__bill_rcvr_org__id=int(bill_rcvr_org)))
-    paginator=PageNumberPagination()
-    paginator.page_size=8
-    query_set=paginator.paginate_queryset(query.order_by("-pk"),request)
-    serializer=BillSearchSerializer(query_set,many=True)
-    statistics=get_statistics_bill(query)    
-    serializer_context={"message":"OK","ok":True,"statistics":statistics,"serializer_data":serializer.data}
+    start_date = request.data.get("start_date", None)
+    end_date = request.data.get("end_date", None)
+    
+    print(f"#####bill_type {bill_type}, bill_no {bill_no}, bill_rcvr_org {bill_rcvr_org}, start_date {start_date}, end_date {end_date}")
+    
+    # Clean dates
+    start_date = re.sub('\t', '', str(start_date))
+    end_date = re.sub('\t', '', str(end_date))
+    
+    # Base query with date range
+    query = Bill.objects.filter(date__range=[start_date, end_date])
+    
+    # Filter by organization
+    if parent_organization is not None:
+        # Specific organization or user's organization
+        query = query.filter(
+            Q(organization=parent_organization) | 
+            Q(bill_receiver2__bill_rcvr_org=parent_organization)
+        )
+    # else: superuser viewing all organizations - no filter needed
+    
+    print(f"1 query count {query.count()}")
+    
+    # Filter by bill number
+    if bill_no and str(bill_no).strip() and str(bill_no) != "0":
+        try:
+            query = query.filter(bill_no=int(bill_no))
+        except (ValueError, TypeError):
+            pass  # Invalid bill_no, skip filtering
+    
+    # Filter by bill type
+    if bill_type and bill_type not in [None, "", "all", "null"]:
+        query = query.filter(bill_type=bill_type)
+    
+    # Filter by receiver organization
+    if bill_rcvr_org and bill_rcvr_org not in [None, "", "null", "all"]:
+        try:
+            query = query.filter(bill_receiver2__bill_rcvr_org__id=int(bill_rcvr_org))
+        except (ValueError, TypeError):
+            pass  # Invalid bill_rcvr_org, skip filtering
+    
+    # Pagination
+    paginator = PageNumberPagination()
+    paginator.page_size = 8
+    query_set = paginator.paginate_queryset(query.order_by("-pk"), request)
+    
+    # Serialize results
+    serializer = BillSearchSerializer(query_set, many=True)
+    statistics = get_statistics_bill(query)
+    
+    serializer_context = {
+        "message": "OK",
+        "ok": True,
+        "statistics": statistics,
+        "serializer_data": serializer.data
+    }
+    
     return paginator.get_paginated_response(serializer_context)
-
-from decimal import Decimal
-from django.db import transaction
 
 @login_required(login_url='/admin')
 @api_view(['POST'])
@@ -633,3 +661,4 @@ def finalize_ledger(request):
     except Exception as e:
         print("Error in finalize_ledger: ", str(e))
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
