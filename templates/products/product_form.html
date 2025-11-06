@@ -5,6 +5,49 @@
 
 {% block head_extra %}
 <style>
+    /* Force visible text in all form inputs - CRITICAL FIX */
+    .form-table input[type="text"],
+    .form-table input[type="number"],
+    .form-table input[type="password"],
+    .form-table input[type="email"],
+    .form-table select,
+    .form-table textarea,
+    input.form-control-custom,
+    input.inputs,
+    select.form-control-custom,
+    select.inputs {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        -webkit-text-fill-color: #000000 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure placeholder text is visible but lighter */
+    .form-table input::placeholder,
+    .form-control-custom::placeholder,
+    .inputs::placeholder {
+        color: #999999 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure dropdown options are visible */
+    .form-table select option,
+    select.form-control-custom option,
+    select.inputs option {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    
+    /* Ensure disabled inputs are visible */
+    .form-table input:disabled,
+    .form-table select:disabled,
+    input.form-control-custom:disabled,
+    select.form-control-custom:disabled {
+        color: #666666 !important;
+        background-color: #f5f5f5 !important;
+        -webkit-text-fill-color: #666666 !important;
+    }
+    
     /* Modern Card Design for Product Form */
     .product-form-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -70,11 +113,6 @@
         outline: none;
         border-color: #667eea;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    .form-table input:disabled {
-        background-color: #f5f5f5;
-        cursor: not-allowed;
     }
     
     /* Checkbox Styling */

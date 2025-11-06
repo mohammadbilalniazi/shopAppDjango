@@ -28,8 +28,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Whitenoise configuration - ignore missing source maps
+WHITENOISE_MANIFEST_STRICT = False  # Don't fail on missing files like .map files
 
 # ---------------------------
 # Installed Apps
@@ -161,4 +164,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ---------------------------
 # Heroku
 # ---------------------------
+# Configure django-heroku but override staticfiles storage
 django_heroku.settings(locals())
+
+# Override the staticfiles storage set by django_heroku to avoid missing .map file errors
+# Use CompressedStaticFilesStorage instead of CompressedManifestStaticFilesStorage
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# OR if you want to keep manifest but ignore missing files:
+# WHITENOISE_MANIFEST_STRICT = False

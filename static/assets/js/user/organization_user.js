@@ -104,14 +104,18 @@ async function search(url = "/user/organization_user/search/") {
     if (previous) {
       pagination.insertAdjacentHTML(
         "beforeend",
-        `<tr><td><a href="${previous}" class="btn btn-success" data-url="${previous}" onclick="handlePaginationClick(event)">Previous</a></td></tr>`
+        `<a href="${previous}" class="btn-gradient" data-url="${previous}" onclick="handlePaginationClick(event); return false;">
+          <i class="bi bi-arrow-left"></i> Previous
+        </a>`
       );
     }
 
     if (next) {
       pagination.insertAdjacentHTML(
         "beforeend",
-        `<tr><td><a href="${next}" class="btn btn-success" data-url="${next}" onclick="handlePaginationClick(event)">Next</a></td></tr>`
+        `<a href="${next}" class="btn-gradient" data-url="${next}" onclick="handlePaginationClick(event); return false;">
+          Next <i class="bi bi-arrow-right"></i>
+        </a>`
       );
     }
     console.log("serializer_data", serializer_data);
@@ -120,19 +124,42 @@ async function search(url = "/user/organization_user/search/") {
       const row = `
         <tr>
           <td>${user.organization}</td>
-          <td>${user.username}</td>
+          <td><i class="bi bi-person-circle"></i> ${user.username}</td>
           <td>${user.first_name}</td>
           <td>${user.last_name}</td>
-          <td>${user.role}</td>
-          <td><img src="${user.img || "/static/default.png"}" width="80" height="80"/></td>
           <td>
-            <a href="/user/organization_user/add/${user.id}" class="btn btn-success">Update</a>
-            <a class="btn btn-danger" onclick="deleteOrganizationUser(${user.id});return false">Delete</a>
+            <span class="badge bg-${getRoleBadgeColor(user.role)}">
+              ${user.role}
+            </span>
+          </td>
+          <td>
+            <img src="${user.img || "/static/default.png"}" class="user-avatar" alt="${user.username}"/>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <a href="/user/organization_user/add/${user.id}" class="btn-gradient" title="Update User">
+                <i class="bi bi-pencil-square"></i> Update
+              </a>
+              <a class="btn-gradient btn-danger-gradient" onclick="deleteOrganizationUser(${user.id});return false" title="Delete User">
+                <i class="bi bi-trash"></i> Delete
+              </a>
+            </div>
           </td>
         </tr>`;
       tbody.insertAdjacentHTML("beforeend", row);
     }
   }
+}
+
+// Helper function to get badge color based on role
+function getRoleBadgeColor(role) {
+  const colors = {
+    'employee': 'info',
+    'admin': 'warning',
+    'superuser': 'danger',
+    'owner': 'success'
+  };
+  return colors[role] || 'secondary';
 }
 
 function handlePaginationClick(event) {

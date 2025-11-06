@@ -1,0 +1,218 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}Select2 Test | Shirkat{% endblock %}
+
+{% block head_extra %}
+<style>
+    .test-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+    
+    .test-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .test-select {
+        margin-bottom: 1.5rem;
+    }
+    
+    .test-select label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .console-log {
+        background: #1e1e1e;
+        color: #00ff00;
+        padding: 1rem;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="test-container">
+    <div class="test-card">
+        <h2>🧪 Select2 Searchability Test</h2>
+        <p class="text-muted">Testing if Select2 dropdowns are searchable</p>
+        <hr>
+        
+        <div class="test-select">
+            <label for="test_select1">Test 1: Basic Select with Bootstrap-5 Theme</label>
+            <select id="test_select1" class="form-select" style="width: 100%">
+                <option value="">Select an option...</option>
+                <option value="1">Apple</option>
+                <option value="2">Banana</option>
+                <option value="3">Cherry</option>
+                <option value="4">Date</option>
+                <option value="5">Elderberry</option>
+                <option value="6">Fig</option>
+                <option value="7">Grape</option>
+                <option value="8">Honeydew</option>
+                <option value="9">Indian Fig</option>
+                <option value="10">Jackfruit</option>
+            </select>
+        </div>
+        
+        <div class="test-select">
+            <label for="test_select2">Test 2: Organization Dropdown (Like in Bill Detail)</label>
+            <select id="test_select2" class="form-select-custom" name="organization" style="width: 100%">
+                <option value="">Select Organization...</option>
+                {% for org in global_organizations %}
+                    <option value="{{ org.id }}">{{ org }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="test-select">
+            <label for="test_select3">Test 3: Default Theme</label>
+            <select id="test_select3" class="form-select" style="width: 100%">
+                <option value="">Select a color...</option>
+                <option value="red">Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="yellow">Yellow</option>
+                <option value="purple">Purple</option>
+            </select>
+        </div>
+        
+        <button onclick="testSelect2()" class="btn btn-gradient-primary">
+            <i class="bi bi-check-circle"></i> Test Select2 Status
+        </button>
+        
+        <div class="mt-4">
+            <h5>Console Output:</h5>
+            <div id="consoleOutput" class="console-log">
+                Waiting for test...
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    let consoleOutput = [];
+    
+    function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+        consoleOutput.push(`[${timestamp}] ${icon} ${message}`);
+        updateConsole();
+    }
+    
+    function updateConsole() {
+        document.getElementById('consoleOutput').innerHTML = consoleOutput.join('\n');
+    }
+    
+    $(document).ready(function() {
+        log('Document ready, initializing Select2...');
+        
+        // Check if jQuery is loaded
+        if (typeof jQuery !== 'undefined') {
+            log('jQuery version: ' + jQuery.fn.jquery, 'success');
+        } else {
+            log('jQuery NOT loaded!', 'error');
+        }
+        
+        // Check if Select2 is loaded
+        if (typeof jQuery.fn.select2 !== 'undefined') {
+            log('Select2 loaded successfully!', 'success');
+        } else {
+            log('Select2 NOT loaded!', 'error');
+            return;
+        }
+        
+        // Wait a bit then destroy any existing instances
+        setTimeout(function() {
+            log('Destroying existing Select2 instances...');
+            $('#test_select1, #test_select2, #test_select3').each(function() {
+                if ($(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2('destroy');
+                    log('Destroyed Select2 on #' + this.id);
+                }
+            });
+            
+            // Initialize Test 1 with Bootstrap-5 theme
+            log('Initializing Test 1 (Bootstrap-5 theme)...');
+            $('#test_select1').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Type to search...',
+                allowClear: true,
+                minimumResultsForSearch: 0
+            });
+            log('Test 1 initialized', 'success');
+            
+            // Initialize Test 2 with Bootstrap-5 theme (like bill detail)
+            log('Initializing Test 2 (Organization dropdown)...');
+            $('#test_select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Select Organization',
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                containerCssClass: 'select2-lg',
+                dropdownCssClass: 'select2-dropdown-lg'
+            });
+            log('Test 2 initialized', 'success');
+            
+            // Initialize Test 3 with default theme
+            log('Initializing Test 3 (Default theme)...');
+            $('#test_select3').select2({
+                theme: 'default',
+                width: '100%',
+                placeholder: 'Type to search colors...',
+                allowClear: true,
+                minimumResultsForSearch: 0
+            });
+            log('Test 3 initialized', 'success');
+            
+            log('All tests initialized! Click dropdowns to test search functionality.', 'success');
+            
+        }, 600);
+    });
+    
+    function testSelect2() {
+        consoleOutput = [];
+        log('Running Select2 diagnostic test...');
+        
+        // Test each select
+        ['test_select1', 'test_select2', 'test_select3'].forEach(function(id) {
+            const $select = $('#' + id);
+            if ($select.length) {
+                log(`Found #${id}`);
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    const data = $select.select2('data');
+                    log(`  ✓ Select2 active on #${id}`, 'success');
+                    log(`  - Options count: ${$select.find('option').length}`);
+                } else {
+                    log(`  ✗ Select2 NOT active on #${id}!`, 'error');
+                }
+            } else {
+                log(`  ✗ #${id} not found!`, 'error');
+            }
+        });
+        
+        // Check for search input
+        setTimeout(function() {
+            log('Open a dropdown and check for search box...');
+            log('If you see a search input field, Select2 is working!', 'success');
+        }, 100);
+    }
+</script>
+{% endblock %}

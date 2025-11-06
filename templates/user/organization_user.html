@@ -1,235 +1,330 @@
 {% extends "master.html" %}
 {% load static %}
 
-{% block title %}Add User To Organization{% endblock %}
+{% block title %}Manage Organization Users{% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{% static 'admin/css/base.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/nav_sidebar.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/responsive.css' %}">
-<link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
-<link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/unified-styles.css' %}">
 <style>
+  .organization-user-container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 20px;
+  }
 
-    body {
-      background-color: antiquewhite;
-      font-family: Arial, sans-serif;
-    }
+  .page-header {
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    color: white;
+    padding: 25px;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
 
-    .inputs {
-      width: 100%;
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
+  .page-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+  }
 
-    select, input[type=text], input[type=number] {
-      font-weight: 700;
-      font-size: 15px;
-    }
+  .content-card {
+    background: white;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 30px;
+  }
 
-    td {
-      font-weight: 700;
-      font-size: 16px;
-      color: darkred;
-      padding: 8px;
-    }
+  .form-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 15px;
+  }
 
-    .alert {
-      padding: 8px;
-      border-radius: 4px;
-      margin-bottom: 10px;
-      color: white;
-    }
+  .form-table td {
+    padding: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--dark);
+  }
 
-    .alert-danger {
-      background-color: crimson;
-    }
+  .form-table td:first-child {
+    width: 150px;
+    color: var(--dark-secondary);
+  }
 
-    .alert-success {
-      background-color: seagreen;
-    }
+  .form-control-custom {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
 
-    .header-title {
-      color: rgb(255, 174, 0);
-      font-weight: bold;
-      text-align: center;
-      font-size: 40px;
-      margin: 10px 0;
-    }
+  .form-control-custom:focus {
+    outline: none;
+    border-color: var(--primary-solid);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
 
-    .breadcrumbs {
-      margin: 15px;
-      font-size: 14px;
-    }
+  .btn-gradient {
+    background: linear-gradient(135deg, var(--success-gradient-start), var(--success-gradient-end));
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+  }
 
-    .results table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
+  .btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+  }
 
-    .results th, .results td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
+  .btn-danger-gradient {
+    background: linear-gradient(135deg, var(--danger-gradient-start), var(--danger-gradient-end));
+    box-shadow: 0 4px 15px rgba(235, 51, 73, 0.3);
+  }
 
-    .results th {
-      background: #f4f4f4;
-    }
+  .btn-danger-gradient:hover {
+    box-shadow: 0 6px 20px rgba(235, 51, 73, 0.4);
+  }
 
-    .btn {
-      padding: 6px 12px;
-      border-radius: 4px;
-      text-decoration: none;
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-    }
+  .results-section {
+    margin-top: 40px;
+  }
 
-    .btn-success { background: seagreen; }
-    .btn-danger { background: crimson; }
-    .btn:hover { opacity: 0.85; }
-  
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .results-table thead {
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    color: white;
+  }
+
+  .results-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .results-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--gray-200);
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  .results-table tbody tr:hover {
+    background-color: var(--gray-100);
+  }
+
+  .user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .alert-custom {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-align: center;
+    font-size: 15px;
+  }
+
+  .alert-success-custom {
+    background: var(--success-light);
+    color: var(--success-text);
+    border-left: 4px solid var(--success-solid);
+  }
+
+  .alert-danger-custom {
+    background: var(--danger-light);
+    color: var(--danger-text);
+    border-left: 4px solid var(--danger-solid);
+  }
+
+  .search-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .search-input-wrapper input[type="text"] {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid var(--info-solid);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .system-id-badge {
+    display: inline-block;
+    background: var(--info-light);
+    color: var(--info-text);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
+<div class="organization-user-container">
     
+    <!-- Messages -->
     {% if messages %}
         {% for message in messages %}
-            {% if message.tags == "error" %}
-                <div class='alert alert-danger' style="background-color:rgb(176, 122, 122);font-weight:bolder;text-align:center;padding:12px;font-size:15px">
-            {% else %}
-                <div class='alert alert-success' style="background-color:lightgreen;font-weight:bolder;text-align:center;padding:12px;font-size:15px">
-            {% endif %}
+            <div class='alert-custom {% if message.tags == "error" %}alert-danger-custom{% else %}alert-success-custom{% endif %}'>
                 {{ message }}
             </div>
         {% endfor %}
     {% endif %}
-  <!-- Main Content -->
-  <main id="main" class="main shifted">
-    <fieldset class="module aligned">
-      <!-- Form -->
-      <form id="organization_user_form" method="post" action="{{request.META.HTTP_NAME}}/user/organization_user/insert/" enctype="multipart/form-data">
-        {% csrf_token %}
 
-        <!-- Messages -->
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
-              {{ message }}
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1><i class="bi bi-people-fill"></i> Manage Organization Users</h1>
+  </div>
+
+  <!-- Main Content Card -->
+  <div class="content-card">
+    <form id="organization_user_form" method="post" action="{{request.META.HTTP_NAME}}/user/organization_user/insert/" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <table class="form-table">
+        <tr>
+          <td>System ID</td>
+          <td colspan="5">
+            {% if organization_user.id %}
+              <span class="system-id-badge">#{{organization_user.id}}</span>
+            {% else %}
+              <span class="system-id-badge">New User</span>
+            {% endif %}
+            <input type="hidden" class="form-control-custom" name="id" id="id" value="{{organization_user.id}}">
+          </td>
+        </tr>
+
+        <tr>
+          <td>First Name</td>
+          <td colspan="2">
+            <input type="text" class="form-control-custom" oninput="search()" name="first_name" id="first_name" value="{{organization_user.user.first_name|default:''}}" placeholder="Enter first name">
+          </td>
+          <td>Last Name</td>
+          <td colspan="2">
+            <input type="text" class="form-control-custom" oninput="search()" name="last_name" id="last_name" value="{{organization_user.user.last_name|default:''}}" placeholder="Enter last name">
+          </td>
+        </tr>
+
+        <tr>
+          <td>Username</td>
+          <td colspan="2">
+            <input type="text" class="form-control-custom" oninput="search()" name="username" id="username" value="{{organization_user.user.username|default:''}}" placeholder="Enter username">
+          </td>
+          <td>Password</td>
+          <td colspan="2">
+            <input type="password" class="form-control-custom" name="password" id="password" placeholder="{% if organization_user.id %}Leave blank to keep current{% else %}Enter password{% endif %}">
+          </td>
+        </tr>
+
+        <tr>
+          <td>Profile Image</td>
+          <td colspan="2">
+            <input type="file" class="form-control-custom" name="img" id="img" accept="image/*">
+          </td>
+          <td>Organization</td>
+          <td colspan="2">
+            <select name="organization" class="form-control-custom searchable-dropdown" id="organization" onchange="search()">
+              <option value="">Select Organization</option>
+              {% for organization in organizations %}
+                <option value="{{organization.id}}" {% if organization_user.organization == organization %}selected{% endif %}>
+                  {{organization}}
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>Role</td>
+          <td colspan="2">
+            <select name="role" class="form-control-custom" id="role">
+              <option value="employee" {% if organization_user.role == "employee" %}selected{% endif %}>Employee</option>
+              <option value="admin" {% if organization_user.role == "admin" %}selected{% endif %}>Admin</option>
+              <option value="superuser" {% if organization_user.role == "superuser" %}selected{% endif %}>Super User</option>
+              <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
+            </select>
+          </td>
+          <td colspan="3">
+            <div class="search-input-wrapper">
+              <input type="text" 
+                     placeholder="🔍 Quick search by name or username..." 
+                     class="form-control-custom" 
+                     id="search_user_input" 
+                     oninput="search()">
+              <button type="submit" class="btn-gradient" id="create_user">
+                <i class="bi bi-{% if organization_user %}arrow-repeat{% else %}person-plus{% endif %}"></i>
+                {% if organization_user %}Update User{% else %}Create User{% endif %}
+              </button>
             </div>
-          {% endfor %}
-        {% endif %}
+          </td>
+        </tr>
+      </table>
+    </form>
 
-        <table>
+    <!-- Results Section -->
+    <div class="results-section">
+      <h3 style="color: var(--dark); font-weight: 600; margin-bottom: 15px;">
+        <i class="bi bi-table"></i> User List
+      </h3>
+      <table class="results-table" id="result_list">
+        <thead>
           <tr>
-            <td>System Id</td>
-            <td colspan="2">
-              {{organization_user.id}}
-              <input type="hidden" class="inputs" name="id" id="id" value="{{organization_user.id}}" disabled>
-            </td>
+            <th><i class="bi bi-building"></i> Organization</th>
+            <th><i class="bi bi-person-badge"></i> Username</th>
+            <th><i class="bi bi-card-text"></i> First Name</th>
+            <th><i class="bi bi-card-text"></i> Last Name</th>
+            <th><i class="bi bi-shield-check"></i> Role</th>
+            <th><i class="bi bi-image"></i> Profile</th>
+            <th><i class="bi bi-gear"></i> Actions</th>
           </tr>
-
-          <tr>
-            <td>First Name</td>
-            <td colspan="2">
-              <input type="text" class="inputs" oninput="search()" name="first_name" id="first_name" value="{{organization_user.user.first_name|default:''}}">
-            </td>
-            <td>Last Name</td>
-            <td colspan="2">
-              <input type="text" class="inputs" oninput="search()" name="last_name" id="last_name" value="{{organization_user.user.last_name|default:''}}">
-            </td>
-          </tr>
-
-          <tr>
-            <td>User Name</td>
-            <td colspan="2">
-              <input type="text" class="inputs" oninput="search()" name="username" id="username" value="{{organization_user.user.username|default:''}}">
-            </td>
-            <td>Password</td>
-            <td colspan="2">
-              <input type="text" class="inputs" name="password" id="password">
-            </td>
-          </tr>
-
-          <tr>
-            <td>Upload Image</td>
-            <td colspan="2">
-              <input type="file" class="inputs" name="img" id="img">
-            </td>
-            <td>Organization</td>
-            <td colspan="2">
-              <select name="organization" class="inputs" id="organization" onchange="search()">
-                {% for organization in organizations %}
-                  <option value="{{organization.id}}" {% if organization_user.organization == organization %}selected{% endif %}>
-                    {{organization}}
-                  </option>
-                {% endfor %}
-              </select>
-            </td>
-          </tr>
-
-          <tr>
-            <td>Role</td>
-            <td colspan="2">
-              <select name="role" class="inputs" id="role">
-                <option value="employee" {% if organization_user.role == "employee" %}selected{% endif %}>Employee</option>
-                <option value="admin" {% if organization_user.role == "admin" %}selected{% endif %}>Admin</option>
-                <option value="superuser" {% if organization_user.role == "superuser" %}selected{% endif %}>Super User</option>
-                <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
-              </select>
-            </td>
-            <td colspan="3">
-              <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" 
-                       placeholder="🔍 Search by name or username..." 
-                       class="inputs" 
-                       id="search_user_input" 
-                       oninput="search()"
-                       style="flex: 1; padding: 8px 12px; border: 2px solid #3498db; border-radius: 6px; font-size: 14px;">
-                <input type="submit" 
-                       value="{% if organization_user %} Update User {% else %} Create User {% endif %}" 
-                       class="btn btn-success" 
-                       id="create_user"
-                       style="white-space: nowrap;">
-              </div>
-            </td>
-          </tr>
-        </table>
-      </form>
-
-      <!-- Results Table -->
-      <div class="results">
-        <table id="result_list">
-          <thead>
-            <tr>
-              <th>Organization</th>
-              <th>User</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Role</th>
-               <th>Profile</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="organization_user_body"></tbody>
-        </table>
-        <div id="pagination_id"></div>
-      </div>
-    </fieldset>
-  </main>
-
-  <!-- Footer -->
-  <footer id="footer"></footer>
-
-  <!-- Scripts -->
-  <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
-  <script src="/static/assets/js/user/organization_user.js"></script>
+        </thead>
+        <tbody id="organization_user_body"></tbody>
+      </table>
+      <div id="pagination_id" class="pagination-wrapper"></div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -243,6 +338,16 @@
 <script src="{% static 'assets/js/user/organization_user.js' %}"></script>
 
 <script>
+  // Initialize Select2 for searchable dropdowns
+  $(document).ready(function() {
+    $('.searchable-dropdown').select2({
+      theme: 'bootstrap-5',
+      width: '100%',
+      placeholder: 'Select Organization',
+      allowClear: true
+    });
+  });
+
   // Clear search when form is submitted
   document.getElementById('organization_user_form').addEventListener('submit', function() {
     const searchInput = document.getElementById('search_user_input');
@@ -252,3 +357,4 @@
   });
 </script>
 {% endblock %}
+

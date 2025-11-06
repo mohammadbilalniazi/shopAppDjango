@@ -16,6 +16,10 @@
     <link rel="stylesheet" href="{% static 'assets/css/unified-styles.css' %}">
     <!-- Select2 CSS for searchable dropdowns (common across templates) -->
     <link href="{% static 'assets/css/select2.min.css' %}" rel="stylesheet" />
+    <!-- Select2 CDN CSS Fallback -->
+    <noscript><link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /></noscript>
+    <!-- Select2 Bootstrap 5 Theme CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- FontAwesome -->
     <link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
     <!-- Toastr notifications -->
@@ -29,6 +33,73 @@
     {% block head_extra %}{% endblock %}
     
     <style>
+        /* ========================================
+           GLOBAL FIX: Ensure all form inputs have visible text
+           This fixes white text on white background issue
+           ======================================== */
+        input[type="text"],
+        input[type="number"],
+        input[type="password"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="search"],
+        input[type="date"],
+        input[type="time"],
+        input[type="datetime-local"],
+        select,
+        textarea,
+        .form-control,
+        .form-control-custom,
+        .inputs {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            -webkit-text-fill-color: #000000 !important;
+            opacity: 1 !important;
+        }
+        
+        /* Placeholder styling */
+        input::placeholder,
+        textarea::placeholder {
+            color: #999999 !important;
+            opacity: 1 !important;
+        }
+        
+        /* Dropdown options */
+        select option {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        
+        /* Disabled inputs */
+        input:disabled,
+        select:disabled,
+        textarea:disabled {
+            color: #666666 !important;
+            background-color: #f5f5f5 !important;
+            -webkit-text-fill-color: #666666 !important;
+        }
+        
+        /* Focus state - ensure text remains visible */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        
+        /* Autofill styling - important for Chrome/Edge */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-text-fill-color: #000000 !important;
+            -webkit-box-shadow: 0 0 0 1000px white inset !important;
+            box-shadow: 0 0 0 1000px white inset !important;
+        }
+        
+        /* ======================================== */
+        
         /* Body with sidebar layout */
         body {
             display: flex;
@@ -383,6 +454,13 @@
     <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
     <!-- Select2 JS for searchable dropdowns (common) -->
     <script src="{% static 'assets/js/select2.min.js' %}"></script>
+    <!-- Select2 CDN Fallback - loads if local file fails -->
+    <script>
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 === 'undefined') {
+            console.warn('⚠️  Local Select2 failed to load, using CDN fallback...');
+            document.write('<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"><\/script>');
+        }
+    </script>
     <script src="{% static 'assets/js/axios.min.js' %}"></script>
     <script src="{% static 'assets/js/cookie.js' %}"></script>
     <script src="{% static 'assets/js/toastr.min.js' %}"></script>
@@ -444,13 +522,25 @@
         /**
          * Global Select2 Initialization
          * Automatically makes all organization dropdowns searchable
+         * Can be disabled per-page by setting window.CUSTOM_SELECT2_INIT = true
          */
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if page has custom Select2 initialization
+            if (window.CUSTOM_SELECT2_INIT === true) {
+                console.log('⏭️  Skipping global Select2 init - page has custom initialization');
+                return;
+            }
+            
             // Check if jQuery and Select2 are loaded
             if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
                 
                 // Initialize all organization select dropdowns
                 function initOrganizationSelects() {
+                    // Skip if custom init is set
+                    if (window.CUSTOM_SELECT2_INIT === true) {
+                        return;
+                    }
+                    
                     jQuery('.organization-select, select[name="organization"], select[id="organization"], #bill_rcvr_org, #purchased_asset_organization').each(function() {
                         if (!jQuery(this).hasClass('select2-hidden-accessible')) {
                             jQuery(this).select2({
@@ -458,6 +548,7 @@
                                 allowClear: false,
                                 width: '100%',
                                 theme: 'default',
+                                minimumResultsForSearch: 0, // ENABLE SEARCH
                                 language: {
                                     noResults: function() {
                                         return 'No organization found';
@@ -469,7 +560,7 @@
                             });
                         }
                     });
-                    console.log('✅ Organization dropdowns initialized with Select2');
+                    console.log('✅ Organization dropdowns initialized with Select2 (global)');
                 }
                 
                 // Initial load
@@ -477,6 +568,11 @@
                 
                 // Observe DOM changes to reinitialize Select2 on dynamic content
                 const observer = new MutationObserver(function(mutations) {
+                    // Skip if custom init is set
+                    if (window.CUSTOM_SELECT2_INIT === true) {
+                        return;
+                    }
+                    
                     mutations.forEach(function(mutation) {
                         if (mutation.addedNodes.length) {
                             mutation.addedNodes.forEach(function(node) {

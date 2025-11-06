@@ -54,6 +54,33 @@ def bill_show(request,bill_id=None):
     print(f"############ start_date {form.fields["start_date"].initial}")
     context['form']=form
     self_organization,parent_organization,user_orgs = find_userorganization(request)
+    
+    # Handle case when parent_organization is None
+    if parent_organization is None:
+        if request.user.is_superuser:
+            # Superuser can see all organizations
+            context['organizations'] = Organization.objects.all()
+            context['organization'] = None
+        else:
+            # Regular user with multiple orgs but no parent - use first org or show error
+            if user_orgs and user_orgs.count() > 0:
+                parent_organization = user_orgs.first()
+                context['organizations'] = user_orgs
+                context['organization'] = parent_organization
+            else:
+                # No organizations assigned to user
+                from django.contrib import messages
+                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+                context['organizations'] = Organization.objects.none()
+                context['organization'] = None
+    else:
+        # Normal case - parent_organization exists
+        context['organization'] = parent_organization
+        if request.user.is_superuser:
+            context['organizations'] = Organization.objects.all()
+        else:
+            context['organizations'] = Organization.objects.filter(id=parent_organization.id)
+    
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
         context['rcvr_orgs']=Organization.objects.all() 
@@ -75,22 +102,17 @@ def bill_show(request,bill_id=None):
             # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
             context['products']=Product.objects.all()
         context['units']=Unit.objects.all()
-        if bill.organization==parent_organization or request.user.is_superuser:                 
+        if parent_organization and (bill.organization==parent_organization or request.user.is_superuser):                 
             context['rcvr_orgs']=Organization.objects.all().order_by("-pk") 
             if request.user.is_superuser:
                 context['organizations']=Organization.objects.all() 
             else:
                 context['organizations']=Organization.objects.filter(id=parent_organization.id)
-        elif hasattr(bill,'bill_receiver2'):
+        elif hasattr(bill,'bill_receiver2') and parent_organization:
             if bill.bill_receiver2.bill_rcvr_org==parent_organization:
                 #  bill_obj.bill_receiver2:
                 context['rcvr_orgs']=Organization.objects.filter(id=parent_organization.id)
-    context['organization']=parent_organization
-    if request.user.is_superuser:
-        organizations=Organization.objects.all()
-    else:
-        organizations=Organization.objects.filter(id=parent_organization.id)
-    context['organizations']=organizations
+    
     return HttpResponse(template.render(context,request))
 
 
@@ -178,11 +200,29 @@ def bill_form_sell_purchase(request):
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
-    # bill_no=getBillNo(request,parent_organization.id,'PURCHASE')
-    if request.user.is_superuser:
-        organizations=Organization.objects.all()
+    
+    # Handle case when parent_organization is None
+    if parent_organization is None:
+        if request.user.is_superuser:
+            organizations = Organization.objects.all()
+            parent_organization = None  # Superuser can work without specific org
+        else:
+            # Regular user with multiple orgs - use first org as fallback
+            if user_orgs and user_orgs.count() > 0:
+                parent_organization = user_orgs.first()
+                organizations = user_orgs
+            else:
+                # No organizations assigned
+                from django.contrib import messages
+                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+                organizations = Organization.objects.none()
     else:
-        organizations=Organization.objects.filter(id=parent_organization.id)
+        # Normal case - parent_organization exists
+        if request.user.is_superuser:
+            organizations = Organization.objects.all()
+        else:
+            organizations = Organization.objects.filter(id=parent_organization.id)
+    
     context={
         'form':form,
         'organization':parent_organization,
@@ -202,11 +242,29 @@ def bill_form_loss_degrade_product(request):
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
-    # bill_no=getBillNo(request,parent_organization.id,'PURCHASE')
-    if request.user.is_superuser:
-        organizations=Organization.objects.all()
+    
+    # Handle case when parent_organization is None
+    if parent_organization is None:
+        if request.user.is_superuser:
+            organizations = Organization.objects.all()
+            parent_organization = None  # Superuser can work without specific org
+        else:
+            # Regular user with multiple orgs - use first org as fallback
+            if user_orgs and user_orgs.count() > 0:
+                parent_organization = user_orgs.first()
+                organizations = user_orgs
+            else:
+                # No organizations assigned
+                from django.contrib import messages
+                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+                organizations = Organization.objects.none()
     else:
-        organizations=Organization.objects.filter(id=parent_organization.id)
+        # Normal case - parent_organization exists
+        if request.user.is_superuser:
+            organizations = Organization.objects.all()
+        else:
+            organizations = Organization.objects.filter(id=parent_organization.id)
+    
     context={
         'form':form,
         'organization':parent_organization,

@@ -19,7 +19,12 @@ def form(request,id=None):
     if request.user.is_superuser:
         context['organizations']=Organization.objects.all() 
     else:
-        context['organizations']=Organization.objects.filter(id=parent_organization.id)
+        # Handle case when parent_organization is None (user has multiple organizations)
+        if parent_organization is not None:
+            context['organizations']=Organization.objects.filter(id=parent_organization.id)
+        else:
+            # User has multiple organizations, use all of them
+            context['organizations'] = user_orgs
     if id!="null" and id:
         context['organization_user']=OrganizationUser.objects.get(id=int(id))
     return render(request,"user/organization_user.html",context)
@@ -120,7 +125,12 @@ def get(request,id=None):
             if request.user.is_superuser:
                 context['organizations'] = Organization.objects.all()
             else:
-                context['organizations'] = Organization.objects.filter(id=parent_organization.id)
+                # Handle case when parent_organization is None (user has multiple organizations)
+                if parent_organization is not None:
+                    context['organizations'] = Organization.objects.filter(id=parent_organization.id)
+                else:
+                    # User has multiple organizations, use all of them
+                    context['organizations'] = user_orgs
             return render(request, "user/organization_user.html", context)
     except OrganizationUser.DoesNotExist:
         return Response({"error": "OrganizationUser not found."}, status=status.HTTP_404_NOT_FOUND)

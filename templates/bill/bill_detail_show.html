@@ -4,6 +4,7 @@
 {% block title %}Bills | Shirkat{% endblock %}
 
 {% block head_extra %}
+
 {{ block.super }}
 {% if form %}{{ form.media.css }}{% endif %}
 <style>
@@ -26,6 +27,162 @@
         min-width: 90px;
         height: 32px;
         font-size: 0.875rem;
+    }
+
+    /* Enhanced Select/Dropdown Visibility */
+    .form-select-custom,
+    select.form-select,
+    select {
+        border: 2px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        background-color: #ffffff !important;
+        color: #212529 !important;
+        min-height: 45px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .form-select-custom:hover,
+    select.form-select:hover,
+    select:hover {
+        border-color: #667eea !important;
+        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2) !important;
+    }
+
+    .form-select-custom:focus,
+    select.form-select:focus,
+    select:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25) !important;
+        outline: none !important;
+    }
+
+    /* Select2 Enhanced Styling */
+    .select2-container {
+        z-index: 9999 !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 45px !important;
+        border: 2px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection:hover {
+        border-color: #667eea !important;
+        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2) !important;
+    }
+
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+    .select2-container--bootstrap-5.select2-container--open .select2-selection {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25) !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__rendered {
+        color: #212529 !important;
+        line-height: 30px !important;
+        padding-left: 0 !important;
+        font-weight: 500 !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #6c757d !important;
+        font-weight: 400 !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__arrow {
+        height: 43px !important;
+        right: 10px !important;
+    }
+
+    /* Select2 Dropdown List */
+    .select2-dropdown {
+        border: 2px solid #667eea !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        z-index: 10000 !important;
+        background-color: #ffffff !important;
+    }
+
+    .select2-results__option {
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        color: #212529 !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .select2-results__option--highlighted {
+        background-color: #667eea !important;
+        color: #ffffff !important;
+    }
+
+    .select2-results__option--selected {
+        background-color: #e7f1ff !important;
+        color: #212529 !important;
+        font-weight: 600 !important;
+    }
+
+    .select2-search__field {
+        border: 2px solid #dee2e6 !important;
+        border-radius: 6px !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.95rem !important;
+        margin: 0.5rem !important;
+        width: calc(100% - 1rem) !important;
+    }
+
+    .select2-search__field:focus {
+        border-color: #667eea !important;
+        outline: none !important;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15) !important;
+    }
+
+    /* Form Label Enhancement */
+    .form-label-custom {
+        font-weight: 600 !important;
+        color: #2c3e50 !important;
+        margin-bottom: 0.5rem !important;
+        font-size: 0.95rem !important;
+        display: block !important;
+    }
+
+    /* Input Enhancement */
+    .form-control-custom {
+        border: 2px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        min-height: 45px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .form-control-custom:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25) !important;
+        outline: none !important;
+    }
+
+    /* Ensure dropdowns are visible over tables */
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    /* Card body overflow fix */
+    .card-body {
+        overflow: visible !important;
     }
 
 </style>
@@ -109,8 +266,9 @@
 
 <!-- Filter Section -->
 <div class="card-custom mb-4">
-    <div class="card-custom-header">
+    <div class="card-custom-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Bill Filters</h5>
+      
     </div>
     <div class="card-body">
         <div class="row g-3">
@@ -215,33 +373,200 @@
 {% block scripts %}
 {{ block.super }}
 {% if form %}{{ form.media.js }}{% endif %}
+<script src="{% static 'assets/js/select2.min.js' %}"></script>
+<script src="{% static 'assets/js/toastr.min.js' %}"></script>
+<script src="{% static 'assets/js/axios.min.js' %}"></script>
 <script src="/static/assets/js/common_entities/call_shirkat.js"></script>
 <script src="/static/assets/js/bill/select_bill_no.js"></script>
 <script src="/static/assets/js/common_entities/create_element.js"></script>
 <script src="/static/assets/js/configuration/organization.js"></script>
 <script src="/static/assets/js/vendor/show_vendor.js"></script>
 <script src="/static/assets/js/bill/bill_search.js"></script>
-<script src="/static/assets/js/bill/translate_persian_months.js"></script>
 <script src="/static/assets/js/bill/searchable_selects.js"></script>
 <script>
-    // Initialize Select2 for the purchased asset organization dropdown
-    $(document).ready(function() {
-        $('#purchased_asset_organization, #organization, #bill_rcvr_org').select2({
+    // CRITICAL: Prevent master.html global Select2 initialization from interfering
+    window.CUSTOM_SELECT2_INIT = true;
+    
+    // ========================================================================
+    // SELECT2 SEARCHABLE DROPDOWNS INITIALIZATION
+    // ========================================================================
+    
+    // Wait for jQuery and Select2 to be fully loaded
+    function initializeSelect2Dropdowns() {
+        console.log('🔧 BILL DETAIL: Starting Select2 initialization...');
+        
+        // Check dependencies
+        if (typeof jQuery === 'undefined') {
+            console.error('❌ jQuery is not loaded!');
+            console.error('   This should not happen - jQuery is loaded in master.html');
+            return;
+        }
+        console.log('✅ jQuery loaded: v' + jQuery.fn.jquery);
+        
+        if (typeof jQuery.fn.select2 === 'undefined') {
+            console.error('❌ Select2 is not loaded!');
+            console.error('   Select2 should be loaded from: /static/assets/js/select2.min.js');
+            console.error('   Check if file exists and is accessible');
+            return;
+        }
+        console.log('✅ Select2 loaded');
+        
+        // Initialize IMMEDIATELY - don't wait for master.html
+        console.log('⏳ Destroying any existing Select2 instances...');
+        
+        // Destroy any existing Select2 instances first
+        jQuery('#purchased_asset_organization, #organization, #bill_rcvr_org, #bill_type').each(function() {
+            if (jQuery(this).hasClass('select2-hidden-accessible')) {
+                jQuery(this).select2('destroy');
+                console.log('  - Destroyed Select2 on #' + this.id);
+            }
+        });
+        
+        console.log('🎯 Initializing Organization dropdowns with DEFAULT theme + SEARCH ENABLED...');
+        
+        // Organization and receiver organization dropdowns - FULLY SEARCHABLE
+        // Using DEFAULT theme instead of bootstrap-5 to avoid theme issues
+        jQuery('#purchased_asset_organization, #organization, #bill_rcvr_org').select2({
             placeholder: 'Select Organization',
             allowClear: true,
             width: '100%',
-            theme: 'bootstrap-5'
+            theme: 'default',  // Using default theme for compatibility
+            minimumResultsForSearch: 0, // CRITICAL: Enable search from first item
+            language: {
+                noResults: function() {
+                    return '<div style="padding: 1rem; text-align: center; color: #6c757d; font-weight: 500;">🔍 No organization found</div>';
+                },
+                searching: function() {
+                    return '<div style="padding: 1rem; text-align: center; color: #667eea; font-weight: 500;">⏳ Searching...</div>';
+                }
+            }
         });
+        console.log('  ✅ Organization dropdowns initialized with SEARCH ENABLED');
         
-        $('#bill_type').select2({
+        console.log('🎯 Initializing Bill Type dropdown with DEFAULT theme + SEARCH ENABLED...');
+        
+        // Bill type dropdown - FULLY SEARCHABLE
+        jQuery('#bill_type').select2({
             placeholder: 'Select Bill Type',
             allowClear: true,
             width: '100%',
-            theme: 'bootstrap-5',
-            minimumResultsForSearch: Infinity
+            theme: 'default',  // Using default theme for compatibility
+            minimumResultsForSearch: 0, // CRITICAL: Enable search for all items
+            language: {
+                noResults: function() {
+                    return '<div style="padding: 1rem; text-align: center; color: #6c757d; font-weight: 500;">🔍 No bill type found</div>';
+                },
+                searching: function() {
+                    return '<div style="padding: 1rem; text-align: center; color: #667eea; font-weight: 500;">⏳ Searching...</div>';
+                }
+            }
         });
-    });
+        console.log('  ✅ Bill Type dropdown initialized with SEARCH ENABLED');
+        
+        // Verify initialization
+        let successCount = 0;
+        let failedDropdowns = [];
+        ['purchased_asset_organization', 'organization', 'bill_rcvr_org', 'bill_type'].forEach(function(id) {
+            const $el = jQuery('#' + id);
+            if ($el.length === 0) {
+                console.error(`  ✗ #${id} element not found in DOM!`);
+                failedDropdowns.push(id + ' (not found)');
+            } else if ($el.hasClass('select2-hidden-accessible')) {
+                successCount++;
+                // Verify search is enabled
+                const data = $el.data('select2');
+                if (data && data.options && data.options.options) {
+                    const searchEnabled = data.options.options.minimumResultsForSearch === 0;
+                    console.log(`  ✓ #${id} is Select2-enabled, search=${searchEnabled ? 'YES ✅' : 'NO ❌'}`);
+                } else {
+                    console.log(`  ✓ #${id} is Select2-enabled`);
+                }
+            } else {
+                console.error(`  ✗ #${id} failed to initialize!`);
+                failedDropdowns.push(id);
+            }
+        });
+        
+        if (successCount === 4) {
+            console.log('🎉 SUCCESS: All 4 dropdowns are now SEARCHABLE!');
+            console.log('📝 To test: Click any dropdown and you should see a search box appear');
+        } else {
+            console.warn(`⚠️  Only ${successCount}/4 dropdowns initialized successfully`);
+            if (failedDropdowns.length > 0) {
+                console.error(`   Failed dropdowns: ${failedDropdowns.join(', ')}`);
+            }
+        }
+        
+        // Prevent master.html MutationObserver from re-initializing
+        setTimeout(function() {
+            window.CUSTOM_SELECT2_INIT = true;
+            console.log('🔒 Locked Select2 configuration to prevent interference');
+        }, 100);
 
+        // Ensure dropdowns open above other elements with proper z-index
+        jQuery(document).on('select2:open', function(e) {
+            const selectId = e.target.id;
+            const dropdown = jQuery('.select2-dropdown');
+            dropdown.css('z-index', 10000);
+            console.log(`📂 Dropdown opened: #${selectId}`);
+            
+            // Focus on search field when dropdown opens
+            setTimeout(function() {
+                const searchField = jQuery('.select2-search__field');
+                if (searchField.length > 0) {
+                    searchField.focus();
+                    console.log('  ✅ Search field focused - Type to filter results!');
+                } else {
+                    console.error('  ❌ Search field not found! Search may not be enabled.');
+                }
+            }, 100);
+        });
+
+        // Add visual feedback on hover
+        jQuery(document).on('mouseenter', '.select2-selection', function() {
+            jQuery(this).css('box-shadow', '0 2px 8px rgba(102, 126, 234, 0.3)');
+        }).on('mouseleave', '.select2-selection', function() {
+            if (!jQuery(this).parent().hasClass('select2-container--focus')) {
+                jQuery(this).css('box-shadow', '0 1px 3px rgba(0, 0, 0, 0.1)');
+            }
+        });
+    }
+    
+    // Try to initialize when document is ready
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function() {
+            // Check if Select2 is already loaded
+            if (typeof jQuery.fn.select2 !== 'undefined') {
+                initializeSelect2Dropdowns();
+            } else {
+                // Wait a bit for Select2 to load
+                console.log('⏳ Waiting for Select2 to load...');
+                let attempts = 0;
+                const checkSelect2 = setInterval(function() {
+                    attempts++;
+                    if (typeof jQuery.fn.select2 !== 'undefined') {
+                        clearInterval(checkSelect2);
+                        console.log('✅ Select2 detected after ' + attempts + ' attempts');
+                        initializeSelect2Dropdowns();
+                    } else if (attempts > 20) {
+                        clearInterval(checkSelect2);
+                        console.error('❌ Select2 failed to load after 2 seconds');
+                        console.error('   Check if /static/assets/js/select2.min.js exists');
+                        alert('ERROR: Select2 library failed to load. Dropdowns will not be searchable.\n\nPlease check:\n1. File exists: /static/assets/js/select2.min.js\n2. No 404 errors in Network tab (F12)\n3. Static files are properly configured');
+                    }
+                }, 100);
+            }
+        });
+    } else {
+        console.error('❌ CRITICAL: jQuery is not loaded!');
+        alert('ERROR: jQuery is not loaded. Dropdowns will not work.');
+    }
+
+
+    // ============================================================
+    // TEST FUNCTION - Verify Select2 Searchability
+    // ============================================================
+    
     // Function to calculate purchased asset
     async function calculate_purchased_asset() {
         const organization_id = document.getElementById('purchased_asset_organization').value;
