@@ -25,15 +25,15 @@ from django.http import JsonResponse
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     date = date2jalali(datetime.now()) 
     year=date.strftime('%Y')
-    self_organization,parent_organization,user_orgs = find_userorganization(request,organization_id)
-    # print("self_organization , parent_organization ",self_organization,parent_organization)
-    bill_rcvr_org,parent_bill_rcvr_org,user_orgs = find_userorganization(request,bill_rcvr_org_id)
+    self_organization,user_orgs = find_userorganization(request,organization_id)
+    # print("self_organization ",self_organization)
+    bill_rcvr_org,user_orgs = find_userorganization(request,bill_rcvr_org_id)
     opposit_bill=get_opposit_bill(bill_type)
     print("opposit_bill ",opposit_bill)
     if bill_type=="EXPENSE":
-        bill_query=Bill.objects.filter(year=int(year),bill_type=bill_type,organization=parent_organization)
+        bill_query=Bill.objects.filter(year=int(year),bill_type=bill_type,organization=self_organization)
     else:    
-        bill_query=Bill.objects.filter(Q(year=int(year)),Q(Q(bill_type=bill_type),Q(organization=parent_organization),Q(bill_receiver2__bill_rcvr_org=parent_bill_rcvr_org)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=parent_organization),Q(organization=parent_bill_rcvr_org)))
+        bill_query=Bill.objects.filter(Q(year=int(year)),Q(Q(bill_type=bill_type),Q(organization=self_organization),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=self_organization),Q(organization=bill_rcvr_org)))
 
     if bill_query.count()>0:  
         bill_no=bill_query.aggregate(Max('bill_no'))['bill_no__max']+1
@@ -53,20 +53,20 @@ def bill_show(request,bill_id=None):
     form.set_start_date()
     print(f"############ start_date {form.fields["start_date"].initial}")
     context['form']=form
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     
-    # Handle case when parent_organization is None
-    if parent_organization is None:
+    # Handle case when self_organization is None
+    if self_organization is None:
         if request.user.is_superuser:
             # Superuser can see all organizations
             context['organizations'] = Organization.objects.all()
             context['organization'] = None
         else:
-            # Regular user with multiple orgs but no parent - use first org or show error
+            # Regular user with multiple orgs but no self org - use first org or show error
             if user_orgs and user_orgs.count() > 0:
-                parent_organization = user_orgs.first()
+                self_organization = user_orgs.first()
                 context['organizations'] = user_orgs
-                context['organization'] = parent_organization
+                context['organization'] = self_organization
             else:
                 # No organizations assigned to user
                 from django.contrib import messages
@@ -74,12 +74,12 @@ def bill_show(request,bill_id=None):
                 context['organizations'] = Organization.objects.none()
                 context['organization'] = None
     else:
-        # Normal case - parent_organization exists
-        context['organization'] = parent_organization
+        # Normal case - self_organization exists
+        context['organization'] = self_organization
         if request.user.is_superuser:
             context['organizations'] = Organization.objects.all()
         else:
-            context['organizations'] = Organization.objects.filter(id=parent_organization.id)
+            context['organizations'] = Organization.objects.filter(id=self_organization.id)
     
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
@@ -102,16 +102,16 @@ def bill_show(request,bill_id=None):
             # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
             context['products']=Product.objects.all()
         context['units']=Unit.objects.all()
-        if parent_organization and (bill.organization==parent_organization or request.user.is_superuser):                 
+        if self_organization and (bill.organization==self_organization or request.user.is_superuser):                 
             context['rcvr_orgs']=Organization.objects.all().order_by("-pk") 
             if request.user.is_superuser:
                 context['organizations']=Organization.objects.all() 
             else:
-                context['organizations']=Organization.objects.filter(id=parent_organization.id)
-        elif hasattr(bill,'bill_receiver2') and parent_organization:
-            if bill.bill_receiver2.bill_rcvr_org==parent_organization:
+                context['organizations']=Organization.objects.filter(id=self_organization.id)
+        elif hasattr(bill,'bill_receiver2') and self_organization:
+            if bill.bill_receiver2.bill_rcvr_org==self_organization:
                 #  bill_obj.bill_receiver2:
-                context['rcvr_orgs']=Organization.objects.filter(id=parent_organization.id)
+                context['rcvr_orgs']=Organization.objects.filter(id=self_organization.id)
     
     return HttpResponse(template.render(context,request))
 
@@ -120,14 +120,15 @@ def bill_show(request,bill_id=None):
 @login_required(login_url='/admin')
 def bill_delete(request,id=None):
     context={}
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     if id!=None:
         context['detail']=True
         bill_query=Bill.objects.filter(id=int(id))
         if bill_query.count()>0:
             bill_obj=bill_query[0]
             if  not request.user.is_superuser:
-                message="The Organization {} can not delete the bill id {} because it is not admin".format(parent_organization.name,id)
+                org_name = self_organization.name if self_organization else "Unknown"
+                message="The Organization {} can not delete the bill id {} because it is not admin".format(org_name,id)
                 messages.error(request,message=message)
                 return bill_show(request,bill_id=id)
             bill_obj.delete()
@@ -145,7 +146,7 @@ def bill_delete(request,id=None):
 @api_view(['GET','DELETE'])
 def bill_detail_delete(request,bill_detail_id=None):
     context={} 
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     message=""
     is_success=False
     if bill_detail_id!=None:
@@ -155,14 +156,16 @@ def bill_detail_delete(request,bill_detail_id=None):
             bill_detail=bill_detail_query[0]
             bill=bill_detail.bill
             previous_bill_type=bill.bill_type
-            if bill.organization!=parent_organization:
-                message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
+            if bill.organization!=self_organization:
+                org_name = self_organization.name if self_organization else "Unknown"
+                message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(org_name,id)
                 return Response({"Message":message,"is_success":False})
             if bill.bill_receiver2.approval_user!=None: # it means approved
                 return Response({"Message":'it is approved',"is_success":False})
             if len(bill.bill_detail_set.all())==1:
                 bill_delete(request,int(bill.id))
-                message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(parent_organization.name,id)
+                org_name = self_organization.name if self_organization else "Unknown"
+                message="The Organization {} can not delete the bill id {} because it is not creator of bill".format(org_name,id)
                 return Response({"Message":message,"is_success":False})
             previous_item_amount=bill_detail.item_amount
             previous_return_qty=bill_detail.return_qty
@@ -196,37 +199,43 @@ def bill_detail_delete(request,bill_detail_id=None):
 def bill_form_sell_purchase(request):
     template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
     
-    # Handle case when parent_organization is None
-    if parent_organization is None:
+    # Handle case when self_organization is None
+    if self_organization is None:
         if request.user.is_superuser:
             organizations = Organization.objects.all()
-            parent_organization = None  # Superuser can work without specific org
+            rcvr_orgs = Organization.objects.all()
+            self_organization = None  # Superuser can work without specific org
         else:
             # Regular user with multiple orgs - use first org as fallback
             if user_orgs and user_orgs.count() > 0:
-                parent_organization = user_orgs.first()
+                self_organization = user_orgs.first()
                 organizations = user_orgs
+                rcvr_orgs = Organization.objects.all()  # Can bill to any org
             else:
                 # No organizations assigned
                 from django.contrib import messages
                 messages.error(request, "No organizations assigned to your account. Please contact administrator.")
                 organizations = Organization.objects.none()
+                rcvr_orgs = Organization.objects.none()
     else:
-        # Normal case - parent_organization exists
+        # Normal case - self_organization exists
         if request.user.is_superuser:
             organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
         else:
-            organizations = Organization.objects.filter(id=parent_organization.id)
+            organizations = Organization.objects.filter(id=self_organization.id)
+            rcvr_orgs = Organization.objects.all()  # Can bill to any org
     
     context={
         'form':form,
-        'organization':parent_organization,
+        'organization':self_organization,
         'organizations':organizations,
+        'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
         'date':date,
         'categories':Category.objects.all(),
     } 
@@ -238,20 +247,20 @@ def bill_form_sell_purchase(request):
 def bill_form_loss_degrade_product(request):
     template=loader.get_template('bill/expenditure/bill_form_loss.html')
     date = date2jalali(datetime.now())
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
     
-    # Handle case when parent_organization is None
-    if parent_organization is None:
+    # Handle case when self_organization is None
+    if self_organization is None:
         if request.user.is_superuser:
             organizations = Organization.objects.all()
-            parent_organization = None  # Superuser can work without specific org
+            self_organization = None  # Superuser can work without specific org
         else:
             # Regular user with multiple orgs - use first org as fallback
             if user_orgs and user_orgs.count() > 0:
-                parent_organization = user_orgs.first()
+                self_organization = user_orgs.first()
                 organizations = user_orgs
             else:
                 # No organizations assigned
@@ -259,15 +268,15 @@ def bill_form_loss_degrade_product(request):
                 messages.error(request, "No organizations assigned to your account. Please contact administrator.")
                 organizations = Organization.objects.none()
     else:
-        # Normal case - parent_organization exists
+        # Normal case - self_organization exists
         if request.user.is_superuser:
             organizations = Organization.objects.all()
         else:
-            organizations = Organization.objects.filter(id=parent_organization.id)
+            organizations = Organization.objects.filter(id=self_organization.id)
     
     context={
         'form':form,
-        'organization':parent_organization,
+        'organization':self_organization,
         'organizations':organizations,
         'date':date,
     } 
@@ -316,7 +325,7 @@ def bill_insert(request):
     ############before request.data  and request.data.getlist
     organization=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization))
-    self_organization,parent_organization,user_orgs = find_userorganization(request,organization.id)
+    self_organization,user_orgs = find_userorganization(request,organization.id)
 
     bill_type=request.data.get("bill_type",None)
     creator=request.user
@@ -355,7 +364,7 @@ def bill_insert(request):
         date_str=handle_day_out_of_range(date_str)
         approval_date=datetime.strptime(date_str,'%Y-%m-%d')
     #print("1status ",status," approval_date=",approval_date," is_approved= ",is_approved)
-    if bill_rcvr_org==parent_organization:
+    if bill_rcvr_org==self_organization:
         if is_approved or int(status)==1:
             status=1
             approval_user=request.user
@@ -587,14 +596,14 @@ def search(request, page=None):
     if organization in [None, "", "null", "all"]:
         organization = None
     
-    # Determine parent organization
     if organization is None:
         if request.user.is_superuser:
-            parent_organization = None  # Will search all organizations
+            self_organization = None  # Will search all organizations
+            user_orgs = None
         else:
-            self_organization, parent_organization, user_orgs = find_userorganization(request)
+            self_organization, user_orgs = find_userorganization(request)
     else:
-        self_organization, parent_organization, user_orgs = find_userorganization(request, organization)
+        self_organization, user_orgs = find_userorganization(request, organization)
 
     start_date = request.data.get("start_date", None)
     end_date = request.data.get("end_date", None)
@@ -609,11 +618,11 @@ def search(request, page=None):
     query = Bill.objects.filter(date__range=[start_date, end_date])
     
     # Filter by organization
-    if parent_organization is not None:
+    if self_organization is not None:
         # Specific organization or user's organization
         query = query.filter(
-            Q(organization=parent_organization) | 
-            Q(bill_receiver2__bill_rcvr_org=parent_organization)
+            Q(organization=self_organization) | 
+            Q(bill_receiver2__bill_rcvr_org=self_organization)
         )
     # else: superuser viewing all organizations - no filter needed
     

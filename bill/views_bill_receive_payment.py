@@ -21,12 +21,39 @@ def bill_form(request):
     template=loader.get_template('bill/bill_form_receive_payment.html')
     date = date2jalali(datetime.now())
     # year=date.strftime('%Y')
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     form.fields['date'].initial=date
+    
+    # Handle organizations and rcvr_orgs
+    if self_organization is None:
+        if request.user.is_superuser:
+            organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
+            self_organization = None
+        else:
+            if user_orgs and user_orgs.count() > 0:
+                self_organization = user_orgs.first()
+                organizations = user_orgs
+                rcvr_orgs = Organization.objects.all()
+            else:
+                from django.contrib import messages
+                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+                organizations = Organization.objects.none()
+                rcvr_orgs = Organization.objects.none()
+    else:
+        if request.user.is_superuser:
+            organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
+        else:
+            organizations = Organization.objects.filter(id=self_organization.id)
+            rcvr_orgs = Organization.objects.all()
+    
     context={
         'form':form,
-        'organization':parent_organization,
+        'organization':self_organization,
+        'organizations':organizations,  # ← ADD THIS
+        'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
         'date':date,
     } 
     return HttpResponse(template.render(context,request))

@@ -365,12 +365,20 @@
         
         <!-- Sidebar Navigation -->
         <nav class="sidebar-nav">
+            <a href="{% url 'admin_dashboard' %}">
+                <span class="nav-icon">📊</span>
+                <span>Admin Dashboard</span>
+            </a>
+            <a href="{% url 'asset_dashboard' %}">
+                <span class="nav-icon">💰</span>
+                <span>Financial Reports</span>
+            </a>
             <a href="{% url 'admin:index' %}">
                 <span class="nav-icon">🏠</span>
-                <span>Dashboard</span>
+                <span>Django Admin</span>
             </a>
             <a href="{% url 'bill_form_sell_purchase' %}">
-                <span class="nav-icon">�</span>
+                <span class="nav-icon">🛒</span>
                 <span>Purchase/Sell</span>
             </a>
             <a href="{% url 'bill_form_receive_payment' %}">
@@ -386,7 +394,7 @@
                 <span>Expense</span>
             </a>
             <a href="{% url 'bill_show_html' %}">
-                <span class="nav-icon">�</span>
+                <span class="nav-icon">📄</span>
                 <span>Bills</span>
             </a>
             <a href="{% url 'product_show_html' %}">

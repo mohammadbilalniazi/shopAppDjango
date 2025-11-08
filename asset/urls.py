@@ -2,6 +2,9 @@ from django.urls import path
 from asset import views
 
 urlpatterns = [
+    # Admin Dashboard (Main Overview)
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    
     # Dashboard
     path('dashboard/', views.asset_dashboard, name='asset_dashboard'),
     

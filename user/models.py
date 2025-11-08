@@ -10,7 +10,7 @@ class OrganizationUser(models.Model):
         ('owner','Owner')
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     img = models.FileField(upload_to="OrganizationUser", null=True, blank=True)
@@ -21,7 +21,6 @@ class OrganizationUser(models.Model):
         return f"{self.user.username} - {self.organization.name}"
 
     class Meta:
-        unique_together = ('user', 'organization')
         verbose_name = "Organization User"
         verbose_name_plural = "Organization Users"
         ordering = ['user__username']

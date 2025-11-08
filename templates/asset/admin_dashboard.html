@@ -1,0 +1,793 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - {{ selected_organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+    
+    .dashboard-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .dashboard-header .last-updated {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card.success::before {
+        background: var(--success-gradient);
+    }
+    
+    .stat-card.danger::before {
+        background: var(--danger-gradient);
+    }
+    
+    .stat-card.warning::before {
+        background: var(--warning-gradient);
+    }
+    
+    .stat-card.info::before {
+        background: var(--info-gradient);
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        opacity: 0.2;
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        color: #2c3e50;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 0.5rem;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .chart-card h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+    }
+    
+    .quick-action-btn {
+        display: inline-block;
+        padding: 0.8rem 1.5rem;
+        margin: 0.5rem;
+        border-radius: 10px;
+        text-decoration: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+    
+    .quick-action-btn.primary {
+        background: var(--primary-gradient);
+    }
+    
+    .quick-action-btn.success {
+        background: var(--success-gradient);
+    }
+    
+    .quick-action-btn.danger {
+        background: var(--danger-gradient);
+    }
+    
+    .quick-action-btn.info {
+        background: var(--info-gradient);
+    }
+    
+    .recent-activity-item {
+        padding: 1rem;
+        border-left: 3px solid #667eea;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .recent-activity-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .badge-custom {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .badge-purchase {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .badge-selling {
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        color: white;
+    }
+    
+    .badge-payment {
+        background: linear-gradient(135deg, #eb3349, #f45c43);
+        color: white;
+    }
+    
+    .badge-receivement {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: white;
+    }
+    
+    .badge-expense {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+    }
+    
+    .badge-lossdegrade {
+        background: linear-gradient(135deg, #fa709a, #fee140);
+        color: white;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 2rem 0 1rem 0;
+        padding-left: 1rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .org-selector {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .progress-custom {
+        height: 8px;
+        border-radius: 10px;
+        background: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-bar-custom {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
+    
+    .mini-stat {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .mini-stat .value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    
+    .mini-stat .label {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        text-transform: uppercase;
+    }
+    
+    .table-dashboard {
+        font-size: 0.9rem;
+    }
+    
+    .table-dashboard th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #2c3e50;
+        border: none;
+    }
+    
+    .table-dashboard td {
+        vertical-align: middle;
+        border-color: #e9ecef;
+    }
+    
+    .alert-custom {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1><i class="bi bi-speedometer2"></i> Admin Dashboard</h1>
+                <p class="last-updated">
+                    <i class="bi bi-clock"></i> Last Updated: {{ org_asset.last_updated|date:"M d, Y H:i" }}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <div class="org-selector">
+                    <label for="orgSelect" class="form-label mb-2"><strong>Select Organization:</strong></label>
+                    <select id="orgSelect" class="form-select">
+                        {% for org in organizations %}
+                        <option value="{{ org.id }}" {% if org == selected_organization %}selected{% endif %}>
+                            {{ org.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    
+    <!-- Key Financial Metrics -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card success">
+                <i class="bi bi-cash-stack stat-icon"></i>
+                <h3 class="stat-value">{{ total_assets|floatformat:0|default:"0" }}</h3>
+                <p class="stat-label">Total Assets</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card danger">
+                <i class="bi bi-graph-down stat-icon"></i>
+                <h3 class="stat-value">{{ total_liabilities|floatformat:0|default:"0" }}</h3>
+                <p class="stat-label">Total Liabilities</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card info">
+                <i class="bi bi-bank stat-icon"></i>
+                <h3 class="stat-value">{{ equity|floatformat:0|default:"0" }}</h3>
+                <p class="stat-label">Owner's Equity</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card warning">
+                <i class="bi bi-graph-up-arrow stat-icon"></i>
+                <h3 class="stat-value">{{ net_profit|floatformat:0|default:"0" }}</h3>
+                <p class="stat-label">Net Profit</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="chart-card">
+        <h3><i class="bi bi-lightning-fill"></i> Quick Actions</h3>
+        <div class="text-center">
+            <a href="{% url 'bill_form_sell_purchase' %}" class="quick-action-btn primary">
+                <i class="bi bi-receipt"></i> New Bill
+            </a>
+            <a href="{% url 'product_form' %}" class="quick-action-btn success">
+                <i class="bi bi-box-seam"></i> New Product
+            </a>
+            <a href="{% url 'update_stock' %}" class="quick-action-btn info">
+                <i class="bi bi-plus-circle"></i> Update Stock
+            </a>
+            <a href="/admin/" class="quick-action-btn danger" target="_blank">
+                <i class="bi bi-gear"></i> Django Admin
+            </a>
+            <a href="{% url 'asset_dashboard' %}" class="quick-action-btn primary">
+                <i class="bi bi-graph-up"></i> Financial Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Bill Statistics -->
+    <h2 class="section-title"><i class="bi bi-file-earmark-text"></i> Bill Statistics</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="chart-card">
+                <h3><i class="bi bi-pie-chart-fill"></i> Bills by Type</h3>
+                <canvas id="billTypeChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="chart-card">
+                <h3><i class="bi bi-list-ol"></i> Bill Counts</h3>
+                <div class="mini-stat">
+                    <div class="value text-primary">{{ total_bills }}</div>
+                    <div class="label">Total Bills</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-6 mini-stat">
+                        <div class="value text-success">{{ purchase_bills }}</div>
+                        <div class="label">Purchase</div>
+                    </div>
+                    <div class="col-6 mini-stat">
+                        <div class="value text-info">{{ selling_bills }}</div>
+                        <div class="label">Selling</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mini-stat">
+                        <div class="value text-danger">{{ payment_bills }}</div>
+                        <div class="label">Payment</div>
+                    </div>
+                    <div class="col-6 mini-stat">
+                        <div class="value text-warning">{{ receivement_bills }}</div>
+                        <div class="label">Receivement</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mini-stat">
+                        <div class="value text-secondary">{{ expense_bills }}</div>
+                        <div class="label">Expense</div>
+                    </div>
+                    <div class="col-6 mini-stat">
+                        <div class="value text-dark">{{ lossdegrade_bills }}</div>
+                        <div class="label">Loss/Degrade</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Trends -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="chart-card">
+                <h3><i class="bi bi-bar-chart-line"></i> Monthly Bill Trends (Last 6 Months)</h3>
+                <canvas id="monthlyTrendChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Overview -->
+    <h2 class="section-title"><i class="bi bi-currency-dollar"></i> Financial Overview</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h3><i class="bi bi-wallet2"></i> Asset Breakdown</h3>
+                <canvas id="assetBreakdownChart" height="150"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h3><i class="bi bi-graph-down"></i> Profit & Loss Breakdown</h3>
+                <canvas id="profitLossChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product & Inventory Statistics -->
+    <h2 class="section-title"><i class="bi bi-box-seam"></i> Products & Inventory</h2>
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card">
+                <i class="bi bi-boxes stat-icon"></i>
+                <h3 class="stat-value">{{ total_products }}</h3>
+                <p class="stat-label">Total Products</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card success">
+                <i class="bi bi-check-circle stat-icon"></i>
+                <h3 class="stat-value">{{ active_products }}</h3>
+                <p class="stat-label">Active Products</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card info">
+                <i class="bi bi-stack stat-icon"></i>
+                <h3 class="stat-value">{{ total_stock_quantity|floatformat:0 }}</h3>
+                <p class="stat-label">Total Stock Units</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card warning">
+                <i class="bi bi-exclamation-triangle stat-icon"></i>
+                <h3 class="stat-value">{{ low_stock_items }}</h3>
+                <p class="stat-label">Low Stock Alerts</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if low_stock_items > 0 %}
+    <div class="alert alert-warning alert-custom">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Warning!</strong> You have {{ low_stock_items }} product(s) with low stock levels (less than 10 units).
+    </div>
+    {% endif %}
+    
+    <!-- Loans & User Statistics -->
+    <div class="row">
+        <div class="col-md-6">
+            <h2 class="section-title"><i class="bi bi-bank2"></i> Loan Statistics</h2>
+            <div class="chart-card">
+                <div class="row">
+                    <div class="col-6 mini-stat">
+                        <div class="value text-success">{{ loans_receivable_count }}</div>
+                        <div class="label">Loans Receivable</div>
+                        <small class="text-muted">Amount: {{ loans_receivable_amount|floatformat:0 }}</small>
+                    </div>
+                    <div class="col-6 mini-stat">
+                        <div class="value text-danger">{{ loans_payable_count }}</div>
+                        <div class="label">Loans Payable</div>
+                        <small class="text-muted">Amount: {{ loans_payable_amount|floatformat:0 }}</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="mini-stat">
+                    <div class="value text-info">{{ active_loans }}</div>
+                    <div class="label">Active Loans</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <h2 class="section-title"><i class="bi bi-people"></i> User Statistics</h2>
+            <div class="chart-card">
+                <div class="row">
+                    <div class="col-6 mini-stat">
+                        <div class="value text-primary">{{ total_org_users }}</div>
+                        <div class="label">Total Users</div>
+                    </div>
+                    <div class="col-6 mini-stat">
+                        <div class="value text-success">{{ active_org_users }}</div>
+                        <div class="label">Active Users</div>
+                    </div>
+                </div>
+                {% if request.user.is_superuser %}
+                <hr>
+                <div class="row">
+                    <div class="col-6 mini-stat">
+                        <div class="value text-info">{{ total_organizations }}</div>
+                        <div class="label">Organizations</div>
+                    </div>
+                    <div class="col-6 mini-stat">
+                        <div class="value text-warning">{{ total_system_users }}</div>
+                        <div class="label">System Users</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <h2 class="section-title"><i class="bi bi-clock-history"></i> Recent Activity</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="chart-card">
+                <h3><i class="bi bi-receipt"></i> Recent Bills</h3>
+                <div class="table-responsive">
+                    <table class="table table-dashboard table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Bill #</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Creator</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in recent_bills %}
+                            <tr>
+                                <td>{{ bill.bill_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge-custom badge-{{ bill.bill_type|lower }}">
+                                        {{ bill.bill_type }}
+                                    </span>
+                                </td>
+                                <td>#{{ bill.bill_no }}</td>
+                                <td>{{ bill.bill_total|floatformat:0 }}</td>
+                                <td>{{ bill.bill_totalpayment|floatformat:0 }}</td>
+                                <td>{{ bill.creator.username|default:"N/A" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No bills found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="chart-card">
+                <h3><i class="bi bi-box"></i> Recent Products</h3>
+                {% for product in recent_products %}
+                <div class="recent-activity-item">
+                    <strong>{{ product.product }}</strong><br>
+                    <small class="text-muted">
+                        <i class="bi bi-tag"></i> {{ product.category.name|default:"No Category" }}
+                    </small>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center">No products found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Expenses -->
+    {% if recent_expenses %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="chart-card">
+                <h3><i class="bi bi-cash-coin"></i> Recent Expenses</h3>
+                <div class="row">
+                    {% for expense in recent_expenses %}
+                    <div class="col-md-4">
+                        <div class="recent-activity-item">
+                            <strong>{{ expense.description|truncatewords:5 }}</strong><br>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> {{ expense.date|date:"M d, Y" }}
+                            </small><br>
+                            <span class="text-danger"><strong>{{ expense.amount|floatformat:0 }} {{ selected_organization.currency.symbol }}</strong></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // Organization selector
+    document.getElementById('orgSelect').addEventListener('change', function() {
+        window.location.href = '?organization=' + this.value;
+    });
+    
+    // Chart colors
+    const gradients = {
+        primary: ['#667eea', '#764ba2'],
+        success: ['#11998e', '#38ef7d'],
+        danger: ['#eb3349', '#f45c43'],
+        warning: ['#f093fb', '#f5576c'],
+        info: ['#4facfe', '#00f2fe'],
+        dark: ['#2c3e50', '#3498db']
+    };
+    
+    // Bill Type Chart (Pie)
+    const billTypeCtx = document.getElementById('billTypeChart').getContext('2d');
+    new Chart(billTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Purchase', 'Selling', 'Payment', 'Receivement', 'Expense', 'Loss/Degrade'],
+            datasets: [{
+                data: [
+                    {{ purchase_bills }},
+                    {{ selling_bills }},
+                    {{ payment_bills }},
+                    {{ receivement_bills }},
+                    {{ expense_bills }},
+                    {{ lossdegrade_bills }}
+                ],
+                backgroundColor: [
+                    '#667eea',
+                    '#11998e',
+                    '#eb3349',
+                    '#4facfe',
+                    '#f093fb',
+                    '#fa709a'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+    
+    // Monthly Trend Chart (Line)
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    new Chart(monthlyTrendCtx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for month in monthly_bills %}'{{ month.month }}',{% endfor %}
+            ],
+            datasets: [{
+                label: 'Total Amount',
+                data: [
+                    {% for month in monthly_bills %}{{ month.total }},{% endfor %}
+                ],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Bill Count',
+                data: [
+                    {% for month in monthly_bills %}{{ month.count }},{% endfor %}
+                ],
+                borderColor: '#11998e',
+                backgroundColor: 'rgba(17, 153, 142, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Asset Breakdown Chart (Doughnut)
+    const assetBreakdownCtx = document.getElementById('assetBreakdownChart').getContext('2d');
+    new Chart(assetBreakdownCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Cash', 'Inventory', 'Receivables', 'Loans Receivable'],
+            datasets: [{
+                data: [
+                    {{ cash_on_hand|default:0 }},
+                    {{ inventory_value|default:0 }},
+                    {{ accounts_receivable|default:0 }},
+                    {{ loans_receivable_amount|default:0 }}
+                ],
+                backgroundColor: [
+                    '#11998e',
+                    '#667eea',
+                    '#4facfe',
+                    '#f093fb'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+    
+    // Profit & Loss Chart (Bar)
+    const profitLossCtx = document.getElementById('profitLossChart').getContext('2d');
+    new Chart(profitLossCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Revenue', 'COGS', 'Expenses', 'Losses', 'Net Profit'],
+            datasets: [{
+                label: 'Amount',
+                data: [
+                    {{ total_revenue|default:0 }},
+                    -{{ total_cogs|default:0 }},
+                    -{{ total_expenses|default:0 }},
+                    -{{ total_losses|default:0 }},
+                    {{ net_profit|default:0 }}
+                ],
+                backgroundColor: [
+                    '#11998e',
+                    '#eb3349',
+                    '#f093fb',
+                    '#fa709a',
+                    '#667eea'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

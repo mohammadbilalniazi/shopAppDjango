@@ -25,20 +25,54 @@ from django.template import loader
 @login_required
 @api_view(('GET','DELETE'))
 def rcvr_org_show(request,id="all"):
-    # print("vendors_show id=",id)
+    """
+    API endpoint for bill_rcvr_org dropdown.
+    Returns:
+    - For superadmin: ALL organizations
+    - For regular users: ALL organizations EXCEPT their own organization
+    """
     # if request.type=="DELETE":
     if id=="all":
-        self_organization,parent_organization,user_orgs = find_userorganization(request)
-        if parent_organization!=None and self_organization!=None:
-            query_set=Organization.objects.all().exclude(id=parent_organization.id).exclude(parent=self_organization).order_by('-pk')
-        elif self_organization!=None:
-            query_set=Organization.objects.all().exclude(id=self_organization.id).order_by('-pk')
+        self_organization,user_orgs = find_userorganization(request)
+        
+        # Superadmin sees all organizations
+        if request.user.is_superuser:
+            query_set = Organization.objects.all().order_by('-pk')
+        # Regular users see all organizations except their own
+        elif self_organization is not None:
+            query_set = Organization.objects.all().exclude(id=self_organization.id).order_by('-pk')
         else:
-            query_set=Organization.objects.all().order_by('-pk')
-        print("query set ",query_set)
+            # User with multiple orgs - exclude all their organizations
+            user_org_ids = user_orgs.values_list('id', flat=True)
+            query_set = Organization.objects.all().exclude(id__in=user_org_ids).order_by('-pk')
+        
+        print("rcvr_org_show query set ", query_set)
     else:
         query_set=Organization.objects.filter(name=str(id))
     serializer=OrganizationSerializer(query_set,many=True)
+    return Response(serializer.data)
+
+
+@login_required
+@api_view(('GET',))
+def user_organizations(request):
+    """
+    API endpoint for organization dropdown.
+    Returns:
+    - For superadmin: ALL organizations
+    - For regular users: ONLY their accessible organization(s)
+    """
+    self_organization, user_orgs = find_userorganization(request)
+    
+    # Superadmin sees all organizations
+    if request.user.is_superuser:
+        query_set = Organization.objects.all().order_by('-pk')
+    # Regular users see only their organization(s)
+    else:
+        query_set = user_orgs.order_by('-pk')
+    
+    print("user_organizations query set ", query_set)
+    serializer = OrganizationSerializer(query_set, many=True)
     return Response(serializer.data)
 
 @login_required(login_url='/admin')

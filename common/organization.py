@@ -2,18 +2,11 @@ from configuration.models import Organization
 from user.models import OrganizationUser
 
 
-def top_parent(organization):
-    while organization.parent is not None:
-        organization=organization.parent
-    return organization
-
-
 def find_userorganization(request, organization_id=None):
     """
     Returns:
-        (organization, parent_organization, user_organizations)
+        (organization, user_organizations)
         organization: Organization instance (if exactly one found, else None)
-        parent_organization: Top parent organization (if found, else None)
         user_organizations: QuerySet of Organization objects the user belongs to
     """
     # Handle empty string or None as None
@@ -31,11 +24,9 @@ def find_userorganization(request, organization_id=None):
     orgs = Organization.objects.filter(id__in=user_orgs.values_list("organization_id", flat=True))
     if orgs.count() == 1:
         organization = orgs.first()
-        parent_organization = top_parent(organization)
     else:
         organization = None
-        parent_organization = None
     if not organization_id and request.user.is_superuser:
         orgs = Organization.objects.all()
-    print(f"organization, {organization} parent_organization {parent_organization}, orgs {orgs}")
-    return organization, parent_organization, orgs
+    print(f"organization: {organization}, orgs: {orgs}")
+    return organization, orgs

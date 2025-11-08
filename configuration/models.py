@@ -37,7 +37,6 @@ class Location(models.Model):
         return str(self.country)+'_'+self.state
     
 class Organization(models.Model):
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="organization_set")
     owner = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     name = models.CharField(max_length=20, unique=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True, related_name="city_set")

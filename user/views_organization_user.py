@@ -14,14 +14,14 @@ from django.contrib.auth.decorators import login_required
 
 @login_required(login_url='/')
 def form(request,id=None):
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization,user_orgs = find_userorganization(request)
     context={}
     if request.user.is_superuser:
         context['organizations']=Organization.objects.all() 
     else:
-        # Handle case when parent_organization is None (user has multiple organizations)
-        if parent_organization is not None:
-            context['organizations']=Organization.objects.filter(id=parent_organization.id)
+        # Handle case when self_organization is None (user has multiple organizations)
+        if self_organization is not None:
+            context['organizations']=Organization.objects.filter(id=self_organization.id)
         else:
             # User has multiple organizations, use all of them
             context['organizations'] = user_orgs
@@ -63,9 +63,11 @@ def insert(request):
                 )
 
             else:  # 🔹 CREATE
+                # Check username availability first
                 if User.objects.filter(username=username).exists():
                     return Response({"error": "Username already taken."}, status=400)
 
+                # Create the user
                 user = User(
                     username=username,
                     first_name=first_name,
@@ -77,8 +79,11 @@ def insert(request):
                     user.set_password(password)
                 user.save()
 
-                if OrganizationUser.objects.filter(user=user, organization_id=organization).exists():
-                    return Response({"error": "User already exists in this organization."}, status=400)
+                # Check if user already belongs to ANY organization (one user, one organization rule)
+                # This shouldn't happen due to OneToOneField, but added as extra safety
+                if OrganizationUser.objects.filter(user=user).exists():
+                    user.delete()  # Clean up the created user
+                    return Response({"error": "User already belongs to an organization. One user can only belong to one organization."}, status=400)
 
                 create_data = request.data.dict()
                 create_data["user"] = user.id
@@ -120,14 +125,14 @@ def get(request,id=None):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             # Render the organization_user.html template
-            self_organization, parent_organization, user_orgs = find_userorganization(request)
+            self_organization, user_orgs = find_userorganization(request)
             context = {}
             if request.user.is_superuser:
                 context['organizations'] = Organization.objects.all()
             else:
-                # Handle case when parent_organization is None (user has multiple organizations)
-                if parent_organization is not None:
-                    context['organizations'] = Organization.objects.filter(id=parent_organization.id)
+                # Handle case when self_organization is None (user has multiple organizations)
+                if self_organization is not None:
+                    context['organizations'] = Organization.objects.filter(id=self_organization.id)
                 else:
                     # User has multiple organizations, use all of them
                     context['organizations'] = user_orgs

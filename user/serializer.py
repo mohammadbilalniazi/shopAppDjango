@@ -5,7 +5,22 @@ from django.contrib.auth.models import User
 class OrganizationUserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrganizationUser
-        fields = '__all__'    
+        fields = '__all__'
+    
+    def validate_user(self, value):
+        """
+        Ensure that a user can only belong to one organization.
+        """
+        # Skip validation if we're updating an existing instance
+        if self.instance:
+            return value
+        
+        # Check if the user already belongs to an organization
+        if OrganizationUser.objects.filter(user=value).exists():
+            raise serializers.ValidationError(
+                "This user already belongs to an organization. One user can only belong to one organization."
+            )
+        return value    
 
 class OrganizationUserSerializer(serializers.ModelSerializer):
     img = serializers.SerializerMethodField()

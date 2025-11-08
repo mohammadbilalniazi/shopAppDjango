@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -14,6 +14,9 @@ from django.shortcuts import redirect
 urlpatterns = [
     path('login/check', views_login.host_to_heroku_submit),
 
+    # Asset Management & Financial Reports
+    path('asset/', include('asset.urls')),
+
     # Expenditure
     path('expenditure/bill/form/', expenditure_view.expense_form,name="expense_form"),
     path('expenditure/bill/form/<id>/', expenditure_view.expense_form),
@@ -22,6 +25,7 @@ urlpatterns = [
     # Organizations
     path('organizations/finalize-ledger', views_bill.finalize_ledger, name='finalize_ledger'),
     path('organizations/calculate-purchased-asset/',asset_view.calculate_total_purchased_asset_from_products_using, name='calculate_purchased_asset'),
+    path('organizations/user/', views_organization.user_organizations, name='user_organizations'),
     path('organizations/<id>/', views_organization.rcvr_org_show, name='rcvr_org_show'),
     path('configuration/organization/form/', views_organization.form, name='organization_form'),
     path('configuration/organization/form/<id>', views_organization.form, name='organization_form'),
