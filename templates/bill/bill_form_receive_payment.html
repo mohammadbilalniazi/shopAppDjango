@@ -220,13 +220,13 @@
                            Bill Receiver Organization
                         </td> 
                         <td>              
-                            <span style="display:inline;margin:1%" id="rcvr_org_span">
-                                <select type="text"  name="bill_rcvr_org" placeholder="مقابل لوری" class="" required="" id="bill_rcvr_org">     
+                            <span style="display:flex; align-items:center; gap:5px;" id="rcvr_org_span">
+                                <select type="text"  name="bill_rcvr_org" placeholder="مقابل لوری" class="" required="" id="bill_rcvr_org" style="flex:1;">     
                                     {% for row in rcvr_orgs %}
                                     <option  {% if bill.bill_receiver2.bill_rcvr_org == row %} selected  {% endif %} value="{{row.id}}">{{row}}</option>
                                     {% endfor %}
                                 </select>     
-                                <a href="/admin/configuration/organization/add/" class="addlink"></a>                       
+                                <button type="button" id="add_org_modal_btn" onclick="openOrganizationModal()" style="background-color: #28a745; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 16px; min-width: 40px;" title="Add New Organization">+</button>                       
                             </span>
                         </td>
                        
@@ -273,6 +273,143 @@
         </form>
     </div>
 </div>
+
+<!-- ========== ORGANIZATION MODAL ========== -->
+<div id="organizationModal" class="product-modal" style="display: none;">
+    <div class="product-modal-content" style="max-width: 700px;">
+        <div class="product-modal-header" style="background-color: #417690; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0;">Add New Organization</h2>
+            <span class="organization-modal-close" style="cursor: pointer; font-size: 28px;">&times;</span>
+        </div>
+        <div class="product-modal-body" style="padding: 20px;">
+            <form id="modal_organization_form">
+                {% csrf_token %}
+                
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 35%; padding: 10px;"><label for="modal_org_owner">Owner User Name: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="owner" id="modal_org_owner" maxlength="10" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_org_type">Organization Type: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;">
+                            <select name="type" id="modal_org_type" class="form-control" required style="width: 100%;">
+                                <option value="SHIRKAT">SHIRKAT</option>
+                                <option value="SHOP">SHOP</option>
+                                <option value="NONE">NONE</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_org_name">Shirkat/Shop Name: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="name" id="modal_org_name" maxlength="20" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_org_email">Email: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="email" class="form-control" name="email" id="modal_org_email" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_org_password">Password: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="password" class="form-control" name="password" id="modal_org_password" value="Afghan123" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_org_location">Location: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px; display: flex; gap: 5px;">
+                            <select name="location" id="modal_org_location" class="form-control" required style="flex: 1;"></select>
+                            <button type="button" class="btn btn-sm" onclick="openLocationModal()" style="background-color: #417690; color: white; padding: 5px 15px;" title="Add Location">+</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_org_is_active">Is Active:</label></td>
+                        <td style="padding: 10px;"><input type="checkbox" name="is_active" id="modal_org_is_active" checked></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right; padding: 20px 10px 10px;">
+                            <button type="button" class="btn" onclick="closeOrganizationModal()" style="margin-right: 10px; padding: 8px 20px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">Save Organization</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========== LOCATION MODAL ========== -->
+<div id="locationModal" class="product-modal" style="display: none;">
+    <div class="product-modal-content" style="max-width: 500px;">
+        <div class="product-modal-header" style="background-color: #417690; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0;">Add New Location</h2>
+            <span class="location-modal-close" style="cursor: pointer; font-size: 28px;">&times;</span>
+        </div>
+        <div class="product-modal-body" style="padding: 20px;">
+            <form id="modal_location_form">
+                {% csrf_token %}
+                
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 35%; padding: 10px;"><label for="modal_location_country">Country: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px; display: flex; align-items: center; gap: 5px;">
+                            <select class="form-control" name="country" id="modal_location_country" required style="flex: 1;"></select>
+                            <button type="button" onclick="openCountryModal()" class="btn btn-sm btn-success" style="padding: 5px 10px; background-color: green; color: white; border: none; cursor: pointer; border-radius: 3px;" title="Add new country">+</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_location_state">State/Province: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="state" id="modal_location_state" maxlength="20" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_location_city">City: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="city" id="modal_location_city" maxlength="20" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right; padding: 20px 10px 10px;">
+                            <button type="button" class="btn" onclick="closeLocationModal()" style="margin-right: 10px; padding: 8px 20px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">Save Location</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Country Modal (nested within Location Modal) -->
+<div id="countryModal" class="product-modal" style="display: none; z-index: 10002;">
+    <div class="product-modal-content" style="width: 400px; max-width: 90%;">
+        <span class="product-modal-close country-modal-close">&times;</span>
+        <div class="product-modal-header">
+            <h2 style="color: white; margin: 0;">Add New Country</h2>
+        </div>
+        <div class="product-modal-body" style="padding: 20px;">
+            <form id="modal_country_form">
+                {% csrf_token %}
+                
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 35%; padding: 10px;"><label for="modal_country_name">Country Name: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="name" id="modal_country_name" maxlength="20" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_country_shortcut">Shortcut: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="shortcut" id="modal_country_shortcut" maxlength="5" required style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><label for="modal_country_currency">Currency:</label></td>
+                        <td style="padding: 10px;"><input type="text" class="form-control" name="currency" id="modal_country_currency" maxlength="5" value="Afg" style="width: 100%;"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right; padding: 20px 10px 10px;">
+                            <button type="button" class="btn" onclick="closeCountryModal()" style="margin-right: 10px; padding: 8px 20px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">Save Country</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -288,10 +425,106 @@
 <script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
 <script src="{% static 'assets/js/show_message.js' %}"></script>
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
+<script src="{% static 'assets/js/bill/organization_location_modal.js' %}"></script>
 <script src="{% static 'assets/js/bill/receive_payment_bill.js' %}"></script>
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <!-- Searchable Selects Module -->
 <script src="{% static 'assets/js/bill/searchable_selects.js' %}"></script>
+
+<script>
+// Remove Django admin's auto-generated addlink that navigates to /admin/
+// And ensure our custom button stays in place
+(function() {
+    function ensureOrganizationButton() {
+        const rcvrOrgSpan = document.getElementById('rcvr_org_span');
+        if (!rcvrOrgSpan) return;
+        
+        // Remove any Django admin addlinks
+        const adminAddlinks = rcvrOrgSpan.querySelectorAll('a.addlink[href*="/admin/"]');
+        adminAddlinks.forEach(link => {
+            console.log('Removing Django admin addlink:', link);
+            link.remove();
+        });
+        
+        // Check if our custom button exists using a unique ID
+        const existingButton = document.getElementById('add_org_modal_btn');
+        if (!existingButton) {
+            console.log('Custom organization button missing, adding it back...');
+            
+            // Create our custom button
+            const button = document.createElement('button');
+            button.id = 'add_org_modal_btn'; // Unique ID to identify our button
+            button.type = 'button';
+            button.onclick = function() { openOrganizationModal(); };
+            button.style.cssText = 'background-color: #28a745; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 16px; min-width: 40px;';
+            button.title = 'Add New Organization';
+            button.textContent = '+';
+            
+            // Add button to the span
+            rcvrOrgSpan.appendChild(button);
+            console.log('Custom organization button added back');
+        }
+    }
+    
+    // Run on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        ensureOrganizationButton();
+        
+        // Run again after delays to catch any async additions/modifications
+        setTimeout(ensureOrganizationButton, 100);
+        setTimeout(ensureOrganizationButton, 500);
+        setTimeout(ensureOrganizationButton, 1000);
+        setTimeout(ensureOrganizationButton, 2000);
+    });
+    
+    // Also run immediately in case DOM is already loaded
+    if (document.readyState === 'loading') {
+        // DOM is still loading
+    } else {
+        // DOM is already loaded
+        ensureOrganizationButton();
+        setTimeout(ensureOrganizationButton, 100);
+        setTimeout(ensureOrganizationButton, 500);
+    }
+    
+    // Set up a MutationObserver to watch for changes
+    window.addEventListener('load', function() {
+        const rcvrOrgSpan = document.getElementById('rcvr_org_span');
+        if (rcvrOrgSpan) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    // Check if nodes were added or removed
+                    if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
+                        // Ensure button is still there
+                        setTimeout(ensureOrganizationButton, 50);
+                    }
+                    
+                    // Remove any admin addlinks that were added
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.matches && node.matches('a.addlink[href*="/admin/"]')) {
+                                console.log('MutationObserver: Removing dynamically added admin addlink');
+                                node.remove();
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(rcvrOrgSpan, {
+                childList: true,
+                subtree: true
+            });
+            
+            // Run cleanup one more time after observer is set up
+            ensureOrganizationButton();
+        }
+    });
+    
+    // Also check periodically (every 2 seconds) to ensure button stays
+    setInterval(ensureOrganizationButton, 2000);
+})();
+</script>
 
 {% if detail %}
 <script>add_event_to_total()</script>

@@ -66,8 +66,8 @@ class Category(models.Model):
     img=models.ImageField(upload_to = Category_directory_path,null=True,blank=True)
     is_active=models.BooleanField(default=True)
     
-    def save(self):
-        super().save()  # saving image first
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # saving image first
         from PIL import Image
         if self.img:
             img = Image.open(self.img.path) # Open image using self

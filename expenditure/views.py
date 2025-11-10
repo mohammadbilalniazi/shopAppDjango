@@ -19,20 +19,20 @@ from django.contrib import messages
 def expense_form(request,id=None):
     template=loader.get_template('bill/expenditure/expense_form.html')
     date = date2jalali(datetime.now())
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization, user_orgs = find_userorganization(request)
 
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
     
     # Handle organizations
-    if parent_organization is None:
+    if self_organization is None:
         if request.user.is_superuser:
             organizations = Organization.objects.all()
-            parent_organization = None
+            self_organization = None
         else:
             if user_orgs and user_orgs.count() > 0:
-                parent_organization = user_orgs.first()
+                self_organization = user_orgs.first()
                 organizations = user_orgs
             else:
                 messages.error(request, "No organizations assigned to your account. Please contact administrator.")
@@ -41,17 +41,17 @@ def expense_form(request,id=None):
         if request.user.is_superuser:
             organizations = Organization.objects.all()
         else:
-            organizations = Organization.objects.filter(id=parent_organization.id)
+            organizations = Organization.objects.filter(id=self_organization.id)
     
-    if parent_organization:
-        bill_no=getBillNo(request,parent_organization.id,parent_organization.id,"EXPENSE")
+    if self_organization:
+        bill_no=getBillNo(request,self_organization.id,self_organization.id,"EXPENSE")
     else:
         bill_no=getBillNo(request,None,None,"EXPENSE")
     
     context={
         'form':form,
         'bill_no':bill_no,
-        'organization':parent_organization,
+        'organization':self_organization,
         'organizations':organizations,  # ← ADD THIS
         'date':date,
     } 

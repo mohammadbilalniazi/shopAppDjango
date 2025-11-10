@@ -14,16 +14,18 @@ from django.db import transaction
     
 def show_html(request,id=None):
     context={}
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization, user_orgs = find_userorganization(request)
 
     if id==None or id=="all":
         if request.user.is_superuser:
             query=Product.objects.all()
         else:
-            query=Product.objects.filter(product_detail__organization=parent_organization)
+            if self_organization is not None:
+                query=Product.objects.filter(product_detail__organization=self_organization)
+            else:
+                query=Product.objects.filter(product_detail__organization__in=user_orgs)
     else:
         query=Product.objects.filter(id=int(id))
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
 
     context['products']=query.order_by("-pk")
     context['organizations']=user_orgs
@@ -33,9 +35,13 @@ def show_html(request,id=None):
 @login_required(login_url='/admin')
 def form(request,id=None):
     context={}
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization, user_orgs = find_userorganization(request)
 
-    stock_query=Stock.objects.filter(organization=parent_organization)
+    if self_organization is not None:
+        stock_query=Stock.objects.filter(organization=self_organization)
+    else:
+        stock_query=Stock.objects.filter(organization__in=user_orgs)
+        
     if id!=None:
         product=Product.objects.get(id=int(id))
         context['product']=product
@@ -50,7 +56,7 @@ def form(request,id=None):
         context['current_amount']=current_amount
     template=loader.get_template('products/product_form.html')
     context['self_organization']=self_organization
-    context['parent_organization']=parent_organization
+    context['parent_organization']=None  # Deprecated field
     context['organizations']=user_orgs
     context['categories']=Category.objects.all()
     return HttpResponse(template.render(context,request))
@@ -84,10 +90,15 @@ def create(request, id=None):
     stock_detail = {
         "current_amount": float(data.get("current_amount", 0))
     }
-    # Fetch parent organization
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    # Fetch organization
+    self_organization, user_orgs = find_userorganization(request)
 
-    product_detail["organization"] = parent_organization
+    if self_organization is not None:
+        product_detail["organization"] = self_organization
+    else:
+        # For users with multiple orgs, use the first one or get from request
+        product_detail["organization"] = user_orgs.first() if user_orgs.exists() else None
+        
     # Create or update Product
     if not product["id"] or str(product["id"]).strip() == "":
         product.pop("id")
@@ -117,13 +128,17 @@ def create(request, id=None):
     if product.img:  # Check if there's an image
         product.img = request.FILES.get("img")  # Assign uploaded image
         product.save()
+    
+    # Get organization for product detail and stock
+    org_for_product = product_detail.get("organization")
+    
     # Update or create Product_Detail
-    product_detail_query = Product_Detail.objects.filter(product=product, organization=parent_organization)
+    product_detail_query = Product_Detail.objects.filter(product=product, organization=org_for_product)
     if product_detail_query.exists():
         product_detail_query.update(**product_detail)
     else:
         Product_Detail.objects.create(product=product, **product_detail)
-    stock, created = Stock.objects.get_or_create(product=product, organization=parent_organization)
+    stock, created = Stock.objects.get_or_create(product=product, organization=org_for_product)
     if not created:
         stock.current_amount = stock_detail["current_amount"]
         stock.save()
@@ -139,16 +154,19 @@ def show(request):
     if organization_id == '' or organization_id == 'all':
         organization_id = None
     
-    self_organization,parent_organization,user_orgs = find_userorganization(request, organization_id)
+    self_organization, user_orgs = find_userorganization(request, organization_id)
     
     if organization_id is None:
         query_set=Product.objects.order_by('-pk')
     else:
-        query_set=Product.objects.filter(product_detail__organization=parent_organization)
+        if self_organization is not None:
+            query_set=Product.objects.filter(product_detail__organization=self_organization)
+        else:
+            query_set=Product.objects.filter(product_detail__organization__in=user_orgs)
     if item_name: 
         query_set=query_set.filter(item_name__icontains=item_name)
-    print("parent_organization ",parent_organization)
-    context={'organization':parent_organization.id if hasattr(parent_organization,'id') else None,'request':request}
+    print("self_organization ",self_organization)
+    context={'organization':self_organization.id if hasattr(self_organization,'id') else None,'request':request}
     is_paginate=int(request.data.get("is_paginate",0))
     if  is_paginate==1:
         paginator=PageNumberPagination()

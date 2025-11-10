@@ -1,11 +1,12 @@
 from django.test import TestCase, TransactionTestCase
 from django.contrib.auth import get_user_model
 from decimal import Decimal
+from datetime import date
 from unittest.mock import patch, MagicMock
 from .models import Bill, Bill_Receiver2, Bill_detail
 from .views_bill import handle_profit_loss, get_opposit_bill
-from product.models import Product, Unit, Stock, Product_Detail
-from configuration.models import Organization, Location
+from product.models import Product, Unit, Stock, Product_Detail, Category
+from configuration.models import Organization, Location, Country
 from asset.models import AssetBillSummary, AssetWholeBillSummary
 
 User = get_user_model()
@@ -22,23 +23,50 @@ class HandleProfitLossTestCase(TestCase):
             password='testpass123'
         )
         
+        # Create country and location
+        self.country = Country.objects.create(
+            name='Afghanistan',
+            shortcut='AFG',
+            currency='AFN'
+        )
+        
+        self.location = Location.objects.create(
+            country=self.country,
+            state='Kabul',
+            city='Kabul City'
+        )
+        
+        # Create owner for organization
+        self.owner = User.objects.create_user(
+            username='owner',
+            password='ownerpass'
+        )
+        
         # Create organization
         self.org = Organization.objects.create(
+            owner=self.owner,
             name='Test Organization',
-            address='Test Address',
-            phone='1234567890'
+            location=self.location,
+            organization_type='RETAIL',
+            created_date=date.today()
+        )
+        
+        # Create category
+        self.category = Category.objects.create(
+            name='Test Category',
+            description='Test Description'
         )
         
         # Create product
         self.product = Product.objects.create(
             item_name='Test Product',
-            item_code='TEST001'
+            category=self.category
         )
         
         # Create unit
         self.unit = Unit.objects.create(
-            name='Piece',
-            symbol='pc'
+            organization=self.org,
+            name='Piece'
         )
         
         # Create bill
@@ -110,9 +138,10 @@ class HandleProfitLossTestCase(TestCase):
         self.assertEqual(self.bill.profit, 700)  # 1000 - 300
     
     def test_handle_profit_loss_with_none_values(self):
-        """Test handling of None profit values"""
-        # Set profit to None
-        self.bill.profit = None
+        """Test handling of None/zero profit values"""
+        # Set profit to 0 (since Bill.profit doesn't allow None)
+        # But Bill_detail.profit can be None
+        self.bill.profit = 0
         self.bill_detail.profit = None
         self.bill.save()
         self.bill_detail.save()
@@ -217,20 +246,47 @@ class BillSignalTestCase(TransactionTestCase):
             password='testpass123'
         )
         
+        # Create country and location
+        self.country = Country.objects.create(
+            name='Afghanistan',
+            shortcut='AFG',
+            currency='AFN'
+        )
+        
+        self.location = Location.objects.create(
+            country=self.country,
+            state='Kabul',
+            city='Kabul City'
+        )
+        
+        # Create owner for organization
+        self.owner = User.objects.create_user(
+            username='owner',
+            password='ownerpass'
+        )
+        
         self.org = Organization.objects.create(
+            owner=self.owner,
             name='Test Org',
-            address='Test Address',
-            phone='1234567890'
+            location=self.location,
+            organization_type='RETAIL',
+            created_date=date.today()
+        )
+        
+        # Create category
+        self.category = Category.objects.create(
+            name='Test Category',
+            description='Test Description'
         )
         
         self.product = Product.objects.create(
             item_name='Test Product',
-            item_code='TEST001'
+            category=self.category
         )
         
         self.unit = Unit.objects.create(
-            name='Piece',
-            symbol='pc'
+            organization=self.org,
+            name='Piece'
         )
     
     def test_lossdegrade_bill_creates_asset_summary(self):
@@ -347,20 +403,47 @@ class BillDetailSignalTestCase(TransactionTestCase):
             password='testpass123'
         )
         
+        # Create country and location
+        self.country = Country.objects.create(
+            name='Afghanistan',
+            shortcut='AFG',
+            currency='AFN'
+        )
+        
+        self.location = Location.objects.create(
+            country=self.country,
+            state='Kabul',
+            city='Kabul City'
+        )
+        
+        # Create owner for organization
+        self.owner = User.objects.create_user(
+            username='owner',
+            password='ownerpass'
+        )
+        
         self.org = Organization.objects.create(
+            owner=self.owner,
             name='Test Org',
-            address='Test Address',
-            phone='1234567890'
+            location=self.location,
+            organization_type='RETAIL',
+            created_date=date.today()
+        )
+        
+        # Create category
+        self.category = Category.objects.create(
+            name='Test Category',
+            description='Test Description'
         )
         
         self.product = Product.objects.create(
             item_name='Test Product',
-            item_code='TEST001'
+            category=self.category
         )
         
         self.unit = Unit.objects.create(
-            name='Piece',
-            symbol='pc'
+            organization=self.org,
+            name='Piece'
         )
         
         # Create product detail
@@ -570,16 +653,50 @@ class BillReceiver2SignalTestCase(TransactionTestCase):
             password='testpass123'
         )
         
+        # Create country and location
+        self.country = Country.objects.create(
+            name='Afghanistan',
+            shortcut='AFG',
+            currency='AFN'
+        )
+        
+        self.location1 = Location.objects.create(
+            country=self.country,
+            state='Kabul',
+            city='Kabul City'
+        )
+        
+        self.location2 = Location.objects.create(
+            country=self.country,
+            state='Herat',
+            city='Herat City'
+        )
+        
+        # Create owners for organizations
+        self.owner1 = User.objects.create_user(
+            username='owner1',
+            password='ownerpass1'
+        )
+        
+        self.owner2 = User.objects.create_user(
+            username='owner2',
+            password='ownerpass2'
+        )
+        
         self.org1 = Organization.objects.create(
+            owner=self.owner1,
             name='Organization 1',
-            address='Address 1',
-            phone='1111111111'
+            location=self.location1,
+            organization_type='RETAIL',
+            created_date=date.today()
         )
         
         self.org2 = Organization.objects.create(
+            owner=self.owner2,
             name='Organization 2',
-            address='Address 2',
-            phone='2222222222'
+            location=self.location2,
+            organization_type='WHOLESALE',
+            created_date=date.today()
         )
     
     def test_purchase_bill_creates_receiver_summary(self):

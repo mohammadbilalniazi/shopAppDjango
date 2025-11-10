@@ -16,7 +16,7 @@ def organizations_processor(request):
     if request.user.is_authenticated:
         try:
             # Get user's organizations using the existing helper
-            self_organization, parent_organization, user_orgs = find_userorganization(request)
+            self_organization, user_orgs = find_userorganization(request)
             
             # For superusers, show all organizations
             if request.user.is_superuser or request.user.is_staff:
@@ -26,7 +26,7 @@ def organizations_processor(request):
                 all_organizations = user_orgs.order_by('name')
             
             context['global_organizations'] = all_organizations
-            context['global_parent_organization'] = parent_organization
+            context['global_parent_organization'] = self_organization  # Using self_organization instead
             context['global_organizations_count'] = all_organizations.count()
             
         except Exception as e:

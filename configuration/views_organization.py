@@ -1,5 +1,6 @@
 
 from django.db.models import Sum
+from django.db import transaction
 from django.http import HttpResponse
 from jalali_date import date2jalali
 from django.contrib.auth.decorators import login_required
@@ -156,30 +157,20 @@ def form(request,id=None):
         context['id']=int(id)
     template=loader.get_template('configurations/organization_form.html')
     
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization, user_orgs = find_userorganization(request)
 
-    # print("self_organization ",self_organization," parent_organization ",parent_organization)
+    # print("self_organization ",self_organization)
     context['self_organization']=self_organization
-    context['parent_organization']=parent_organization
+    context['parent_organization']=None  # Deprecated field
     # HttpResponse("TES") 
     context['created_date']=date2jalali(datetime.now()) 
     return HttpResponse(template.render(context,request))
 
 @login_required(login_url='/admin')
 @api_view(('POST',))
+@transaction.atomic
 def create(request,id=None):
-    parent=request.data['parent']
     ##################################################data gathering#############################
-    if parent=='None' or parent=='':
-        parent=None
-        group='organization'
-    else:
-        group='branch'
-        try:
-            parent=Organization.objects.get(id=int(parent))
-        except:
-            messages.error(request,'There Was Technical Error searching parent Organization')
-            return redirect('/configuration/organization/form/')
     owner=request.data['owner']
     text=""
     for i in owner.split():
@@ -213,6 +204,9 @@ def create(request,id=None):
     created_date=datetime.strptime(datetime.now().strftime("%Y-%m-%d"),"%Y-%m-%d") 
     created_date=date2jalali(created_date)
     created_date=datetime.strptime(created_date.strftime("%Y-%m-%d"),"%Y-%m-%d")
+    
+    # Set group to organization (parent functionality removed)
+    group = 'organization'
     #############################################end data get#############################
     
     if id=='' or id=='None' or id==None: # 1 step create
@@ -235,7 +229,7 @@ def create(request,id=None):
                     group_obj=Group.objects.create(name=group)   
                 owner.groups.add(group_obj)
                 owner.set_password(password)
-                org=Organization(parent=parent,owner=owner,name=name,location=location,is_active=is_active,created_date=created_date,img=img,organization_type=organization_type )
+                org=Organization(owner=owner,name=name,location=location,is_active=is_active,created_date=created_date,img=img,organization_type=organization_type )
                 org.save()
                 
                 for admin in User.objects.filter(is_superuser=True):
@@ -271,7 +265,7 @@ def create(request,id=None):
             
             if img!=None:
                 ok,message=delete_file(org_query[0],'img')
-            org_query.update(parent=parent,owner=owner_obj,name=name,location=location,organization_type=organization_type,img=img,is_active=is_active)
+            org_query.update(owner=owner_obj,name=name,location=location,organization_type=organization_type,img=img,is_active=is_active)
             messages.success(request,'Organization {} successfully updated '.format(org.name))
             return redirect('/configuration/organization/form/'+str(org_query[0].id)) 
         else:

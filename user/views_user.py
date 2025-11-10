@@ -14,12 +14,15 @@ from django.contrib.auth.decorators import login_required
 
 @login_required(login_url='/')
 def form(request,id=None):
-    self_organization,parent_organization,user_orgs = find_userorganization(request)
+    self_organization, user_orgs = find_userorganization(request)
     context={}
     if request.user.is_superuser:
         context['organizations']=Organization.objects.all() 
     else:
-        context['organizations']=Organization.objects.filter(id=parent_organization.id)
+        if self_organization is not None:
+            context['organizations']=Organization.objects.filter(id=self_organization.id)
+        else:
+            context['organizations']=user_orgs
     if id:
         context['organization_user']=OrganizationUser.objects.get(id=int(id))
     return render(request,"user/organization_user.html",context)

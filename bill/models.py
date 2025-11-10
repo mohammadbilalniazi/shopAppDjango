@@ -229,6 +229,25 @@ class Bill_detail(models.Model):
 
 
 # ---------------------------------------------------
+# Bill Signal: Cache old values before save
+# ---------------------------------------------------
+@receiver(pre_save, sender=Bill)
+def cache_old_bill_values(sender, instance, **kwargs):
+    """
+    Cache old bill values before save for delta calculation.
+    Only applies to LOSSDEGRADE and EXPENSE bill types.
+    """
+    if instance.pk and instance.bill_type in ["LOSSDEGRADE", "EXPENSE"]:
+        try:
+            old_bill = Bill.objects.get(pk=instance.pk)
+            instance._old_total = old_bill.total
+            instance._old_payment = old_bill.payment
+            instance._old_profit = old_bill.profit
+        except Bill.DoesNotExist:
+            pass
+
+
+# ---------------------------------------------------
 # Bill Signal: Update Asset Summaries on Save
 # ---------------------------------------------------
 @receiver(post_save, sender=Bill)
@@ -250,17 +269,10 @@ def update_asset_bill_summary(sender, instance, created, **kwargs):
     
     # Calculate deltas for update operations
     if not created:
-        # For updates, we need the previous values from DB
-        try:
-            old_bill = Bill.objects.get(pk=bill.pk)
-            total_delta = bill.total - old_bill.total
-            payment_delta = bill.payment - old_bill.payment
-            profit_delta = bill.profit - old_bill.profit
-        except Bill.DoesNotExist:
-            # Fallback if old instance not found
-            total_delta = bill.total
-            payment_delta = bill.payment
-            profit_delta = bill.profit
+        # For updates, use cached old values from pre_save signal
+        total_delta = bill.total - getattr(bill, '_old_total', 0)
+        payment_delta = bill.payment - getattr(bill, '_old_payment', 0)
+        profit_delta = bill.profit - getattr(bill, '_old_profit', 0)
     else:
         # For new bills, the delta is the full amount
         total_delta = bill.total
@@ -274,9 +286,9 @@ def update_asset_bill_summary(sender, instance, created, **kwargs):
         bill_type=bill_type,
         year=year
     )
-    abs_obj.total += Decimal(total_delta)
-    abs_obj.payment += Decimal(payment_delta)
-    abs_obj.profit += Decimal(profit_delta)
+    abs_obj.total = Decimal(str(abs_obj.total)) + Decimal(str(total_delta))
+    abs_obj.payment = Decimal(str(abs_obj.payment)) + Decimal(str(payment_delta))
+    abs_obj.profit += profit_delta
     abs_obj.save()
 
     # Update AssetWholeBillSummary (aggregate across all years)
@@ -284,9 +296,9 @@ def update_asset_bill_summary(sender, instance, created, **kwargs):
         organization=organization,
         bill_type=bill_type
     )
-    awbs_obj.total += Decimal(total_delta)
-    awbs_obj.payment += Decimal(payment_delta)
-    awbs_obj.profit += Decimal(profit_delta)
+    awbs_obj.total = Decimal(str(awbs_obj.total)) + Decimal(str(total_delta))
+    awbs_obj.payment = Decimal(str(awbs_obj.payment)) + Decimal(str(payment_delta))
+    awbs_obj.profit += profit_delta
     awbs_obj.save()
 
 

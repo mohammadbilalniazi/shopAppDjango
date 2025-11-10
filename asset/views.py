@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.db import transaction
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,7 +24,7 @@ def asset_dashboard(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, parent_organization, user_orgs = find_userorganization(request, org_id)
+    self_organization, user_orgs = find_userorganization(request, org_id)
     
     context = {}
     
@@ -38,16 +39,15 @@ def asset_dashboard(request):
             # Verify user has access to this organization
             if not request.user.is_superuser:
                 if selected_org.id not in user_orgs.values_list('id', flat=True):
-                    selected_org = self_organization or parent_organization or user_orgs.first()
+                    selected_org = self_organization or user_orgs.first()
         except Organization.DoesNotExist:
-            selected_org = self_organization or parent_organization or user_orgs.first()
+            selected_org = self_organization or user_orgs.first()
     else:
         # Use default organization from find_userorganization
-        selected_org = self_organization or parent_organization or user_orgs.first()
+        selected_org = self_organization or user_orgs.first()
     
     context['selected_organization'] = selected_org
     context['organization'] = selected_org  # For consistency with other templates
-    
     if selected_org:
         # Update asset summary
         asset_summary = update_organization_assets(selected_org)
@@ -68,7 +68,7 @@ def balance_sheet_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, parent_organization, user_orgs = find_userorganization(request, org_id)
+    self_organization, user_orgs = find_userorganization(request, org_id)
     
     context = {}
     
@@ -81,11 +81,11 @@ def balance_sheet_view(request):
             selected_org = Organization.objects.get(id=org_id)
             if not request.user.is_superuser:
                 if selected_org.id not in user_orgs.values_list('id', flat=True):
-                    selected_org = self_organization or parent_organization or user_orgs.first()
+                    selected_org = self_organization or user_orgs.first()
         except Organization.DoesNotExist:
-            selected_org = self_organization or parent_organization or user_orgs.first()
+            selected_org = self_organization or user_orgs.first()
     else:
-        selected_org = self_organization or parent_organization or user_orgs.first()
+        selected_org = self_organization or user_orgs.first()
     
     context['selected_organization'] = selected_org
     context['organization'] = selected_org
@@ -103,7 +103,7 @@ def profit_loss_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, parent_organization, user_orgs = find_userorganization(request, org_id)
+    self_organization, user_orgs = find_userorganization(request, org_id)
     
     context = {}
     
@@ -116,11 +116,11 @@ def profit_loss_view(request):
             selected_org = Organization.objects.get(id=org_id)
             if not request.user.is_superuser:
                 if selected_org.id not in user_orgs.values_list('id', flat=True):
-                    selected_org = self_organization or parent_organization or user_orgs.first()
+                    selected_org = self_organization or user_orgs.first()
         except Organization.DoesNotExist:
-            selected_org = self_organization or parent_organization or user_orgs.first()
+            selected_org = self_organization or user_orgs.first()
     else:
-        selected_org = self_organization or parent_organization or user_orgs.first()
+        selected_org = self_organization or user_orgs.first()
     
     context['selected_organization'] = selected_org
     context['organization'] = selected_org
@@ -138,7 +138,7 @@ def cash_flow_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, parent_organization, user_orgs = find_userorganization(request, org_id)
+    self_organization, user_orgs = find_userorganization(request, org_id)
     
     context = {}
     
@@ -151,11 +151,11 @@ def cash_flow_view(request):
             selected_org = Organization.objects.get(id=org_id)
             if not request.user.is_superuser:
                 if selected_org.id not in user_orgs.values_list('id', flat=True):
-                    selected_org = self_organization or parent_organization or user_orgs.first()
+                    selected_org = self_organization or user_orgs.first()
         except Organization.DoesNotExist:
-            selected_org = self_organization or parent_organization or user_orgs.first()
+            selected_org = self_organization or user_orgs.first()
     else:
-        selected_org = self_organization or parent_organization or user_orgs.first()
+        selected_org = self_organization or user_orgs.first()
     
     context['selected_organization'] = selected_org
     context['organization'] = selected_org
@@ -173,7 +173,7 @@ def loans_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, parent_organization, user_orgs = find_userorganization(request, org_id)
+    self_organization, user_orgs = find_userorganization(request, org_id)
     
     context = {}
     
@@ -186,11 +186,11 @@ def loans_view(request):
             selected_org = Organization.objects.get(id=org_id)
             if not request.user.is_superuser:
                 if selected_org.id not in user_orgs.values_list('id', flat=True):
-                    selected_org = self_organization or parent_organization or user_orgs.first()
+                    selected_org = self_organization or user_orgs.first()
         except Organization.DoesNotExist:
-            selected_org = self_organization or parent_organization or user_orgs.first()
+            selected_org = self_organization or user_orgs.first()
     else:
-        selected_org = self_organization or parent_organization or user_orgs.first()
+        selected_org = self_organization or user_orgs.first()
     
     context['selected_organization'] = selected_org
     context['organization'] = selected_org
@@ -211,6 +211,7 @@ def loans_view(request):
 
 
 @api_view(['POST'])
+@transaction.atomic
 def refresh_assets(request):
     """
     API endpoint to manually refresh asset calculations for an organization.
@@ -391,7 +392,7 @@ def admin_dashboard(request):
     
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, parent_organization, user_orgs = find_userorganization(request, org_id)
+    self_organization, user_orgs = find_userorganization(request, org_id)
     
     # Determine selected organization
     if org_id and org_id != 'all':
@@ -401,12 +402,12 @@ def admin_dashboard(request):
             # Verify user has access to this organization
             if not request.user.is_superuser:
                 if selected_org.id not in user_orgs.values_list('id', flat=True):
-                    selected_org = self_organization or parent_organization or user_orgs.first()
+                    selected_org = self_organization or user_orgs.first()
         except Organization.DoesNotExist:
-            selected_org = self_organization or parent_organization or user_orgs.first()
+            selected_org = self_organization or user_orgs.first()
     else:
         # Use default organization from find_userorganization
-        selected_org = self_organization or parent_organization or user_orgs.first()
+        selected_org = self_organization or user_orgs.first()
     
     context = {}
     

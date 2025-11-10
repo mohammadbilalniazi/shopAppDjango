@@ -118,6 +118,7 @@ def bill_show(request,bill_id=None):
 
 
 @login_required(login_url='/admin')
+@transaction.atomic
 def bill_delete(request,id=None):
     context={}
     self_organization,user_orgs = find_userorganization(request)
@@ -144,6 +145,7 @@ def bill_delete(request,id=None):
 
 @login_required(login_url='/admin')
 @api_view(['GET','DELETE'])
+@transaction.atomic
 def bill_detail_delete(request,bill_detail_id=None):
     context={} 
     self_organization,user_orgs = find_userorganization(request)

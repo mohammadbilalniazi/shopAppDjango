@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.db import transaction
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
@@ -60,6 +61,7 @@ def bill_form(request):
 
 @login_required(login_url='/admin')
 @api_view(['POST','PUT'])
+@transaction.atomic
 def bill_insert(request):  
     print(".request.data ",request.data)
     ########################################## Bill input taking############################
@@ -71,7 +73,7 @@ def bill_insert(request):
     ############before request.data  and request.data.getlist
     organization_id=request.data.get("organization",0)
     organization=Organization.objects.get(id=int(organization_id))
-    self_organization,parent_organization,user_orgs = find_userorganization(request,organization_id)
+    self_organization, user_orgs = find_userorganization(request,organization_id)
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -103,7 +105,7 @@ def bill_insert(request):
         
     # approval_user=request.data.get("approval_user")
     print("1status ",status," approval_date=",approval_date," is_approved= ",is_approved)
-    if bill_rcvr_org==parent_organization:
+    if bill_rcvr_org==self_organization:
         if is_approved or int(status)==1:
             status=1
             approval_user=request.user

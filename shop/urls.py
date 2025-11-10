@@ -34,6 +34,8 @@ urlpatterns = [
     path('admin/configuration/organization/', views_organization.show, name='organization_show'),
     path('configuration/organization/', views_organization.show, name='organization_show'),
     # Location
+    path('configuration/countries/', views_location.get_countries, name='get_countries'),
+    path('configuration/location/<id>/', views_location.show, name='location_show_id'),
     path('configuration/location/', views_location.show, name='location_show'),
 
     # Bills
