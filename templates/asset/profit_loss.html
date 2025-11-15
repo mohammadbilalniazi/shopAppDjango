@@ -1,0 +1,369 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Profit & Loss Statement - {{ selected_organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    body {
+        background: #f0f2f5;
+        min-height: 100vh;
+    }
+    
+    .profit-loss-header {
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .profit-loss-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid;
+    }
+    
+    .section-title.revenue {
+        border-color: #48bb78;
+        color: #2f855a;
+    }
+    
+    .section-title.expenses {
+        border-color: #f56565;
+        color: #c53030;
+    }
+    
+    .section-title.profit {
+        border-color: #4299e1;
+        color: #2b6cb0;
+    }
+    
+    .line-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .line-item:last-child {
+        border-bottom: none;
+    }
+    
+    .line-item.subtotal {
+        font-weight: 600;
+        font-size: 1.05rem;
+        background: #f8f9fa;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .line-item.total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        background: #e9ecef;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 8px;
+    }
+    
+    .line-item.grand-total {
+        font-weight: 700;
+        font-size: 1.4rem;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+        border-radius: 10px;
+    }
+    
+    .line-item.grand-total.positive {
+        background: var(--success-gradient);
+        color: white;
+    }
+    
+    .line-item.grand-total.negative {
+        background: var(--danger-gradient);
+        color: white;
+    }
+    
+    .subsection {
+        margin-left: 1rem;
+        padding-left: 1rem;
+        border-left: 3px solid #e0e0e0;
+    }
+    
+    .amount {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+    
+    .amount.positive {
+        color: #2f855a;
+        font-weight: 700;
+    }
+    
+    .amount.negative {
+        color: #c53030;
+        font-weight: 700;
+    }
+    
+    .summary-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .metric-card .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-card .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .metric-card.revenue .metric-value {
+        color: #2f855a;
+    }
+    
+    .metric-card.expenses .metric-value {
+        color: #c53030;
+    }
+    
+    .metric-card.profit .metric-value {
+        color: #2f855a;
+    }
+    
+    .metric-card.loss .metric-value {
+        color: #c53030;
+    }
+    
+    .last-updated {
+        text-align: center;
+        margin-top: 2rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    @media print {
+        body {
+            background: white;
+        }
+        
+        .profit-loss-header,
+        .section-card {
+            box-shadow: none;
+        }
+        
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profit-loss-header">
+    <div class="container">
+        <h1>📈 Profit & Loss Statement</h1>
+        <p class="mb-0">{{ selected_organization.name }}</p>
+        {% if profit_loss.last_updated %}
+        <p class="last-updated mb-0">
+            <small>Last Updated: {{ profit_loss.last_updated|date:"M d, Y H:i" }}</small>
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <!-- Organization Selector -->
+    <div class="row mb-4 no-print">
+        <div class="col-md-6">
+            <label for="orgSelect" class="form-label fw-bold">Select Organization:</label>
+            <select id="orgSelect" class="form-select" onchange="location.href='?organization=' + this.value">
+                {% for org in organizations %}
+                <option value="{{ org.id }}" {% if org.id == selected_organization.id %}selected{% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 text-end">
+            <button onclick="window.print()" class="btn btn-primary mt-4">
+                <i class="fas fa-print"></i> Print Statement
+            </button>
+        </div>
+    </div>
+
+    {% if profit_loss %}
+    <!-- Key Metrics Summary -->
+    <div class="summary-metrics">
+        <div class="metric-card revenue">
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-value">{{ profit_loss.revenue.total_revenue|floatformat:2 }}</div>
+            <div class="text-muted small">AFN</div>
+        </div>
+        
+        <div class="metric-card expenses">
+            <div class="metric-label">Total Expenses</div>
+            <div class="metric-value">{{ profit_loss.operating_expenses.total_expenses|floatformat:2 }}</div>
+            <div class="text-muted small">AFN</div>
+        </div>
+        
+        <div class="metric-card {% if profit_loss.net_profit >= 0 %}profit{% else %}loss{% endif %}">
+            <div class="metric-label">Net {% if profit_loss.net_profit >= 0 %}Profit{% else %}Loss{% endif %}</div>
+            <div class="metric-value">{{ profit_loss.net_profit|floatformat:2 }}</div>
+            <div class="text-muted small">AFN</div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-label">Gross Profit</div>
+            <div class="metric-value" style="color: #667eea;">{{ profit_loss.gross_profit|floatformat:2 }}</div>
+            <div class="text-muted small">AFN</div>
+        </div>
+    </div>
+
+    <!-- REVENUE Section -->
+    <div class="section-card">
+        <h2 class="section-title revenue">💰 REVENUE</h2>
+        
+        <div class="line-item">
+            <span>Sales Revenue</span>
+            <span class="amount positive">{{ profit_loss.revenue.sales_revenue|floatformat:2 }} AFN</span>
+        </div>
+        
+        <div class="line-item total">
+            <span>TOTAL REVENUE</span>
+            <span class="amount">{{ profit_loss.revenue.total_revenue|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- COST OF SALES Section -->
+    <div class="section-card">
+        <h2 class="section-title expenses">📦 COST OF GOODS SOLD</h2>
+        
+        <div class="line-item">
+            <span>Purchases</span>
+            <span class="amount negative">{{ profit_loss.cost_of_sales.purchases|floatformat:2 }} AFN</span>
+        </div>
+        
+        <div class="line-item total">
+            <span>TOTAL COST OF GOODS SOLD</span>
+            <span class="amount">{{ profit_loss.cost_of_sales.total_cogs|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- GROSS PROFIT -->
+    <div class="section-card">
+        <div class="line-item subtotal" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
+            <span style="font-size: 1.3rem;">GROSS PROFIT</span>
+            <span class="amount" style="font-size: 1.3rem; color: #667eea;">
+                {{ profit_loss.gross_profit|floatformat:2 }} AFN
+            </span>
+        </div>
+    </div>
+
+    <!-- OPERATING EXPENSES Section -->
+    <div class="section-card">
+        <h2 class="section-title expenses">💸 OPERATING EXPENSES</h2>
+        
+        <div class="subsection">
+            <div class="line-item">
+                <span>General Expenses</span>
+                <span class="amount negative">{{ profit_loss.operating_expenses.general_expenses|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item">
+                <span>Losses from Damage/Degradation</span>
+                <span class="amount negative">{{ profit_loss.operating_expenses.losses_from_damage|floatformat:2 }} AFN</span>
+            </div>
+        </div>
+        
+        <div class="line-item total">
+            <span>TOTAL OPERATING EXPENSES</span>
+            <span class="amount">{{ profit_loss.operating_expenses.total_expenses|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- NET PROFIT/LOSS -->
+    <div class="section-card">
+        <div class="line-item grand-total {% if profit_loss.net_profit >= 0 %}positive{% else %}negative{% endif %}">
+            <span>NET {% if profit_loss.net_profit >= 0 %}PROFIT{% else %}LOSS{% endif %}</span>
+            <span class="amount">{{ profit_loss.net_profit|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- Profit Margin -->
+    <div class="section-card text-center">
+        <h4>Performance Indicators</h4>
+        {% if profit_loss.revenue.total_revenue > 0 %}
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <h5>Gross Profit Margin</h5>
+                <p class="fs-3 fw-bold" style="color: #667eea;">
+                    {% widthratio profit_loss.gross_profit profit_loss.revenue.total_revenue 100 %}%
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h5>Net Profit Margin</h5>
+                <p class="fs-3 fw-bold" style="color: {% if profit_loss.net_profit >= 0 %}#2f855a{% else %}#c53030{% endif %};">
+                    {% widthratio profit_loss.net_profit profit_loss.revenue.total_revenue 100 %}%
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h5>Expense Ratio</h5>
+                <p class="fs-3 fw-bold" style="color: #f45c43;">
+                    {% widthratio profit_loss.operating_expenses.total_expenses profit_loss.revenue.total_revenue 100 %}%
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted">No revenue data available for margin calculations</p>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No profit & loss data available</h4>
+        <p>Financial statement will appear here once transactions are recorded.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

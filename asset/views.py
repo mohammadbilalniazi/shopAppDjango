@@ -381,10 +381,9 @@ def admin_dashboard(request):
     """
     Beautiful comprehensive admin dashboard showing all system statistics.
     """
-    from django.db.models import Count, Sum, Q, Avg
-    from django.contrib.auth.models import User
-    from bill.models import Bill, Bill_Receiver2
-    from product.models import Product, Stock, Product_Detail, Category, Unit
+    from django.db.models import Count, Sum
+    from bill.models import Bill
+    from product.models import Product, Stock
     from user.models import OrganizationUser
     from expenditure.models import Expense
     from configuration.models import Organization, CustomUser
@@ -431,42 +430,48 @@ def admin_dashboard(request):
         
         # Bill totals by type
         bill_stats = bills.values('bill_type').annotate(
-            total=Sum('bill_total'),
+            total=Sum('total'),
             count=Count('id'),
-            total_payment=Sum('bill_totalpayment')
+            total_payment=Sum('payment')
         )
         context['bill_stats'] = list(bill_stats)
         
         # Recent bills
-        context['recent_bills'] = bills.select_related('organization', 'creator').order_by('-bill_date')[:10]
+        context['recent_bills'] = bills.select_related('organization', 'creator').order_by('-date')[:10]
         
         # Monthly bill trends (last 6 months)
+        # Note: Bill.date is a CharField in format "YYYY-MM-DD", so we use string pattern matching
         monthly_bills = []
         for i in range(5, -1, -1):
             month_start = datetime.now().replace(day=1) - timedelta(days=30*i)
+            # Create date prefix pattern for filtering (e.g., "1403-07" for year 1403, month 07)
+            date_prefix = f"{month_start.year}-{month_start.month:02d}"
             month_bills = bills.filter(
-                bill_date__year=month_start.year,
-                bill_date__month=month_start.month
+                date__startswith=date_prefix
             )
             monthly_bills.append({
                 'month': month_start.strftime('%b %Y'),
                 'count': month_bills.count(),
-                'total': month_bills.aggregate(Sum('bill_total'))['bill_total__sum'] or 0
+                'total': month_bills.aggregate(Sum('total'))['total__sum'] or 0
             })
         context['monthly_bills'] = monthly_bills
         
         # ===== PRODUCT STATISTICS =====
-        products = Product.objects.filter(organization=selected_org)
+        # Products are linked to organizations through Stock, not directly
+        stocks = Stock.objects.filter(organization=selected_org)
+        product_ids = stocks.values_list('product_id', flat=True).distinct()
+        products = Product.objects.filter(id__in=product_ids)
+        
         context['total_products'] = products.count()
-        context['active_products'] = products.filter(is_active=True).count()
+        # Note: Product model doesn't have is_active field directly
+        context['active_products'] = products.count()  # All products in stock are considered active
         
         # Stock statistics
-        stocks = Stock.objects.filter(organization=selected_org)
         context['total_stock_items'] = stocks.count()
-        context['total_stock_quantity'] = stocks.aggregate(Sum('quantity'))['quantity__sum'] or 0
+        context['total_stock_quantity'] = stocks.aggregate(Sum('current_amount'))['current_amount__sum'] or 0
         
         # Low stock alerts (less than 10 units)
-        context['low_stock_items'] = stocks.filter(quantity__lt=10).count()
+        context['low_stock_items'] = stocks.filter(current_amount__lt=10).count()
         
         # Products by category
         category_stats = products.values('category__name').annotate(
@@ -534,12 +539,21 @@ def admin_dashboard(request):
         context['active_org_users'] = org_users.filter(is_active=True).count()
         
         # ===== EXPENSE STATISTICS =====
-        expenses = Expense.objects.filter(organization=selected_org)
-        context['total_expenses_count'] = expenses.count()
-        context['total_expenses_amount'] = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        # Recent expenses
-        context['recent_expenses'] = expenses.order_by('-date')[:5]
+        # Expense is linked to organization through Bill
+        # Only query if expenditure_expense table exists
+        try:
+            expenses = Expense.objects.filter(bill__organization=selected_org)
+            context['total_expenses_count'] = expenses.count()
+            # Expense model doesn't have 'amount' field directly, get from bill.total
+            context['total_expenses_amount'] = expenses.aggregate(Sum('bill__total'))['bill__total__sum'] or 0
+            
+            # Recent expenses
+            context['recent_expenses'] = expenses.select_related('bill').order_by('-bill__date')[:5]
+        except Exception:
+            # Table doesn't exist yet, set default values
+            context['total_expenses_count'] = 0
+            context['total_expenses_amount'] = 0
+            context['recent_expenses'] = []
         
     # ===== SYSTEM-WIDE STATISTICS (for superusers) =====
     if request.user.is_superuser:

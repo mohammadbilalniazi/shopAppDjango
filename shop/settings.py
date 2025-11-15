@@ -128,11 +128,9 @@ USE_TZ = True
 # CORS
 # ---------------------------
 CORS_ALLOWED_ORIGINS = [
-    "https://www.tejaratistan.com",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
     "http://127.0.0.1:8000",
-    "http://127.0.0.1:2000",
 ]
 
 # ---------------------------

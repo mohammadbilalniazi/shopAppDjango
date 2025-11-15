@@ -1,0 +1,321 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Cash Flow Statement - {{ selected_organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    body {
+        background: #f0f2f5;
+        min-height: 100vh;
+    }
+    
+    .cash-flow-header {
+        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .cash-flow-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid;
+    }
+    
+    .section-title.operating {
+        border-color: #48bb78;
+        color: #2f855a;
+    }
+    
+    .section-title.financing {
+        border-color: #4299e1;
+        color: #2b6cb0;
+    }
+    
+    .line-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .line-item:last-child {
+        border-bottom: none;
+    }
+    
+    .line-item.subtotal {
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: #f8f9fa;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .line-item.grand-total {
+        font-weight: 700;
+        font-size: 1.4rem;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+        border-radius: 10px;
+    }
+    
+    .line-item.grand-total.positive {
+        background: var(--success-gradient);
+        color: white;
+    }
+    
+    .line-item.grand-total.negative {
+        background: var(--danger-gradient);
+        color: white;
+    }
+    
+    .amount {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+    
+    .amount.inflow {
+        color: #2f855a;
+        font-weight: 700;
+    }
+    
+    .amount.outflow {
+        color: #c53030;
+        font-weight: 700;
+    }
+    
+    .cash-flow-diagram {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .cash-flow-diagram .flow-item {
+        display: inline-block;
+        margin: 0 1rem;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    .cash-flow-diagram .flow-item.positive {
+        background: var(--success-gradient);
+        color: white;
+    }
+    
+    .cash-flow-diagram .flow-item.negative {
+        background: var(--danger-gradient);
+        color: white;
+    }
+    
+    @media print {
+        body {
+            background: white;
+        }
+        
+        .cash-flow-header,
+        .section-card {
+            box-shadow: none;
+        }
+        
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cash-flow-header">
+    <div class="container">
+        <h1>💵 Cash Flow Statement</h1>
+        <p class="mb-0">{{ selected_organization.name }}</p>
+        <p class="mb-0"><small>Tracking Money In and Money Out</small></p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Organization Selector -->
+    <div class="row mb-4 no-print">
+        <div class="col-md-6">
+            <label for="orgSelect" class="form-label fw-bold">Select Organization:</label>
+            <select id="orgSelect" class="form-select" onchange="location.href='?organization=' + this.value">
+                {% for org in organizations %}
+                <option value="{{ org.id }}" {% if org.id == selected_organization.id %}selected{% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 text-end">
+            <button onclick="window.print()" class="btn btn-primary mt-4">
+                <i class="fas fa-print"></i> Print Statement
+            </button>
+        </div>
+    </div>
+
+    {% if cash_flow %}
+    <!-- Cash Flow Visual -->
+    <div class="cash-flow-diagram">
+        <h4>Net Cash Flow</h4>
+        <div class="mt-3">
+            <div class="flow-item {% if cash_flow.net_cash_flow >= 0 %}positive{% else %}negative{% endif %}">
+                {{ cash_flow.net_cash_flow|floatformat:2 }} AFN
+            </div>
+        </div>
+        <p class="mt-3 text-muted">
+            {% if cash_flow.net_cash_flow >= 0 %}
+            ✅ Positive cash flow - Business is generating cash
+            {% else %}
+            ⚠️ Negative cash flow - Business is consuming cash
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- OPERATING ACTIVITIES Section -->
+    <div class="section-card">
+        <h2 class="section-title operating">💼 OPERATING ACTIVITIES</h2>
+        
+        <div class="line-item">
+            <span>💰 Cash Received from Sales</span>
+            <span class="amount inflow">+{{ cash_flow.operating_activities.cash_from_sales|floatformat:2 }} AFN</span>
+        </div>
+        <div class="line-item">
+            <span>📦 Cash Paid for Purchases</span>
+            <span class="amount outflow">{{ cash_flow.operating_activities.cash_for_purchases|floatformat:2 }} AFN</span>
+        </div>
+        <div class="line-item">
+            <span>💸 Cash Paid for Expenses</span>
+            <span class="amount outflow">{{ cash_flow.operating_activities.cash_for_expenses|floatformat:2 }} AFN</span>
+        </div>
+        <div class="line-item">
+            <span>📉 Cash Lost from Damage/Losses</span>
+            <span class="amount outflow">{{ cash_flow.operating_activities.cash_for_losses|floatformat:2 }} AFN</span>
+        </div>
+        
+        <div class="line-item subtotal">
+            <span>NET CASH FROM OPERATING ACTIVITIES</span>
+            <span class="amount {% if cash_flow.operating_activities.net_operating_cash >= 0 %}inflow{% else %}outflow{% endif %}">
+                {{ cash_flow.operating_activities.net_operating_cash|floatformat:2 }} AFN
+            </span>
+        </div>
+    </div>
+
+    <!-- FINANCING ACTIVITIES Section -->
+    <div class="section-card">
+        <h2 class="section-title financing">🏦 FINANCING ACTIVITIES</h2>
+        
+        <div class="line-item">
+            <span>💵 Cash Received (Payments from Customers/Partners)</span>
+            <span class="amount inflow">+{{ cash_flow.financing_activities.cash_received|floatformat:2 }} AFN</span>
+        </div>
+        <div class="line-item">
+            <span>💳 Cash Paid (Payments to Suppliers/Partners)</span>
+            <span class="amount outflow">{{ cash_flow.financing_activities.cash_paid|floatformat:2 }} AFN</span>
+        </div>
+        
+        <div class="line-item subtotal">
+            <span>NET CASH FROM FINANCING ACTIVITIES</span>
+            <span class="amount {% if cash_flow.financing_activities.net_financing_cash >= 0 %}inflow{% else %}outflow{% endif %}">
+                {{ cash_flow.financing_activities.net_financing_cash|floatformat:2 }} AFN
+            </span>
+        </div>
+    </div>
+
+    <!-- NET CASH FLOW -->
+    <div class="section-card">
+        <div class="line-item grand-total {% if cash_flow.net_cash_flow >= 0 %}positive{% else %}negative{% endif %}">
+            <span>NET INCREASE/DECREASE IN CASH</span>
+            <span class="amount">{{ cash_flow.net_cash_flow|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- Cash Flow Analysis -->
+    <div class="section-card">
+        <h4>📊 Cash Flow Analysis</h4>
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <h5>Operating Efficiency</h5>
+                    <p class="fs-4 fw-bold" style="color: #11998e;">
+                        {% if cash_flow.operating_activities.net_operating_cash >= 0 %}Strong{% else %}Weak{% endif %}
+                    </p>
+                    <small class="text-muted">
+                        {% if cash_flow.operating_activities.net_operating_cash >= 0 %}
+                        Core business is profitable
+                        {% else %}
+                        Core business needs improvement
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <h5>Financing Status</h5>
+                    <p class="fs-4 fw-bold" style="color: #667eea;">
+                        {% if cash_flow.financing_activities.net_financing_cash >= 0 %}Positive{% else %}Negative{% endif %}
+                    </p>
+                    <small class="text-muted">
+                        {% if cash_flow.financing_activities.net_financing_cash >= 0 %}
+                        Receiving more than paying
+                        {% else %}
+                        Paying more than receiving
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <h5>Overall Health</h5>
+                    <p class="fs-4 fw-bold" style="color: {% if cash_flow.net_cash_flow >= 0 %}#2f855a{% else %}#c53030{% endif %};">
+                        {% if cash_flow.net_cash_flow >= 0 %}Healthy{% else %}At Risk{% endif %}
+                    </p>
+                    <small class="text-muted">
+                        {% if cash_flow.net_cash_flow >= 0 %}
+                        Cash position improving
+                        {% else %}
+                        Cash position declining
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No cash flow data available</h4>
+        <p>Cash flow statement will appear here once transactions are recorded.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

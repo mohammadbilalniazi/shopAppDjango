@@ -240,24 +240,7 @@
                         <th>خلاصه ګټه (مجموعه ګټه - مصرف)</th>
                         <th><input type="number" name="net_profit_sum" id="net_profit_sum" class="form-control-custom"></th>
                     </tr>
-                    <tr>
-                        <th colspan="2">
-                            <select name="purchased_asset_organization" class="form-select-custom" id="purchased_asset_organization">
-                                <option value="">Select Organization</option>
-                                {% for row in organizations %}
-                                    <option value="{{ row.id }}">{{ row }}</option>
-                                {% endfor %}
-                            </select>
-                        </th>
-                        <th>
-                            <button class="btn btn-info-gradient" id="calculate_purchased_asset_btn" onclick="calculate_purchased_asset()">
-                                <i class="bi bi-calculator"></i> Calculate Asset
-                            </button>
-                        </th>
-                        <th>
-                            <input type="number" name="purchased_asset_total" id="purchased_asset_total" class="form-control-custom bg-info text-white" readonly placeholder="Purchased Asset Total">
-                        </th>
-                    </tr>
+                    
                 </thead>
             </table>
         </div>

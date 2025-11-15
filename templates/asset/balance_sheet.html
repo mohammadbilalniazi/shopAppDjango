@@ -1,0 +1,273 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Balance Sheet - {{ selected_organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    body {
+        background: #f0f2f5;
+        min-height: 100vh;
+    }
+    
+    .balance-sheet-header {
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .balance-sheet-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid;
+    }
+    
+    .section-title.assets {
+        border-color: #4299e1;
+        color: #2b6cb0;
+    }
+    
+    .section-title.liabilities {
+        border-color: #f56565;
+        color: #c53030;
+    }
+    
+    .section-title.equity {
+        border-color: #48bb78;
+        color: #2f855a;
+    }
+    
+    .line-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .line-item:last-child {
+        border-bottom: none;
+    }
+    
+    .line-item.total {
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: #f8f9fa;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .line-item.grand-total {
+        font-weight: 700;
+        font-size: 1.3rem;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 8px;
+    }
+    
+    .subsection {
+        margin-left: 1rem;
+        padding-left: 1rem;
+        border-left: 3px solid #e0e0e0;
+    }
+    
+    .amount {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+    
+    .amount.positive {
+        color: #2f855a;
+        font-weight: 700;
+    }
+    
+    .amount.negative {
+        color: #c53030;
+        font-weight: 700;
+    }
+    
+    .last-updated {
+        text-align: center;
+        margin-top: 2rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    @media print {
+        body {
+            background: white;
+        }
+        
+        .balance-sheet-header,
+        .section-card {
+            box-shadow: none;
+        }
+        
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="balance-sheet-header">
+    <div class="container">
+        <h1>📊 Balance Sheet</h1>
+        <p class="mb-0">{{ selected_organization.name }}</p>
+        {% if balance_sheet.last_updated %}
+        <p class="last-updated mb-0">
+            <small>Last Updated: {{ balance_sheet.last_updated|date:"M d, Y H:i" }}</small>
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <!-- Organization Selector -->
+    <div class="row mb-4 no-print">
+        <div class="col-md-6">
+            <label for="orgSelect" class="form-label fw-bold">Select Organization:</label>
+            <select id="orgSelect" class="form-select" onchange="location.href='?organization=' + this.value">
+                {% for org in organizations %}
+                <option value="{{ org.id }}" {% if org.id == selected_organization.id %}selected{% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 text-end">
+            <button onclick="window.print()" class="btn btn-primary mt-4">
+                <i class="fas fa-print"></i> Print Balance Sheet
+            </button>
+        </div>
+    </div>
+
+    {% if balance_sheet %}
+    <!-- ASSETS Section -->
+    <div class="section-card">
+        <h2 class="section-title assets">💰 ASSETS</h2>
+        
+        <div class="subsection">
+            <h4>Current Assets</h4>
+            <div class="line-item">
+                <span>Cash on Hand</span>
+                <span class="amount positive">{{ balance_sheet.assets.current_assets.cash|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item">
+                <span>Accounts Receivable</span>
+                <span class="amount positive">{{ balance_sheet.assets.current_assets.accounts_receivable|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item">
+                <span>Inventory Value</span>
+                <span class="amount positive">{{ balance_sheet.assets.current_assets.inventory|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item">
+                <span>Loans Receivable</span>
+                <span class="amount positive">{{ balance_sheet.assets.current_assets.loans_receivable|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item total">
+                <span>Total Current Assets</span>
+                <span class="amount">{{ balance_sheet.assets.current_assets.total|floatformat:2 }} AFN</span>
+            </div>
+        </div>
+        
+        <div class="line-item grand-total">
+            <span>TOTAL ASSETS</span>
+            <span class="amount">{{ balance_sheet.assets.total_assets|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- LIABILITIES Section -->
+    <div class="section-card">
+        <h2 class="section-title liabilities">📋 LIABILITIES</h2>
+        
+        <div class="subsection">
+            <h4>Current Liabilities</h4>
+            <div class="line-item">
+                <span>Accounts Payable</span>
+                <span class="amount negative">{{ balance_sheet.liabilities.current_liabilities.accounts_payable|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item">
+                <span>Loans Payable</span>
+                <span class="amount negative">{{ balance_sheet.liabilities.current_liabilities.loans_payable|floatformat:2 }} AFN</span>
+            </div>
+            <div class="line-item total">
+                <span>Total Current Liabilities</span>
+                <span class="amount">{{ balance_sheet.liabilities.current_liabilities.total|floatformat:2 }} AFN</span>
+            </div>
+        </div>
+        
+        <div class="line-item grand-total">
+            <span>TOTAL LIABILITIES</span>
+            <span class="amount">{{ balance_sheet.liabilities.total_liabilities|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- EQUITY Section -->
+    <div class="section-card">
+        <h2 class="section-title equity">🏦 EQUITY</h2>
+        
+        <div class="line-item">
+            <span>Retained Earnings (Net Profit)</span>
+            <span class="amount {% if balance_sheet.equity.retained_earnings >= 0 %}positive{% else %}negative{% endif %}">
+                {{ balance_sheet.equity.retained_earnings|floatformat:2 }} AFN
+            </span>
+        </div>
+        
+        <div class="line-item grand-total">
+            <span>TOTAL EQUITY</span>
+            <span class="amount">{{ balance_sheet.equity.total_equity|floatformat:2 }} AFN</span>
+        </div>
+    </div>
+
+    <!-- Accounting Equation Verification -->
+    <div class="section-card text-center">
+        <h4>Accounting Equation</h4>
+        <p class="lead">
+            Assets = Liabilities + Equity
+        </p>
+        <p class="fs-5">
+            <span class="badge bg-primary">{{ balance_sheet.assets.total_assets|floatformat:2 }} AFN</span>
+            =
+            <span class="badge bg-danger">{{ balance_sheet.liabilities.total_liabilities|floatformat:2 }} AFN</span>
+            +
+            <span class="badge bg-success">{{ balance_sheet.equity.total_equity|floatformat:2 }} AFN</span>
+        </p>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No balance sheet data available</h4>
+        <p>Balance sheet information will appear here once transactions are recorded.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

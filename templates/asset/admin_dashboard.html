@@ -15,16 +15,16 @@
     }
     
     body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: #f0f2f5;
         min-height: 100vh;
     }
     
     .dashboard-header {
-        background: var(--primary-gradient);
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
         color: white;
         padding: 2rem 0;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     
     .dashboard-header h1 {
@@ -553,15 +553,15 @@
                         <tbody>
                             {% for bill in recent_bills %}
                             <tr>
-                                <td>{{ bill.bill_date|date:"M d, Y" }}</td>
+                                <td>{{ bill.date|date:"M d, Y" }}</td>
                                 <td>
                                     <span class="badge-custom badge-{{ bill.bill_type|lower }}">
                                         {{ bill.bill_type }}
                                     </span>
                                 </td>
                                 <td>#{{ bill.bill_no }}</td>
-                                <td>{{ bill.bill_total|floatformat:0 }}</td>
-                                <td>{{ bill.bill_totalpayment|floatformat:0 }}</td>
+                                <td>{{ bill.total|floatformat:0 }}</td>
+                                <td>{{ bill.payment|floatformat:0 }}</td>
                                 <td>{{ bill.creator.username|default:"N/A" }}</td>
                             </tr>
                             {% empty %}
