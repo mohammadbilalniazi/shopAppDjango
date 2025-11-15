@@ -95,17 +95,26 @@ WSGI_APPLICATION = 'shop.wsgi.application'
 # ---------------------------
 # Database
 # ---------------------------
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.getenv('MYSQL_DB', 'shirkat_original_test'),
+#         'USER': os.getenv('MYSQL_USER', 'root'),
+#         'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
+#         'HOST': os.getenv('MYSQL_HOST', 'localhost'),
+#         'PORT': os.getenv('MYSQL_PORT', '3306'),
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQL_DB', 'shirkat_original_test'),
-        'USER': os.getenv('MYSQL_USER', 'root'),
-        'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
-        'HOST': os.getenv('MYSQL_HOST', 'localhost'),
-        'PORT': os.getenv('MYSQL_PORT', '3306'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'supermarket',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',    # or IP if remote
+        'PORT': '5432',         # default port
     }
 }
-
 # ---------------------------
 # Password Validators
 # ---------------------------
