@@ -11,88 +11,9 @@
 <link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
 <!-- Select2 CSS for searchable dropdowns -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Bill Form Receive/Payment CSS -->
+<link rel="stylesheet" href="{% static 'assets/css/bill_form_receive_payment.css' %}">
 {% if form %}{{ form.media.css }}{% endif %}
-<style>
-        .danger-btn{
-            font-weight: 900; 
-            font-size: 16px; 
-            background-color: red; 
-            color: black; 
-            padding: 0px; 
-            margin: 0px;
-            padding:0.4%;
-        }
-        .bill_creator{
-            font-size:xx-large;
-            font-weight: 900;
-            color:black
-        }
-        .bill_acceptor{
-            font-size:xx-large;
-            font-weight: 900;
-            color:crimson
-        }
-
-    select {
-        font-weight: 900;
-    }
-    input[type=number], input[type=text] {
-        font-weight: 900;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    table th, table td {
-        padding: 8px;
-        text-align: left;
-        border: 1px solid #ddd;
-    }
-    table thead th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-        border: 2px solid #999;
-        padding: 10px;
-    }
-    table tbody td {
-        border: 1px solid #ddd;
-    }
-    .form-table {
-        background: white;
-        padding: 20px;
-        border-radius: 5px;
-    }
-    .submit-row {
-        margin-top: 20px;
-        padding: 10px;
-        text-align: center;
-    }
-    /* Select2 custom styling */
-        .select2-container {
-            font-weight: 900;
-        }
-        .select2-container--default .select2-selection--single {
-            height: 38px;
-            padding: 4px 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 30px;
-            color: #333;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px;
-        }
-        .select2-dropdown {
-            border: 1px solid #ced4da;
-            font-weight: 900;
-        }
-    .select2-search__field {
-        border: 1px solid #ced4da;
-        padding: 4px 8px;
-    }
-</style>
 {% endblock %}
 
 {% block content %}

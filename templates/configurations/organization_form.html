@@ -185,6 +185,32 @@ function openLocationModal() {
     const modal = document.getElementById('locationModalOrgForm');
     if (modal) {
         modal.style.display = 'block';
+        // Load countries when modal opens
+        loadCountriesForLocationModal();
+    }
+}
+
+async function loadCountriesForLocationModal() {
+    try {
+        const response = await fetch('/configuration/countries/');
+        const data = await response.json();
+        
+        const countrySelect = document.getElementById('modal_location_country_org');
+        if (countrySelect) {
+            countrySelect.innerHTML = '<option value="">Select Country</option>';
+            
+            data.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.id;
+                option.textContent = country.name;
+                countrySelect.appendChild(option);
+            });
+            
+            console.log('✓ Countries loaded for location modal');
+        }
+    } catch (error) {
+        console.error('Error loading countries:', error);
+        alert('Failed to load countries');
     }
 }
 
@@ -343,4 +369,122 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- ==================== COUNTRY MODAL JavaScript ==================== -->
+<script>
+    function openCountryModal() {
+        const modal = document.getElementById('countryModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeCountryModal() {
+        const modal = document.getElementById('countryModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        const form = document.getElementById('modal_country_form');
+        if (form) {
+            form.reset();
+        }
+    }
+
+    // Country form submission handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const countryForm = document.getElementById('modal_country_form');
+        if (countryForm) {
+            countryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const data = {
+                    name: formData.get('name'),
+                    shortcut: formData.get('shortcut'),
+                    currency: formData.get('currency') || 'Afg'
+                };
+
+                try {
+                    const response = await fetch('/configuration/countries/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert('Country created successfully!');
+                        closeCountryModal();
+
+                        // Update country dropdown in location modal if it exists
+                        const countrySelect = document.getElementById('modal_location_country_org');
+                        if (countrySelect) {
+                            // Reload countries and select the new one
+                            setTimeout(async () => {
+                                try {
+                                    const countriesResponse = await fetch('/configuration/countries/');
+                                    const countries = await countriesResponse.json();
+                                    
+                                    // Rebuild dropdown
+                                    countrySelect.innerHTML = '<option value="">Select Country</option>';
+                                    countries.forEach(country => {
+                                        const option = document.createElement('option');
+                                        option.value = country.id;
+                                        option.textContent = country.name;
+                                        countrySelect.appendChild(option);
+                                    });
+                                    
+                                    // Select the newly created country
+                                    countrySelect.value = result.data.id;
+                                } catch (error) {
+                                    console.error('Error reloading countries:', error);
+                                }
+                            }, 500);
+                        }
+                    } else {
+                        const error = await response.json();
+                        alert('Failed to create country: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error creating country:', error);
+                    alert('Error: ' + error.message);
+                }
+            });
+        }
+
+        // Close country modal when clicking the X
+        const countryCloseBtn = document.querySelector('.country-modal-close');
+        if (countryCloseBtn) {
+            countryCloseBtn.onclick = closeCountryModal;
+        }
+
+        // Close country modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('countryModal');
+            if (event.target === modal) {
+                closeCountryModal();
+            }
+        });
+    });
+
+    // CSRF token helper function (if not already defined)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
 {% endblock %}
+

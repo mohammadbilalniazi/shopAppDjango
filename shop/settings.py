@@ -110,7 +110,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'supermarket',
         'USER': 'postgres',
-        'PASSWORD': 'admin',
+        'PASSWORD': 'Allahisone',
         'HOST': 'localhost',    # or IP if remote
         'PORT': '5432',         # default port
     }
