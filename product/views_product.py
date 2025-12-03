@@ -43,17 +43,40 @@ def form(request,id=None):
         stock_query=Stock.objects.filter(organization__in=user_orgs)
         
     if id!=None:
-        product=Product.objects.get(id=int(id))
-        context['product']=product
-        context['id']=int(id)
-        stock_query=stock_query.filter(product=product)
-        if stock_query.count()>0:
-            stock=stock_query[0]
-        else:
-            stock=Stock(product=product,organization=self_organization,current_amount=0)
-            stock.save()
-        current_amount=stock.current_amount
-        context['current_amount']=current_amount
+        try:
+            product=Product.objects.select_related('product_detail', 'product_detail__organization').get(id=int(id))
+        except Product.DoesNotExist:
+            # Handle case where product doesn't exist
+            product = None
+        
+        if product:
+            context['product']=product
+            context['id']=int(id)
+            
+            # Ensure product has product_detail
+            if not hasattr(product, 'product_detail') or not product.product_detail:
+                # Create product_detail if it doesn't exist
+                org_for_detail = self_organization if self_organization else (user_orgs.first() if user_orgs.exists() else None)
+                if org_for_detail:
+                    Product_Detail.objects.create(
+                        product=product,
+                        organization=org_for_detail,
+                        minimum_requirement=1,
+                        purchased_price=0,
+                        selling_price=0
+                    )
+                    # Reload the product with the new product_detail
+                    product = Product.objects.select_related('product_detail', 'product_detail__organization').get(id=int(id))
+                    context['product'] = product
+            
+            stock_query=stock_query.filter(product=product)
+            if stock_query.count()>0:
+                stock=stock_query[0]
+            else:
+                stock=Stock(product=product,organization=self_organization,current_amount=0)
+                stock.save()
+            current_amount=stock.current_amount
+            context['current_amount']=current_amount
     template=loader.get_template('products/product_form.html')
     context['self_organization']=self_organization
     context['parent_organization']=None  # Deprecated field
@@ -90,14 +113,24 @@ def create(request, id=None):
     stock_detail = {
         "current_amount": float(data.get("current_amount", 0))
     }
-    # Fetch organization
+    # Fetch organization from form data or user's organization
+    org_id = data.get("organization")
     self_organization, user_orgs = find_userorganization(request)
-
-    if self_organization is not None:
-        product_detail["organization"] = self_organization
+    
+    if org_id:
+        try:
+            selected_org = user_orgs.get(id=int(org_id)) if user_orgs else None
+            if not selected_org and self_organization and self_organization.id == int(org_id):
+                selected_org = self_organization
+        except (ValueError, TypeError):
+            selected_org = None
     else:
-        # For users with multiple orgs, use the first one or get from request
-        product_detail["organization"] = user_orgs.first() if user_orgs.exists() else None
+        selected_org = self_organization
+    
+    if not selected_org:
+        return Response({"message": "Please select a valid organization", "ok": False})
+
+    product_detail["organization"] = selected_org
         
     # Create or update Product
     if not product["id"] or str(product["id"]).strip() == "":
@@ -136,11 +169,20 @@ def create(request, id=None):
     product_detail_query = Product_Detail.objects.filter(product=product, organization=org_for_product)
     if product_detail_query.exists():
         product_detail_query.update(**product_detail)
+        product_detail_obj = product_detail_query.first()
     else:
-        Product_Detail.objects.create(product=product, **product_detail)
-    stock, created = Stock.objects.get_or_create(product=product, organization=org_for_product)
+        product_detail_obj = Product_Detail.objects.create(product=product, **product_detail)
+    
+    # Always ensure stock exists for the organization
+    stock, created = Stock.objects.get_or_create(
+        product=product, 
+        organization=org_for_product,
+        defaults={'current_amount': stock_detail.get("current_amount", 0)}
+    )
+    
     if not created:
-        stock.current_amount = stock_detail["current_amount"]
+        # Update existing stock amount
+        stock.current_amount = stock_detail.get("current_amount", stock.current_amount)
         stock.save()
     return Response({"message": message, "ok": ok, "id": product.id})
  

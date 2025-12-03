@@ -247,6 +247,33 @@
     height: 44px !important;
     right: 8px !important;
   }
+
+  /* Fallback styles for regular select if Select2 fails */
+  select.organization-select {
+    appearance: auto !important;
+    background-color: white !important;
+    color: var(--dark) !important;
+    cursor: pointer !important;
+  }
+
+  select.organization-select option {
+    padding: 8px 12px !important;
+    color: var(--dark) !important;
+    background-color: white !important;
+    cursor: pointer !important;
+  }
+
+  select.organization-select option:hover,
+  select.organization-select option:checked {
+    background-color: var(--primary-solid) !important;
+    color: white !important;
+  }
+
+  /* Force visibility of dropdown options */
+  .select2-results__options {
+    background: white !important;
+    color: var(--dark) !important;
+  }
 </style>
 {% endblock %}
 
@@ -388,7 +415,41 @@
 
 <script>
   // Select2 is initialized globally for organization dropdowns
-  // No custom initialization needed
+  // Debug function to check if organization options are loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Debug: Check if organizations are loaded
+    const orgSelect = document.getElementById('organization');
+    if (orgSelect) {
+      console.log('🔍 Organization dropdown found with', orgSelect.options.length, 'options');
+      for (let i = 0; i < orgSelect.options.length; i++) {
+        console.log('   Option', i, ':', orgSelect.options[i].text, '(value:', orgSelect.options[i].value, ')');
+      }
+    } else {
+      console.warn('⚠️  Organization dropdown not found');
+    }
+    
+    // Ensure Select2 is working after a delay
+    setTimeout(function() {
+      if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+        // Force reinitialize if needed
+        const $orgSelect = jQuery('#organization');
+        if ($orgSelect.length && !$orgSelect.hasClass('select2-hidden-accessible')) {
+          console.log('⚡ Manually initializing organization Select2...');
+          $orgSelect.select2({
+            placeholder: 'Select Organization',
+            allowClear: false,
+            width: '100%',
+            theme: 'default',
+            minimumResultsForSearch: 0,
+            dropdownAutoWidth: true,
+            dropdownParent: jQuery('body'),
+            containerCssClass: 'select2-organization-container',
+            dropdownCssClass: 'select2-organization-dropdown'
+          });
+        }
+      }
+    }, 500);
+  });
 
   // Clear search when form is submitted
   document.getElementById('organization_user_form').addEventListener('submit', function() {
