@@ -108,6 +108,30 @@ class CustomUser(models.Model):
         return f"{self.first_name} {self.father_name}"
 
 STATUS=((0,"CANCELLED"),(1,"CREATED"))    
+class Branch(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="branches")
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True)
+    address = models.TextField(max_length=200, null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="managed_branches")
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="created_branches")
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(max_length=500, null=True, blank=True)
+    
+    class Meta:
+        unique_together = (("name", "organization"), ("code", "organization"))
+        verbose_name = "Branch"
+        verbose_name_plural = "Branches"
+        ordering = ['organization', 'name']
+    
+    def __str__(self):
+        return f"{self.organization.name} - {self.name}"
+
 class Role(models.Model):
     parent=models.ForeignKey("self",on_delete=models.CASCADE,blank=True,null=True)
     name=models.CharField(max_length=20,unique=True)

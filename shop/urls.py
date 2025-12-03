@@ -6,10 +6,13 @@ from django.conf.urls.static import static
 from bill import views_bill, views_bill_receive_payment
 from product import views_product, views_unit, views_stock
 from user import views_login, views_organization_user
-from configuration import views_organization, views_location
+from configuration import views_organization, views_location, views_branch
 from expenditure import views as expenditure_view
 from asset import views as asset_view
 from django.shortcuts import redirect
+
+# Import admin configuration to customize admin interface
+from . import admin_config
 
 urlpatterns = [
     path('login/check', views_login.host_to_heroku_submit),
@@ -38,6 +41,16 @@ urlpatterns = [
     path('configuration/location/<id>/', views_location.show, name='location_show_id'),
     path('configuration/location/', views_location.show, name='location_show'),
 
+    # Branch Management
+    path('configuration/branch/', views_branch.branch_select_organization, name='branch_select_organization'),
+    path('configuration/branch/organization/<int:org_id>/', views_branch.branch_management, name='branch_management'),
+    path('configuration/branch/create/', views_branch.branch_create, name='branch_create'),
+    path('configuration/branch/<int:branch_id>/update/', views_branch.branch_update, name='branch_update'),
+    path('configuration/branch/<int:branch_id>/delete/', views_branch.branch_delete, name='branch_delete'),
+    path('configuration/branch/<int:branch_id>/detail/', views_branch.branch_detail, name='branch_detail'),
+    path('configuration/branch/<int:branch_id>/toggle-status/', views_branch.branch_toggle_status, name='branch_toggle_status'),
+    path('configuration/organization/<int:org_id>/users/', views_branch.get_organization_users, name='get_organization_users'),
+
     # Bills
     path('bill/delete/<id>/', views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>', views_bill.select_bill_no),
@@ -64,6 +77,7 @@ urlpatterns = [
     path('products/product/add/<id>', views_product.form, name='product_form'),
     path('product/product_form/create/', views_product.create, name='product_form_create'),
     path('product/product_form/create/<id>', views_product.create, name='product_form_update'),
+    path('api/category/create/', views_product.create_category, name='create_category_api'),
 
     # Users & Organization Users
     path('admin/user/organizationuser/add/', views_organization_user.form, name='organization_user_form'),

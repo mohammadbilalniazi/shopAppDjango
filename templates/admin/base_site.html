@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <span style="color: #2c3e50; font-weight: bold; font-size: 1.3em;">
+            🛒 Welcome to Supermarket Management System
+        </span>
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

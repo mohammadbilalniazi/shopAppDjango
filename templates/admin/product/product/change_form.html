@@ -2,8 +2,108 @@
 
 {% block extrahead %}
 {{ block.super }}
+<style>
+    /* Enhanced styling for the category field */
+    .field-category {
+        position: relative;
+    }
+    
+    .field-category .help {
+        font-size: 11px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    /* Highlight category field */
+    .field-category select {
+        border: 2px solid #79aec8;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 13px;
+    }
+    
+    /* Style the + button */
+    .related-widget-wrapper-link {
+        background: #79aec8 !important;
+        border: 1px solid #79aec8 !important;
+        color: white !important;
+        padding: 8px 10px !important;
+        margin-left: 5px !important;
+        border-radius: 4px !important;
+        text-decoration: none !important;
+        font-weight: bold !important;
+    }
+    
+    .related-widget-wrapper-link:hover {
+        background: #5b8db3 !important;
+        border-color: #5b8db3 !important;
+    }
+    
+    /* Category field wrapper styling */
+    .related-widget-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+
 <script>
 (function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhance category field popup functionality
+        const categoryField = document.querySelector('#id_category');
+        if (categoryField) {
+            // Add custom event handler for category selection
+            categoryField.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    console.log('Category selected:', selectedOption.text);
+                }
+            });
+            
+            // Enhance the "+" button if it exists
+            const addButton = document.querySelector('a[href*="/admin/product/category/add/"]');
+            if (addButton) {
+                addButton.title = 'Add new category';
+                addButton.innerHTML = '<strong>+</strong>';
+                
+                // Add click handler for popup
+                addButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = this.href + '?_popup=1';
+                    const popupWindow = window.open(url, 'add_category', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                    
+                    // Listen for popup closure
+                    const checkClosed = setInterval(function() {
+                        if (popupWindow.closed) {
+                            clearInterval(checkClosed);
+                            // Refresh category options
+                            refreshCategoryOptions();
+                        }
+                    }, 1000);
+                });
+            }
+        }
+        
+        // Function to refresh category options after adding new category
+        function refreshCategoryOptions() {
+            fetch('/admin/product/category/?format=json')
+                .then(response => response.json())
+                .catch(() => {
+                    // If JSON endpoint doesn't exist, just reload the page
+                    location.reload();
+                });
+        }
+        
+        // Listen for messages from popup windows
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'category_added') {
+                // A new category was added, refresh the dropdown
+                refreshCategoryOptions();
+            }
+        });
+    });
+    
     // Check if we're in an iframe (inside the product modal)
     if (window.parent !== window) {
         // Listen for form submission success
@@ -48,4 +148,22 @@
     }
 })();
 </script>
+{% endblock %}
+
+{% block field_sets %}
+    {{ block.super }}
+    <script>
+        // Additional script to ensure popup functionality is properly initialized
+        document.addEventListener('DOMContentLoaded', function() {
+            // Force initialize Django's related object lookups
+            if (typeof django !== 'undefined' && django.jQuery) {
+                django.jQuery(document).ready(function($) {
+                    // Reinitialize admin widgets if needed
+                    if (typeof RelatedObjectLookups !== 'undefined') {
+                        RelatedObjectLookups.init();
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}

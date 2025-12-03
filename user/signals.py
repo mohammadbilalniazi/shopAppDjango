@@ -18,9 +18,10 @@ def assign_all_organizations_to_admin(sender, instance, created, **kwargs):
         # Get all organizations
         all_orgs = Organization.objects.filter(is_active=True)
         
+        assigned_count = 0
         for org in all_orgs:
             # Create OrganizationUser entry if it doesn't exist
-            OrganizationUser.objects.get_or_create(
+            org_user, was_created = OrganizationUser.objects.get_or_create(
                 user=instance,
                 organization=org,
                 defaults={
@@ -28,11 +29,13 @@ def assign_all_organizations_to_admin(sender, instance, created, **kwargs):
                     'is_active': True
                 }
             )
+            if was_created:
+                assigned_count += 1
         
         if created:
-            print(f"✅ Admin user '{instance.username}' assigned to {all_orgs.count()} organizations")
+            print(f"✅ Admin user '{instance.username}' assigned to {assigned_count}/{all_orgs.count()} organizations")
         else:
-            print(f"✅ Admin user '{instance.username}' organization assignments updated")
+            print(f"✅ Admin user '{instance.username}' organization assignments updated ({assigned_count} new)")
 
 
 @receiver(post_save, sender=Organization)
@@ -46,9 +49,10 @@ def assign_organization_to_all_admins(sender, instance, created, **kwargs):
         admin_users = User.objects.filter(is_superuser=True) | User.objects.filter(is_staff=True)
         admin_users = admin_users.distinct()
         
+        assigned_count = 0
         for admin_user in admin_users:
             # Create OrganizationUser entry if it doesn't exist
-            OrganizationUser.objects.get_or_create(
+            org_user, was_created = OrganizationUser.objects.get_or_create(
                 user=admin_user,
                 organization=instance,
                 defaults={
@@ -56,5 +60,7 @@ def assign_organization_to_all_admins(sender, instance, created, **kwargs):
                     'is_active': True
                 }
             )
+            if was_created:
+                assigned_count += 1
         
-        print(f"✅ Organization '{instance.name}' assigned to {admin_users.count()} admin users")
+        print(f"✅ Organization '{instance.name}' assigned to {assigned_count}/{admin_users.count()} admin users")

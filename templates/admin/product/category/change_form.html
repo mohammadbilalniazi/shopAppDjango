@@ -1,0 +1,104 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if we're in a popup window
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPopup = urlParams.get('_popup') === '1';
+        
+        if (isPopup) {
+            // We're in a popup, handle the form submission
+            const form = document.querySelector('#category_form');
+            if (form) {
+                const saveButtons = document.querySelectorAll('input[name="_save"]');
+                saveButtons.forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        // Wait for form submission
+                        setTimeout(function() {
+                            // Check for success (no errors)
+                            const errors = document.querySelectorAll('.errorlist, .errornote');
+                            const successMessages = document.querySelectorAll('.success, .messagelist .success');
+                            
+                            if (errors.length === 0 || successMessages.length > 0) {
+                                // Get the newly created category info
+                                const categoryName = document.querySelector('#id_name');
+                                const categoryId = document.querySelector('input[name="id"]');
+                                
+                                if (categoryName && categoryName.value) {
+                                    // Notify parent window about the new category
+                                    window.opener.postMessage({
+                                        type: 'category_added',
+                                        id: categoryId ? categoryId.value : null,
+                                        name: categoryName.value,
+                                        timestamp: new Date().toISOString()
+                                    }, '*');
+                                    
+                                    console.log('✓ Category added notification sent to parent window');
+                                    
+                                    // Close the popup
+                                    setTimeout(function() {
+                                        window.close();
+                                    }, 500);
+                                }
+                            }
+                        }, 500);
+                    });
+                });
+            }
+        }
+    });
+})();
+</script>
+
+<style>
+    /* Style the popup form nicely */
+    .form-row {
+        margin-bottom: 15px;
+    }
+    
+    .field-name input {
+        width: 100%;
+        max-width: 400px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .field-parent select {
+        width: 100%;
+        max-width: 400px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .submit-row {
+        text-align: center;
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f8f8;
+        border-top: 1px solid #ddd;
+    }
+    
+    .submit-row input[type="submit"] {
+        background: #417690;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .submit-row input[type="submit"]:hover {
+        background: #205067;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+{% if add %}Add Category{% else %}Change Category{% endif %} | {{ site_title|default:"Django site admin" }}
+{% endblock %}

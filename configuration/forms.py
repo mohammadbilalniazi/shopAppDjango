@@ -6,7 +6,8 @@ from jalali_date.fields import JalaliDateField, SplitJalaliDateTimeField,JalaliD
 from jalali_date.widgets import AdminJalaliDateWidget,AdminSplitJalaliDateTime
 from jalali_date import datetime2jalali, date2jalali
 from datetime import datetime
-from .models import Organization
+from .models import Organization, Branch, Location
+from django.contrib.auth.models import User
 
 
 import pytz
@@ -34,4 +35,80 @@ class OrganizationForm(forms.ModelForm):
         # self.fields["date_controll"].widget.attrs['tabindex']="5"
         self.fields["created_date"].widget.attrs['disabled']=True 
         # self.fields["mustharadi_file"].widget.attrs['tabindex']="15"
+
+
+class BranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['name', 'code', 'location', 'address', 'phone', 'email', 'manager', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter branch name',
+                'required': True
+            }),
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter branch code',
+                'required': True
+            }),
+            'location': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Enter branch address'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter phone number'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter email address'
+            }),
+            'manager': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Enter branch description'
+            }),
+        }
+
+    def __init__(self, *args, organization=None, **kwargs):
+        super(BranchForm, self).__init__(*args, **kwargs)
+        
+        # Filter locations to active ones
+        self.fields['location'].queryset = Location.objects.filter(is_active=True)
+        self.fields['location'].empty_label = "Select Location"
+        
+        # Filter manager to users who are part of the organization
+        if organization:
+            from user.models import OrganizationUser
+            org_users = OrganizationUser.objects.filter(
+                organization=organization,
+                is_active=True,
+                role__in=['admin', 'superuser', 'owner']
+            ).select_related('user')
+            user_ids = [org_user.user.id for org_user in org_users]
+            self.fields['manager'].queryset = User.objects.filter(id__in=user_ids, is_active=True)
+        else:
+            self.fields['manager'].queryset = User.objects.filter(is_active=True)
+        
+        self.fields['manager'].empty_label = "Select Manager"
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code')
+        if code:
+            code = code.upper().strip()
+        return code
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if name:
+            name = name.strip()
+        return name
     

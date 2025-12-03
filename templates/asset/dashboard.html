@@ -202,7 +202,7 @@
     <div class="dashboard-header">
         <h1><i class="bi bi-graph-up"></i> Financial Dashboard</h1>
         <form method="GET" id="org-filter-form">
-            <select name="organization" class="searchable-dropdown" onchange="this.form.submit()">
+            <select name="organization" class="organization-select" onchange="this.form.submit()">
                 <option value="">Select Organization</option>
                 {% for org in organizations %}
                     <option value="{{ org.id }}" {% if selected_organization.id == org.id %}selected{% endif %}>
@@ -401,13 +401,8 @@
 {% block scripts %}
 {{ block.super }}
 <script>
-    // Initialize Select2 for organization dropdown
-    $(document).ready(function() {
-        $('.searchable-dropdown').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-        });
-    });
+    // Select2 initialization handled globally for organization dropdowns
+    // No custom initialization needed
 
     // Refresh assets
     async function refreshAssets() {

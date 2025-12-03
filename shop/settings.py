@@ -180,3 +180,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # OR if you want to keep manifest but ignore missing files:
 # WHITENOISE_MANIFEST_STRICT = False
+
+# Admin Site Customization
+ADMIN_SITE_HEADER = 'Welcome to Supermarket Management System'
+ADMIN_SITE_TITLE = 'Supermarket Management System'
+ADMIN_INDEX_TITLE = 'Supermarket Management Dashboard'

@@ -10,7 +10,7 @@ class OrganizationUser(models.Model):
         ('owner','Owner')
     )
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     img = models.FileField(upload_to="OrganizationUser", null=True, blank=True)
@@ -24,6 +24,7 @@ class OrganizationUser(models.Model):
         verbose_name = "Organization User"
         verbose_name_plural = "Organization Users"
         ordering = ['user__username']
+        unique_together = ('user', 'organization')
     
     # delete the file and user when the instance is deleted
     def delete(self, *args, **kwargs):

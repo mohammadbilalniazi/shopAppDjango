@@ -1,0 +1,146 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .supermarket-links {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        margin: 20px 0;
+        padding: 20px;
+    }
+    .supermarket-links h2 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 8px;
+    }
+    .supermarket-links .links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .supermarket-links .link-category {
+        background: white;
+        border: 1px solid #e3e3e3;
+        border-radius: 0.25rem;
+        padding: 15px;
+    }
+    .supermarket-links .link-category h3 {
+        color: #34495e;
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #bdc3c7;
+        padding-bottom: 5px;
+    }
+    .supermarket-links .link-category ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .supermarket-links .link-category li {
+        margin: 8px 0;
+    }
+    .supermarket-links .link-category a {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 14px;
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    .supermarket-links .link-category a:hover {
+        background-color: #3498db;
+        color: white;
+        border-color: #2980b9;
+        text-decoration: none;
+    }
+    .supermarket-links .link-category .icon {
+        margin-right: 8px;
+        font-size: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+
+<div class="supermarket-links">
+    <h2>🛒 Supermarket Management System - Application Pages</h2>
+    
+    <div class="links-grid">
+        <!-- Product Management -->
+        <div class="link-category">
+            <h3>📦 Product Management</h3>
+            <ul>
+                <li><a href="{% url 'product_show_html' %}"><span class="icon">📋</span>Products List</a></li>
+                <li><a href="{% url 'product_form' %}"><span class="icon">➕</span>Add New Product</a></li>
+                <li><a href="/units/1/"><span class="icon">📏</span>Units Management</a></li>
+                <li><a href="/stock/update/"><span class="icon">📊</span>Update Stock</a></li>
+            </ul>
+        </div>
+
+        <!-- Bill Management -->
+        <div class="link-category">
+            <h3>💰 Bill Management</h3>
+            <ul>
+                <li><a href="{% url 'bill_show_html' %}"><span class="icon">📄</span>Bills List</a></li>
+                <li><a href="{% url 'bill_form_sell_purchase' %}"><span class="icon">🛒</span>Purchase/Sell Bills</a></li>
+                <li><a href="{% url 'bill_form_receive_payment' %}"><span class="icon">💳</span>Receive/Payment Bills</a></li>
+                <li><a href="{% url 'bill_form_loss_degrade_product' %}"><span class="icon">📉</span>Loss/Degrade Bills</a></li>
+                <li><a href="{% url 'expense_form' %}"><span class="icon">💸</span>Expense Bills</a></li>
+            </ul>
+        </div>
+
+        <!-- Organization Management -->
+        <div class="link-category">
+            <h3>🏢 Organization Management</h3>
+            <ul>
+                <li><a href="{% url 'organization_show' %}"><span class="icon">🏢</span>Organizations List</a></li>
+                <li><a href="{% url 'organization_form' %}"><span class="icon">➕</span>Add Organization</a></li>
+                <li><a href="{% url 'user_organizations' %}"><span class="icon">👥</span>User Organizations</a></li>
+                <li><a href="{% url 'branch_select_organization' %}"><span class="icon">🏪</span>Branch Management</a></li>
+            </ul>
+        </div>
+
+        <!-- User Management -->
+        <div class="link-category">
+            <h3>👥 User Management</h3>
+            <ul>
+                <li><a href="{% url 'organization_user_get' %}"><span class="icon">👤</span>Organization Users</a></li>
+                <li><a href="{% url 'organization_user_form' %}"><span class="icon">➕</span>Add User</a></li>
+                <li><a href="/user/organization_user/search/"><span class="icon">🔍</span>Search Users</a></li>
+            </ul>
+        </div>
+
+        <!-- Financial Reports & Assets -->
+        <div class="link-category">
+            <h3>📊 Financial Reports</h3>
+            <ul>
+                <li><a href="{% url 'asset_dashboard' %}"><span class="icon">💼</span>Asset Dashboard</a></li>
+                <li><a href="/organizations/finalize-ledger"><span class="icon">📈</span>Finalize Ledger</a></li>
+                <li><a href="{% url 'calculate_purchased_asset' %}"><span class="icon">💰</span>Calculate Assets</a></li>
+            </ul>
+        </div>
+
+        <!-- Configuration -->
+        <div class="link-category">
+            <h3>⚙️ Configuration</h3>
+            <ul>
+                <li><a href="{% url 'location_show' %}"><span class="icon">📍</span>Locations</a></li>
+                <li><a href="{% url 'get_countries' %}"><span class="icon">🌍</span>Countries</a></li>
+                <li><a href="{% url 'host_to_heroku_login_form' %}"><span class="icon">🔐</span>Login Form</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -121,6 +121,42 @@
         height: 20px;
         cursor: pointer;
     }
+    
+    /* Category Add Button Styling */
+    #addCategoryBtn {
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    }
+    
+    #addCategoryBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Modal Styling */
+    .modal-content {
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+    
+    /* Form field focus styling */
+    #categoryModal input:focus,
+    #categoryModal select:focus,
+    #categoryModal textarea:focus {
+        outline: none;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    }
 </style>
 {% endblock %}
 
@@ -176,11 +212,17 @@
                 <tr>
                     <td>Category</td>
                     <td colspan="2">
-                        <select name="category" class="form-control-custom" id="category">
-                            {% for category in categories %}
-                                <option {% if product.category == category.id %} selected {% endif %} value='{{category.id}}'>{{category}}</option>
-                            {% endfor %}
-                        </select>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <select name="category" class="form-control-custom" id="category" style="flex: 1;">
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                    <option {% if product and product.category and product.category.id == category.id %} selected {% endif %} value='{{category.id}}'>{{category}}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" id="addCategoryBtn" class="btn btn-primary" style="min-width: 40px; height: 48px; padding: 0; display: flex; align-items: center; justify-content: center; background: #667eea; border: none; border-radius: 8px; cursor: pointer;" title="Add new category">
+                                <strong style="font-size: 18px; color: white;">+</strong>
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 
@@ -258,6 +300,49 @@
 
 {% block scripts %}
 {{ block.super }}
+
+<!-- Category Popup Modal -->
+<div id="categoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; backdrop-filter: blur(2px);">
+    <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+            <h3 style="margin: 0; color: #333; font-weight: 700;">✨ Add New Category</h3>
+            <button type="button" id="closeCategoryModal" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999; transition: color 0.3s; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">&times;</button>
+        </div>
+        
+        <form id="categoryForm">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <label for="categoryName" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Category Name *</label>
+                <input type="text" id="categoryName" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: border-color 0.3s;" placeholder="Enter category name">
+                <div id="categoryNameError" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;"></div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="categoryParent" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Parent Category</label>
+                <select id="categoryParent" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: border-color 0.3s;">
+                    <option value="">📁 No parent (Top level)</option>
+                    {% for category in categories %}
+                        <option value="{{category.id}}">📂 {{category}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="categoryDescription" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Description</label>
+                <textarea id="categoryDescription" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; resize: vertical; min-height: 80px; transition: border-color 0.3s;" placeholder="Enter category description (optional)"></textarea>
+            </div>
+            
+            <div style="text-align: right; margin-top: 30px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+                <button type="button" id="cancelCategoryBtn" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; margin-right: 10px; cursor: pointer; font-size: 16px; transition: background 0.3s;">Cancel</button>
+                <button type="submit" id="saveCategoryBtn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <span id="saveCategoryText">💾 Save Category</span>
+                    <span id="saveCategorySpinner" style="display: none;">⏳ Saving...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="{% static 'assets/js/axios.min.js' %}"></script>
 <script src="{% static 'assets/js/cookie.js' %}"></script>
 <script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
@@ -265,6 +350,167 @@
 <script src="{% static 'assets/js/common_entities/call_shirkat.js' %}"></script>
 <script src="{% static 'assets/js/configuration/organization.js' %}"></script>
 <script src="{% static 'assets/js/product/product.js' %}"></script>
+
+<!-- Category Popup JavaScript -->
+<script>
+// Category popup functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryModal = document.getElementById('categoryModal');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const closeCategoryModal = document.getElementById('closeCategoryModal');
+    const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+    const categoryForm = document.getElementById('categoryForm');
+    const categorySelect = document.getElementById('category');
+    
+    // Open category popup
+    addCategoryBtn.addEventListener('click', function() {
+        categoryModal.style.display = 'block';
+        document.getElementById('categoryName').focus();
+    });
+    
+    // Close category popup
+    function closeCategoryPopup() {
+        categoryModal.style.display = 'none';
+        categoryForm.reset();
+        document.getElementById('saveCategoryText').style.display = 'inline';
+        document.getElementById('saveCategorySpinner').style.display = 'none';
+        document.getElementById('saveCategoryBtn').disabled = false;
+    }
+    
+    closeCategoryModal.addEventListener('click', closeCategoryPopup);
+    cancelCategoryBtn.addEventListener('click', closeCategoryPopup);
+    
+    // Close popup when clicking outside
+    categoryModal.addEventListener('click', function(e) {
+        if (e.target === categoryModal) {
+            closeCategoryPopup();
+        }
+    });
+    
+    // Handle category form submission
+    categoryForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const categoryName = document.getElementById('categoryName').value.trim();
+        const categoryParent = document.getElementById('categoryParent').value;
+        const categoryDescription = document.getElementById('categoryDescription').value.trim();
+        
+        if (!categoryName) {
+            alert('Category name is required!');
+            return;
+        }
+        
+        // Show loading state
+        document.getElementById('saveCategoryText').style.display = 'none';
+        document.getElementById('saveCategorySpinner').style.display = 'inline';
+        document.getElementById('saveCategoryBtn').disabled = true;
+        
+        try {
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('name', categoryName);
+            formData.append('description', categoryDescription);
+            if (categoryParent) {
+                formData.append('parent', categoryParent);
+            }
+            
+            // Get CSRF token
+            const csrfToken = getCookie('csrftoken');
+            
+            // Send AJAX request to create category
+            const response = await fetch('/api/category/create/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.ok) {
+                // Category was created successfully
+                alert('Category created successfully!');
+                
+                // Add the new category to the dropdown
+                const newOption = document.createElement('option');
+                newOption.value = data.category.id;
+                newOption.textContent = data.category.name;
+                newOption.selected = true;
+                categorySelect.appendChild(newOption);
+                
+                closeCategoryPopup();
+                
+            } else {
+                throw new Error(data.message || 'Failed to create category');
+            }
+            
+        } catch (error) {
+            console.error('Error creating category:', error);
+            
+            // Show user-friendly error message
+            let errorMessage = 'Error creating category. Please try again.';
+            if (error.message && error.message !== 'Failed to create category') {
+                errorMessage = error.message;
+            }
+            
+            // Show error in the modal instead of alert
+            const errorDiv = document.getElementById('categoryNameError');
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+            
+        } finally {
+            // Hide loading state
+            document.getElementById('saveCategoryText').style.display = 'inline';
+            document.getElementById('saveCategorySpinner').style.display = 'none';
+            document.getElementById('saveCategoryBtn').disabled = false;
+        }
+    });
+    
+    // Add some nice styling to the buttons on hover
+    addCategoryBtn.addEventListener('mouseenter', function() {
+        this.style.background = '#5a6fd8';
+        this.style.transform = 'scale(1.05)';
+    });
+    
+    addCategoryBtn.addEventListener('mouseleave', function() {
+        this.style.background = '#667eea';
+        this.style.transform = 'scale(1)';
+    });
+    
+    // Add hover effects for modal buttons
+    cancelCategoryBtn.addEventListener('mouseenter', function() {
+        this.style.background = '#5a6268';
+    });
+    
+    cancelCategoryBtn.addEventListener('mouseleave', function() {
+        this.style.background = '#6c757d';
+    });
+    
+    closeCategoryModal.addEventListener('mouseenter', function() {
+        this.style.color = '#dc3545';
+        this.style.background = '#f8d7da';
+    });
+    
+    closeCategoryModal.addEventListener('mouseleave', function() {
+        this.style.color = '#999';
+        this.style.background = 'none';
+    });
+    
+    // Close popup with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && categoryModal.style.display === 'block') {
+            closeCategoryPopup();
+        }
+    });
+});
+</script>
 <script>
 async function get_products()
  {

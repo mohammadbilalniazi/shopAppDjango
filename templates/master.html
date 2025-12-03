@@ -405,6 +405,10 @@
                 <span class="nav-icon">🏢</span>
                 <span>Organizations</span>
             </a>
+            <a href="{% url 'branch_select_organization' %}">
+                <span class="nav-icon">🏪</span>
+                <span>Branches</span>
+            </a>
             <a href="{% url 'organization_user_get' %}">
                 <span class="nav-icon">👥</span>
                 <span>Users</span>
@@ -549,14 +553,16 @@
                         return;
                     }
                     
-                    jQuery('.organization-select, select[name="organization"], select[id="organization"], #bill_rcvr_org, #purchased_asset_organization').each(function() {
+                    jQuery('.organization-select, select[name="organization"], select[id="organization"], #bill_rcvr_org, #purchased_asset_organization, .searchable-dropdown').each(function() {
                         if (!jQuery(this).hasClass('select2-hidden-accessible')) {
                             jQuery(this).select2({
                                 placeholder: jQuery(this).data('placeholder') || 'Select Organization',
                                 allowClear: false,
                                 width: '100%',
                                 theme: 'default',
-                                minimumResultsForSearch: 0, // ENABLE SEARCH
+                                minimumResultsForSearch: 0, // ENABLE SEARCH - shows search box for any number of options
+                                dropdownAutoWidth: true,
+                                dropdownParent: jQuery('body'), // Ensure dropdown appears above other elements
                                 language: {
                                     noResults: function() {
                                         return 'No organization found';
@@ -564,7 +570,10 @@
                                     searching: function() {
                                         return 'Searching...';
                                     }
-                                }
+                                },
+                                // Custom CSS for better visibility
+                                containerCssClass: 'select2-organization-container',
+                                dropdownCssClass: 'select2-organization-dropdown'
                             });
                         }
                     });
@@ -589,7 +598,7 @@
                                     if (node.matches && node.matches('select')) {
                                         initOrganizationSelects();
                                     } else if (node.querySelectorAll) {
-                                        const selects = node.querySelectorAll('select[name="organization"], .organization-select');
+                                        const selects = node.querySelectorAll('select[name="organization"], .organization-select, .searchable-dropdown');
                                         if (selects.length > 0) {
                                             initOrganizationSelects();
                                         }

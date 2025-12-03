@@ -178,3 +178,66 @@ def show(request):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
+def create_category(request):
+    """API endpoint to create a new category via AJAX"""
+    try:
+        name = request.data.get('name', '').strip()
+        parent_id = request.data.get('parent', None)
+        description = request.data.get('description', '').strip()
+        is_active = request.data.get('is_active', True)
+        
+        # Handle string boolean values from FormData
+        if isinstance(is_active, str):
+            is_active = is_active.lower() in ['true', '1', 'yes', 'on']
+        
+        if not name:
+            return Response({
+                'ok': False,
+                'message': 'Category name is required'
+            }, status=400)
+        
+        # Check if category with this name already exists
+        if Category.objects.filter(name=name).exists():
+            return Response({
+                'ok': False,
+                'message': f'Category "{name}" already exists'
+            }, status=400)
+        
+        # Get parent category if specified
+        parent = None
+        if parent_id:
+            try:
+                parent = Category.objects.get(id=parent_id)
+            except Category.DoesNotExist:
+                return Response({
+                    'ok': False,
+                    'message': 'Parent category not found'
+                }, status=400)
+        
+        # Create the category
+        category = Category.objects.create(
+            name=name,
+            parent=parent,
+            description=description,
+            is_active=is_active
+        )
+        
+        return Response({
+            'ok': True,
+            'message': 'Category created successfully',
+            'category': {
+                'id': category.id,
+                'name': category.name,
+                'parent': category.parent.name if category.parent else None,
+                'description': category.description
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'ok': False,
+            'message': f'Error creating category: {str(e)}'
+        }, status=500)
+
+
