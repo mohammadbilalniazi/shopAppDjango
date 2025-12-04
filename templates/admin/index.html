@@ -116,9 +116,12 @@
         <div class="link-category">
             <h3>👥 User Management</h3>
             <ul>
+                <li><a href="{% url 'user_dashboard' %}"><span class="icon">📊</span>User Management Dashboard</a></li>
                 <li><a href="{% url 'organization_user_get' %}"><span class="icon">👤</span>Organization Users</a></li>
                 <li><a href="{% url 'organization_user_form' %}"><span class="icon">➕</span>Add User</a></li>
                 <li><a href="/user/organization_user/search/"><span class="icon">🔍</span>Search Users</a></li>
+                <li><a href="{% url 'session_management' %}"><span class="icon">🔒</span>Session Management</a></li>
+                <li><a href="{% url 'groups_management' %}"><span class="icon">🏷️</span>Groups & Permissions</a></li>
             </ul>
         </div>
 

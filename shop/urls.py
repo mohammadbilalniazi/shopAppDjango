@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 from bill import views_bill, views_bill_receive_payment
 from product import views_product, views_unit, views_stock
-from user import views_login, views_organization_user
+from user import views_login, views_organization_user, views_session, views_groups, views_dashboard
 from configuration import views_organization, views_location, views_branch
 from expenditure import views as expenditure_view
 from asset import views as asset_view
@@ -79,6 +79,9 @@ urlpatterns = [
     path('product/product_form/create/<id>', views_product.create, name='product_form_update'),
     path('api/category/create/', views_product.create_category, name='create_category_api'),
 
+    # User Dashboard
+    path('user/dashboard/', views_dashboard.user_dashboard, name='user_dashboard'),
+    
     # Users & Organization Users
     path('admin/user/organizationuser/add/', views_organization_user.form, name='organization_user_form'),
     path('user/organization_user/add/<id>', views_organization_user.form, name='organization_user_form'),
@@ -87,6 +90,20 @@ urlpatterns = [
     path('user/organization_user/get/<id>', views_organization_user.get, name='organization_user_get_by_id'),
     path('user/organization_user/delete/<id>', views_organization_user.delete, name='organization_user_delete'),
     path('user/organization_user/search/', views_organization_user.search, name='organization_user_search'),
+
+    # User Session Management
+    path('user/sessions/', views_session.session_management, name='session_management'),
+    path('user/sessions/delete/<str:session_key>/', views_session.delete_session, name='delete_session'),
+    path('user/sessions/clear-expired/', views_session.clear_expired_sessions, name='clear_expired_sessions'),
+    path('user/sessions/details/', views_session.get_session_details, name='get_session_details'),
+    
+    # Groups Management
+    path('user/groups/', views_groups.groups_management, name='groups_management'),
+    path('user/groups/form/', views_groups.group_form, name='group_form'),
+    path('user/groups/form/<int:group_id>/', views_groups.group_form, name='group_form_edit'),
+    path('user/groups/create-update/', views_groups.create_update_group, name='create_update_group'),
+    path('user/groups/delete/<int:group_id>/', views_groups.delete_group, name='delete_group'),
+    path('user/groups/details/', views_groups.get_group_details, name='get_group_details'),
 
     # Units
     path('units/<id>/', views_unit.show, name='unit_show'),
