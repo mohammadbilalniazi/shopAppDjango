@@ -22,6 +22,10 @@ class Bill(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.PROTECT,null=True
     )  # New field
+    branch = models.ForeignKey(
+        'configuration.Branch', on_delete=models.SET_NULL, null=True, blank=True,
+        help_text="Branch where this bill was created"
+    )
     creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,related_name="creator_set")
     total=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     payment=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)

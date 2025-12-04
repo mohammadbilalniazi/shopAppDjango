@@ -137,19 +137,21 @@ class Product(models.Model):
     
 class Product_Detail(models.Model): 
     product=models.OneToOneField(Product,on_delete=models.CASCADE,null=True,blank=True,unique=True)
-    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)    
+    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)
+    branch=models.ForeignKey('configuration.Branch',on_delete=models.SET_NULL,null=True,blank=True,help_text="Branch where this product is available")
     minimum_requirement=models.IntegerField(default=1)
     purchased_price= models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     selling_price=models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     unit=models.ForeignKey(Unit,on_delete=models.DO_NOTHING,default=None,null=True)
      
 class Stock(models.Model):
-    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)    
+    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)
+    branch=models.ForeignKey('configuration.Branch',on_delete=models.SET_NULL,null=True,blank=True,help_text="Branch where this stock is held")
     product=models.ForeignKey(Product,on_delete=models.CASCADE,null=True,blank=True)
     current_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     purchasing_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     loss_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     class Meta:
-        unique_together=("organization","product")
+        unique_together=("organization","product","branch")
 

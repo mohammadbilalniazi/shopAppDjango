@@ -245,6 +245,20 @@
                 </tr>
                 
                 <tr>
+                    <td>Branch</td>
+                    <td colspan="2">
+                        <select name="branch" class="form-control-custom branch-select" id="branch">
+                            <option value="">Select Branch (Optional)</option>
+                            {% if branches %}
+                                {% for branch in branches %}
+                                    <option {% if product and product.product_detail and product.product_detail.branch and branch.id == product.product_detail.branch.id %} selected {% endif %} value='{{branch.id}}'>{{branch.name}}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </td>
+                </tr>
+                
+                <tr>
                     <td>Product Image</td>
                     <td colspan="2">
                         <input type="file" class="form-control-custom" name="img" id="img">
@@ -511,6 +525,60 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<script>
+// Branch selection functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const organizationSelect = document.getElementById('organization');
+    const branchSelect = document.getElementById('branch');
+    
+    // Load branches when organization changes
+    organizationSelect.addEventListener('change', async function() {
+        const organizationId = this.value;
+        
+        // Clear current branches
+        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+        
+        if (!organizationId) {
+            return;
+        }
+        
+        try {
+            // Fetch branches for the selected organization
+            const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.branches && data.branches.length > 0) {
+                    data.branches.forEach(branch => {
+                        const option = document.createElement('option');
+                        option.value = branch.id;
+                        option.textContent = branch.name;
+                        branchSelect.appendChild(option);
+                    });
+                } else {
+                    // No branches available
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No branches available';
+                    option.disabled = true;
+                    branchSelect.appendChild(option);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading branches:', error);
+        }
+    });
+});
+</script>
+
 <script>
 async function get_products()
  {

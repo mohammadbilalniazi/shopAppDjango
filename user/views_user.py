@@ -10,6 +10,35 @@ from django.db import transaction
 from django.shortcuts import render
 from common.organization import *
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import get_object_or_404
+
+
+@login_required(login_url='/')
+def profile(request):
+    """User profile view"""
+    user = request.user
+    try:
+        # Get user's organization memberships
+        org_user = OrganizationUser.objects.filter(user=user).first()
+        user_orgs = OrganizationUser.objects.filter(user=user).select_related('organization')
+        
+        context = {
+            'user': user,
+            'org_user': org_user,
+            'user_organizations': user_orgs,
+            'total_organizations': user_orgs.count(),
+        }
+        
+        # Add branch information if available
+        if hasattr(request, 'user_branches'):
+            context['user_branches'] = getattr(request, 'user_branches', [])
+            context['current_branch'] = getattr(request, 'current_branch', None)
+        
+        return render(request, 'user/profile.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading profile: {str(e)}')
+        return render(request, 'user/profile.html', {'user': user})
 
 
 @login_required(login_url='/')

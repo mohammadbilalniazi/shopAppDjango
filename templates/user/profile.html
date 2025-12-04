@@ -1,0 +1,392 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block page_title %}👤 User Profile{% endblock %}
+
+{% block breadcrumb %}
+    <span>Home</span> / <span>User Profile</span>
+{% endblock %}
+
+{% block head_extra %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: var(--space-6) auto;
+        padding: var(--space-4);
+    }
+
+    .profile-header {
+        background: var(--gradient-primary);
+        color: var(--white);
+        padding: var(--space-8);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--space-6);
+        text-align: center;
+        box-shadow: var(--shadow-md);
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid var(--white);
+        margin: 0 auto var(--space-4);
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-size-4xl);
+        color: var(--color-primary);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .profile-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: var(--space-6);
+    }
+
+    .info-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+    }
+
+    .info-card h3 {
+        color: var(--text-primary);
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-2);
+        border-bottom: 2px solid var(--border-light);
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-3) 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+    }
+
+    .info-value {
+        color: var(--text-primary);
+        font-weight: var(--font-weight-medium);
+        text-align: right;
+    }
+
+    .status-badge {
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .status-active {
+        background: var(--color-success-lighter);
+        color: var(--color-success-darker);
+    }
+
+    .status-inactive {
+        background: var(--color-danger-lighter);
+        color: var(--color-danger-darker);
+    }
+
+    .organizations-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .org-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-3);
+        margin: var(--space-2) 0;
+        background: var(--surface-secondary);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+    }
+
+    .org-name {
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+    }
+
+    .org-role {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: var(--space-8);
+        color: var(--text-tertiary);
+        font-style: italic;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: var(--space-3);
+        justify-content: center;
+        margin-top: var(--space-6);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .profile-cards {
+            grid-template-columns: 1fr;
+            gap: var(--space-4);
+        }
+        
+        .profile-container {
+            padding: var(--space-2);
+        }
+        
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--space-1);
+        }
+        
+        .info-value {
+            text-align: left;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if user.first_name %}
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+            {% else %}
+                {{ user.username|first|upper }}
+            {% endif %}
+        </div>
+        <h1>
+            {% if user.first_name or user.last_name %}
+                {{ user.first_name }} {{ user.last_name }}
+            {% else %}
+                {{ user.username }}
+            {% endif %}
+        </h1>
+        <p style="margin: 0; opacity: 0.9;">
+            {% if user.is_superuser %}
+                🛡️ System Administrator
+            {% elif user.is_staff %}
+                👨‍💼 Staff Member
+            {% else %}
+                👤 User
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Profile Information Cards -->
+    <div class="profile-cards">
+        
+        <!-- Basic Information -->
+        <div class="info-card">
+            <h3>📋 Basic Information</h3>
+            
+            <div class="info-item">
+                <span class="info-label">Username:</span>
+                <span class="info-value">{{ user.username }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ user.email|default:"Not provided" }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">First Name:</span>
+                <span class="info-value">{{ user.first_name|default:"Not provided" }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Last Name:</span>
+                <span class="info-value">{{ user.last_name|default:"Not provided" }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value">
+                    {% if user.is_active %}
+                        <span class="status-badge status-active">Active</span>
+                    {% else %}
+                        <span class="status-badge status-inactive">Inactive</span>
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Date Joined:</span>
+                <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Last Login:</span>
+                <span class="info-value">
+                    {% if user.last_login %}
+                        {{ user.last_login|date:"M d, Y H:i" }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Permissions & Roles -->
+        <div class="info-card">
+            <h3>🔐 Permissions & Roles</h3>
+            
+            <div class="info-item">
+                <span class="info-label">Superuser:</span>
+                <span class="info-value">
+                    {% if user.is_superuser %}
+                        <span class="status-badge status-active">Yes</span>
+                    {% else %}
+                        <span class="status-badge status-inactive">No</span>
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Staff Status:</span>
+                <span class="info-value">
+                    {% if user.is_staff %}
+                        <span class="status-badge status-active">Staff</span>
+                    {% else %}
+                        <span class="status-badge status-inactive">Regular User</span>
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Groups:</span>
+                <span class="info-value">
+                    {% if user.groups.all %}
+                        {{ user.groups.all|join:", " }}
+                    {% else %}
+                        No groups assigned
+                    {% endif %}
+                </span>
+            </div>
+            
+            {% if user_branches %}
+            <div class="info-item">
+                <span class="info-label">Accessible Branches:</span>
+                <span class="info-value">{{ user_branches|length }} branch{{ user_branches|length|pluralize }}</span>
+            </div>
+            {% endif %}
+            
+            {% if current_branch %}
+            <div class="info-item">
+                <span class="info-label">Current Branch:</span>
+                <span class="info-value">{{ current_branch.name }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Organization Memberships -->
+        <div class="info-card">
+            <h3>🏢 Organizations</h3>
+            
+            {% if user_organizations %}
+                <div style="margin-top: var(--space-4);">
+                    <div class="info-item">
+                        <span class="info-label">Total Organizations:</span>
+                        <span class="info-value">{{ total_organizations }}</span>
+                    </div>
+                </div>
+                
+                <ul class="organizations-list" style="margin-top: var(--space-4);">
+                    {% for org_user in user_organizations %}
+                    <li class="org-item">
+                        <div>
+                            <div class="org-name">{{ org_user.organization.name }}</div>
+                            <div class="org-role">
+                                Member since {{ org_user.created|date:"M Y" }}
+                                {% if org_user.last_updated %}
+                                    • Updated {{ org_user.last_updated|date:"M d, Y" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="status-badge status-active">Active</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="no-data">
+                    <p>👥 No organization memberships found</p>
+                    {% if user.is_superuser %}
+                        <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
+                            As a superuser, you have access to all organizations.
+                        </p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        {% if user.is_superuser %}
+            <a href="/user/dashboard/" class="btn btn-primary">
+                <i class="fas fa-tachometer-alt"></i> User Dashboard
+            </a>
+        {% endif %}
+        
+        <a href="/admin/" class="btn btn-secondary">
+            <i class="fas fa-cog"></i> Admin Panel
+        </a>
+        
+        <a href="/" class="btn btn-outline-primary">
+            <i class="fas fa-home"></i> Home
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+// Add any profile-specific JavaScript here
+console.log('User profile page loaded');
+</script>
+{% endblock %}

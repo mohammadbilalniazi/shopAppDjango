@@ -55,6 +55,15 @@ def bill_show(request,bill_id=None):
     context['form']=form
     self_organization,user_orgs = find_userorganization(request)
     
+    # Get branches for the organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        branches = Branch.objects.filter(organization=self_organization, is_active=True)
+    else:
+        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
+    
+    context['branches'] = branches
+    
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
@@ -206,6 +215,13 @@ def bill_form_sell_purchase(request):
     context={}
     form.fields['date'].initial=date
     
+    # Get branches for the organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        branches = Branch.objects.filter(organization=self_organization, is_active=True)
+    else:
+        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
+    
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
@@ -238,6 +254,7 @@ def bill_form_sell_purchase(request):
         'organization':self_organization,
         'organizations':organizations,
         'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
+        'branches': branches,  # Add branch context
         'date':date,
         'categories':Category.objects.all(),
     } 
@@ -329,6 +346,20 @@ def bill_insert(request):
     organization=Organization.objects.get(id=int(organization))
     self_organization,user_orgs = find_userorganization(request,organization.id)
 
+    # Handle branch
+    branch_id = request.data.get("branch")
+    branch = None
+    if branch_id:
+        try:
+            from configuration.models import Branch
+            branch = Branch.objects.get(
+                id=int(branch_id), 
+                organization=organization,
+                is_active=True
+            )
+        except Branch.DoesNotExist:
+            pass  # Branch is optional
+
     bill_type=request.data.get("bill_type",None)
     creator=request.user
     total=request.data.get("total",0)
@@ -408,6 +439,7 @@ def bill_insert(request):
         bill_obj.bill_no=bill_no
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
+        bill_obj.branch=branch
         bill_obj.profit=0
     else: ############### new insert Bill if not in system#############
         # opposit_bill=get_opposit_bill(bill_type)
@@ -417,7 +449,7 @@ def bill_insert(request):
             ok=False
             message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
             return Response({"message":message,"ok":ok})
-        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
+        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment,branch=branch)
     try:
         bill_obj.save()
         if bill_type!='LOSSDEGRADE':

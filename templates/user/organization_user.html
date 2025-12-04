@@ -4,133 +4,107 @@
 {% block title %}Manage Organization Users{% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{% static 'assets/css/unified-styles.css' %}">
 <style>
   .organization-user-container {
     max-width: 1400px;
-    margin: 30px auto;
-    padding: 20px;
+    margin: var(--space-8) auto;
+    padding: var(--space-6);
   }
 
   .page-header {
-    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
-    color: white;
-    padding: 25px;
-    border-radius: 10px 10px 0 0;
+    background: var(--gradient-primary);
+    color: var(--white);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     margin-bottom: 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
   }
 
   .page-header h1 {
     margin: 0;
-    font-size: 28px;
-    font-weight: 600;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
     text-align: center;
   }
 
   .content-card {
-    background: white;
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    padding: 30px;
+    background: var(--white);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-8);
   }
 
   .form-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 15px;
+    border-spacing: 0 var(--space-4);
   }
 
   .form-table td {
-    padding: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--dark);
+    padding: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
   }
 
   .form-table td:first-child {
     width: 150px;
-    color: var(--dark-secondary);
+    color: var(--text-secondary);
   }
 
   .form-control-custom {
     width: 100%;
-    padding: 10px 15px;
-    border: 2px solid var(--gray-300);
-    border-radius: 6px;
-    font-size: 15px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    padding: var(--space-3);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    transition: var(--transition-base);
   }
 
   .form-control-custom:focus {
     outline: none;
-    border-color: var(--primary-solid);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .btn-gradient {
-    background: linear-gradient(135deg, var(--success-gradient-start), var(--success-gradient-end));
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
-  }
-
-  .btn-gradient:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
-  }
-
-  .btn-danger-gradient {
-    background: linear-gradient(135deg, var(--danger-gradient-start), var(--danger-gradient-end));
-    box-shadow: 0 4px 15px rgba(235, 51, 73, 0.3);
-  }
-
-  .btn-danger-gradient:hover {
-    box-shadow: 0 6px 20px rgba(235, 51, 73, 0.4);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
   }
 
   .results-section {
-    margin-top: 40px;
+    margin-top: var(--space-10);
   }
 
   .results-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
-    background: white;
-    border-radius: 8px;
+    margin-top: var(--space-5);
+    background: var(--white);
+    border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
   }
 
   .results-table thead {
-    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
-    color: white;
+    background: var(--gradient-primary);
+    color: var(--white);
   }
 
   .results-table th {
-    padding: 15px;
+    padding: var(--space-4);
     text-align: left;
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
   }
 
   .results-table td {
-    padding: 15px;
-    border-bottom: 1px solid var(--gray-200);
-    font-weight: 500;
-    color: var(--dark);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
   }
 
   .results-table tbody tr:hover {
-    background-color: var(--gray-100);
+    background-color: var(--surface-hover);
   }
 
   .user-avatar {
@@ -138,16 +112,13 @@
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
   }
 
   .action-buttons {
     display: flex;
-    gap: 8px;
+    gap: var(--space-2);
   }
-
-  .alert-custom {
-    padding: 15px 20px;
     border-radius: 8px;
     margin-bottom: 20px;
     font-weight: 600;
@@ -177,56 +148,58 @@
     flex: 1;
     padding: 10px 15px;
     border: 2px solid var(--info-solid);
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
+  .alert-custom {
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 
   .pagination-wrapper {
     display: flex;
     justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
   }
 
   .system-id-badge {
     display: inline-block;
-    background: var(--info-light);
-    color: var(--info-text);
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 14px;
+    background: var(--color-info-lighter);
+    color: var(--color-info-darker);
+    padding: var(--space-1) var(--space-4);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
   }
 
-  /* Fix Select2 dropdown visibility */
+  /* Select2 dropdown styling for design system */
   .select2-container {
     z-index: 9999 !important;
   }
 
   .select2-dropdown {
     z-index: 9999 !important;
-    border: 1px solid var(--gray-400) !important;
-    border-radius: 4px !important;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-md) !important;
   }
 
   .select2-results__option {
-    padding: 8px 12px !important;
-    color: var(--dark) !important;
-    background-color: white !important;
+    padding: var(--space-2) var(--space-3) !important;
+    color: var(--text-primary) !important;
+    background-color: var(--white) !important;
     cursor: pointer !important;
   }
 
   .select2-results__option:hover,
   .select2-results__option[aria-selected="true"] {
-    background-color: var(--primary-solid) !important;
-    color: white !important;
+    background-color: var(--color-primary) !important;
+    color: var(--white) !important;
   }
 
   .select2-results__option--highlighted {
-    background-color: var(--primary-solid) !important;
-    color: white !important;
+    background-color: var(--color-primary) !important;
+    color: var(--white) !important;
   }
 
   .select2-container--default .select2-selection--single {
@@ -353,6 +326,19 @@
         </tr>
 
         <tr>
+          <td>Branch</td>
+          <td colspan="2">
+            <select name="branch" class="form-control-custom branch-select" id="branch">
+              <option value="">Select Branch (Optional)</option>
+              {% if branches %}
+                {% for branch in branches %}
+                  <option value="{{branch.id}}" {% if organization_user.branch == branch %}selected{% endif %}>
+                    {{branch.name}}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </td>
           <td>Role</td>
           <td colspan="2">
             <select name="role" class="form-control-custom" id="role">
@@ -362,6 +348,7 @@
               <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
             </select>
           </td>
+        </tr>
           <td colspan="3">
             <div class="search-input-wrapper">
               <input type="text" 
@@ -419,11 +406,59 @@
   document.addEventListener('DOMContentLoaded', function() {
     // Debug: Check if organizations are loaded
     const orgSelect = document.getElementById('organization');
+    const branchSelect = document.getElementById('branch');
+    
     if (orgSelect) {
       console.log('🔍 Organization dropdown found with', orgSelect.options.length, 'options');
       for (let i = 0; i < orgSelect.options.length; i++) {
         console.log('   Option', i, ':', orgSelect.options[i].text, '(value:', orgSelect.options[i].value, ')');
       }
+      
+      // Add organization change event listener for branch loading
+      orgSelect.addEventListener('change', async function() {
+        const organizationId = this.value;
+        
+        // Clear current branches
+        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+        
+        if (!organizationId) {
+          return;
+        }
+        
+        try {
+          // Fetch branches for the selected organization
+          const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+            method: 'GET',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (data.branches && data.branches.length > 0) {
+              data.branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.id;
+                option.textContent = branch.name;
+                branchSelect.appendChild(option);
+              });
+            } else {
+              // No branches available
+              const option = document.createElement('option');
+              option.value = '';
+              option.textContent = 'No branches available';
+              option.disabled = true;
+              branchSelect.appendChild(option);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading branches:', error);
+        }
+      });
+      
     } else {
       console.warn('⚠️  Organization dropdown not found');
     }
@@ -433,6 +468,8 @@
       if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
         // Force reinitialize if needed
         const $orgSelect = jQuery('#organization');
+        const $branchSelect = jQuery('#branch');
+        
         if ($orgSelect.length && !$orgSelect.hasClass('select2-hidden-accessible')) {
           console.log('⚡ Manually initializing organization Select2...');
           $orgSelect.select2({
@@ -445,6 +482,19 @@
             dropdownParent: jQuery('body'),
             containerCssClass: 'select2-organization-container',
             dropdownCssClass: 'select2-organization-dropdown'
+          });
+        }
+        
+        // Initialize branch Select2
+        if ($branchSelect.length && !$branchSelect.hasClass('select2-hidden-accessible')) {
+          $branchSelect.select2({
+            placeholder: 'Select Branch (Optional)',
+            allowClear: true,
+            width: '100%',
+            theme: 'default',
+            minimumResultsForSearch: 0,
+            dropdownAutoWidth: true,
+            dropdownParent: jQuery('body')
           });
         }
       }

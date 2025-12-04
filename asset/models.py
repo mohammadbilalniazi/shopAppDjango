@@ -28,6 +28,10 @@ class AssetBillSummary(models.Model):
         Organization, on_delete=models.PROTECT,null=True,
         related_name="assetbillrcvrorg"
     )
+    branch = models.ForeignKey(
+        'configuration.Branch', on_delete=models.SET_NULL, null=True, blank=True,
+        help_text="Branch where these bills were processed"
+    )
     total=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     payment=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
     year=models.SmallIntegerField(default=get_year)
@@ -35,7 +39,7 @@ class AssetBillSummary(models.Model):
     currency=models.CharField(max_length=7,default="afg")
 
     class Meta:
-        unique_together=("year","organization","bill_rcvr_org","bill_type")
+        unique_together=("year","organization","bill_rcvr_org","bill_type","branch")
     
     def __str__(self):
         return f"{self.organization} - {self.bill_type} - {self.year}"

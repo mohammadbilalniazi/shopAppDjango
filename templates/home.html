@@ -1,159 +1,278 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body {
-  margin: 0 auto;
-  max-width: 800px;
-  padding: 0 20px;
-}
+{% extends "master.html" %}
+{% load static %}
 
-.container {
-  border: 2px solid #dedede;
-  background-color: #f1f1f1;
-  border-radius: 5px;
-  padding: 10px;
-  margin: 10px 0;
-}
+{% block title %}Dashboard | Shirkat{% endblock %}
 
-.darker {
-  border-color: #ccc;
-  background-color: #ddd;
-}
+{% block page_title %}Dashboard{% endblock %}
 
-.container::after {
-  content: "";
-  clear: both;
-  display: table;
-}
+{% block breadcrumb %}
+    <span>Home</span> / <span>Dashboard</span>
+{% endblock %}
 
-.container img {
-  float: left;
-  max-width: 60px;
-  width: 100%;
-  margin-right: 20px;
-  border-radius: 50%;
-}
+{% block content %}
+    <!-- Dashboard Stats Cards -->
+    <div class="row mb-6">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-primary mb-1">{{ total_products|default:"0" }}</h3>
+                            <p class="text-sm text-secondary mb-0">Total Products</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-blue-100 d-flex items-center justify-center">
+                            <i class="bi bi-box text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-success mb-1">{{ total_sales|default:"0" }}</h3>
+                            <p class="text-sm text-secondary mb-0">Total Sales</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-green-100 d-flex items-center justify-center">
+                            <i class="bi bi-graph-up text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-warning mb-1">{{ pending_bills|default:"0" }}</h3>
+                            <p class="text-sm text-secondary mb-0">Pending Bills</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-yellow-100 d-flex items-center justify-center">
+                            <i class="bi bi-clock-history text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-info mb-1">{{ total_users|default:"0" }}</h3>
+                            <p class="text-sm text-secondary mb-0">Active Users</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-blue-100 d-flex items-center justify-center">
+                            <i class="bi bi-people text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-.container img.right {
-  float: right;
-  margin-left: 20px;
-  margin-right:0;
-}
+    <!-- Quick Actions -->
+    <div class="row mb-6">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Actions</h2>
+                    <p class="card-subtitle">Get started with common tasks</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <a href="/products/create/" class="btn btn-outline-primary w-full h-24 flex-col">
+                                <i class="bi bi-plus-circle text-2xl mb-2"></i>
+                                <span>Add Product</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <a href="/bills/create/" class="btn btn-outline-success w-full h-24 flex-col">
+                                <i class="bi bi-receipt text-2xl mb-2"></i>
+                                <span>Create Bill</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <a href="/user/add/" class="btn btn-outline-info w-full h-24 flex-col">
+                                <i class="bi bi-person-plus text-2xl mb-2"></i>
+                                <span>Add User</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <a href="/reports/" class="btn btn-outline-warning w-full h-24 flex-col">
+                                <i class="bi bi-bar-chart text-2xl mb-2"></i>
+                                <span>View Reports</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-.time-right {
-  float: right;
-  color: #aaa;
-}
+    <!-- Recent Activity & Branch Info -->
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-full">
+                <div class="card-header">
+                    <div class="d-flex justify-between items-center">
+                        <div>
+                            <h2 class="card-title">Recent Activity</h2>
+                            <p class="card-subtitle">Latest transactions and updates</p>
+                        </div>
+                        <a href="/bills/" class="btn btn-sm btn-outline">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_bills %}
+                        <div class="space-y-4">
+                            {% for bill in recent_bills|slice:":5" %}
+                                <div class="d-flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 d-flex items-center justify-center">
+                                        <i class="bi bi-receipt text-blue-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="d-flex justify-between items-center">
+                                            <div>
+                                                <h4 class="font-medium text-sm">Bill #{{ bill.id }}</h4>
+                                                <p class="text-xs text-secondary">{{ bill.date|date:"M d, Y" }}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-semibold text-sm">${{ bill.grand_total|floatformat:2 }}</p>
+                                                <span class="badge badge-{% if bill.bill_type == 'SELLING' %}success{% else %}primary{% endif %}">
+                                                    {{ bill.bill_type }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class="bi bi-inbox text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-secondary">No recent activity</p>
+                            <a href="/bills/create/" class="btn btn-sm btn-primary mt-2">Create Your First Bill</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-.time-left {
-  float: left;
-  color: #999;
-}
-</style>
-</head>
-<body style="background-color:black;">
-  <header class="header" style="width: fit-content; align-items: center;height:3vh;">
-    <a class="header--logo" href="#0">
-      <img src="/static/assets/img/Tejaratistan Gold.svg" alt="Tejaratistan Gold">
-      <!-- <p>Tejaratistan</p> -->
-    </a>
-    <!-- <button class="header--cta cta">Contact Us</button>
-    <div class="header--nav-toggle">
-      <span></span>
-    </div> -->
-  </header>
-<div style="text-align:center;color:white;background-color:#d1c664;">
-    <h2>Tejaratistan Chat</h2>
-</div>
+        <!-- Branch Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-full">
+                <div class="card-header">
+                    <h2 class="card-title">Branch Information</h2>
+                    <p class="card-subtitle">Current branch details</p>
+                </div>
+                <div class="card-body">
+                    {% if current_branch %}
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2">{{ current_branch.name }}</h3>
+                                <p class="text-sm text-secondary mb-3">{{ current_branch.organization.name }}</p>
+                            </div>
+                            
+                            {% if current_branch.address %}
+                                <div class="d-flex items-start gap-3">
+                                    <i class="bi bi-geo-alt text-gray-400"></i>
+                                    <div>
+                                        <p class="text-sm font-medium">Address</p>
+                                        <p class="text-xs text-secondary">{{ current_branch.address }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if current_branch.phone %}
+                                <div class="d-flex items-start gap-3">
+                                    <i class="bi bi-telephone text-gray-400"></i>
+                                    <div>
+                                        <p class="text-sm font-medium">Phone</p>
+                                        <p class="text-xs text-secondary">{{ current_branch.phone }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if current_branch.manager %}
+                                <div class="d-flex items-start gap-3">
+                                    <i class="bi bi-person text-gray-400"></i>
+                                    <div>
+                                        <p class="text-sm font-medium">Manager</p>
+                                        <p class="text-xs text-secondary">{{ current_branch.manager.get_full_name|default:current_branch.manager.username }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-6">
+                            <a href="/configuration/branch/{{ current_branch.organization.id }}/" class="btn btn-sm btn-outline w-full">
+                                Manage Branches
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-6">
+                            <i class="bi bi-building text-3xl text-gray-400 mb-3"></i>
+                            <p class="text-secondary text-sm mb-3">No specific branch selected</p>
+                            <p class="text-xs text-tertiary">You have access to all branches in your organization</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Welcome Message for New Users -->
+    {% if not recent_bills and not total_products %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div class="card-body text-center py-12">
+                        <div class="mb-6">
+                            <i class="bi bi-emoji-smile text-6xl text-blue-500"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Welcome to Shirkat!</h2>
+                        <p class="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+                            Get started by adding your first products, creating bills, or managing your team. 
+                            Shirkat makes business management simple and efficient.
+                        </p>
+                        <div class="d-flex gap-4 justify-center flex-wrap">
+                            <a href="/products/create/" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Add Your First Product
+                            </a>
+                            <a href="/user/organization_user/get/" class="btn btn-outline-primary">
+                                <i class="bi bi-people me-2"></i>
+                                Manage Users
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
 
-<div class="container" style="background-color:black;">
-    <style>
-    input[type=text], select {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    }
-
-    input[type=submit] {
-    width: 100%;
-    background-color: #4CAF50;
-    color: white;
-    padding: 14px 20px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    }
-
-    input[type=submit]:hover {
-    background-color: #45a049;
-    }
-
-    div {
-    border-radius: 5px;
-    background-color: #f2f2f2;
-    padding: 20px;
-    }
-    </style>
-
-
-
-
-    <form id="post-form" method="POST" action="/chat/checkview/">
-        {% csrf_token %}
-        <label style="color:white;font-size:20px;">Room Name</label>
-        <select type="text" name="room_name" id="room_name" width="100px" style="font-size:20px;" >
-          {% for row in rooms %}
-            <option>{{row.name}}</option>
-          {% endfor %}
-        </select>
-        <label style="color:white;font-size:20px;">Username</label>
-        <input type="text" name="username" id="username" width="100px" style="font-size:20px;"/>
-        <input type="submit" value="Enter Room" style="font-size:20px;background-color: #d1c664; color:white;">
-    </form>
-</div>
-
-
-</body>
-
-
-</html>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script>
-  function get_rooms(){
-    url='/chat/get_rooms/';
-    // fetch(url,{
-    //   method:'GET',
-    // }).then(response=>{
-    //   response.json()
-    // }).then(data=>{
-    //   console.log("data=",data);
-    // }).catch(error=>{console.log(error)});
-    axios({
-     method: "get",
-     url: url,
-    }).then(function (response) {
-      room_name=document.getElementById("room_name");
-      room_name.innerHTML="";
-      for(key in response.data['rooms']){
-        // console.log(response.data['rooms'][key]['name'])
-        var option=document.createElement("option");
-        option.text=response.data['rooms'][key]['name'];
-        option.value=response.data['rooms'][key]['name'];
-        // html="<option>"+response.data['rooms'][key]['name']+"</option>";
-        room_name.appendChild(option);
-
-      }
-      // console.log(response.data['rooms']);
-    });
-    }
-
-  get_rooms();
-</script>
+{% block scripts %}
+    <script>
+        // Add any dashboard-specific JavaScript here
+        $(document).ready(function() {
+            // Initialize any dashboard widgets
+            console.log('Dashboard loaded successfully');
+            
+            // Add hover effects to stat cards
+            $('.card').hover(
+                function() { $(this).addClass('shadow-md'); },
+                function() { $(this).removeClass('shadow-md'); }
+            );
+        });
+    </script>
+{% endblock %}

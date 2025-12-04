@@ -4,59 +4,39 @@
 {% block title %}Bills | Shirkat{% endblock %}
 
 {% block head_extra %}
-
 {{ block.super }}
 {% if form %}{{ form.media.css }}{% endif %}
 <style>
-    /* Consistent button sizing */
-    .btn {
-        min-width: 120px;
-        height: 38px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
+    /* Bill Detail Page using Design System */
     
-    .btn-lg {
-        min-width: 150px;
-        height: 45px;
-    }
-    
-    .btn-sm {
-        min-width: 90px;
-        height: 32px;
-        font-size: 0.875rem;
-    }
-
-    /* Enhanced Select/Dropdown Visibility */
+    /* Enhanced Select/Dropdown Styling */
     .form-select-custom,
     select.form-select,
     select {
-        border: 2px solid #dee2e6 !important;
-        border-radius: 8px !important;
-        padding: 0.75rem 1rem !important;
-        font-size: 1rem !important;
-        font-weight: 500 !important;
-        background-color: #ffffff !important;
-        color: #212529 !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: var(--radius-md) !important;
+        padding: var(--space-3) var(--space-4) !important;
+        font-size: var(--font-size-base) !important;
+        font-weight: var(--font-weight-medium) !important;
+        background-color: var(--white) !important;
+        color: var(--text-primary) !important;
         min-height: 45px !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        transition: var(--transition-base) !important;
+        box-shadow: var(--shadow-sm) !important;
     }
 
     .form-select-custom:hover,
     select.form-select:hover,
     select:hover {
-        border-color: #667eea !important;
-        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2) !important;
+        border-color: var(--color-primary) !important;
+        box-shadow: var(--shadow-md) !important;
     }
 
     .form-select-custom:focus,
     select.form-select:focus,
     select:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25) !important;
+        border-color: var(--color-primary) !important;
+        box-shadow: var(--shadow-focus) !important;
         outline: none !important;
     }
 
@@ -67,14 +47,14 @@
 
     .select2-container--bootstrap-5 .select2-selection {
         min-height: 45px !important;
-        border: 2px solid #dee2e6 !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 1rem !important;
-        font-size: 1rem !important;
-        font-weight: 500 !important;
-        background-color: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        transition: all 0.3s ease !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: var(--radius-md) !important;
+        padding: var(--space-2) var(--space-4) !important;
+        font-size: var(--font-size-base) !important;
+        font-weight: var(--font-weight-medium) !important;
+        background-color: var(--white) !important;
+        box-shadow: var(--shadow-sm) !important;
+        transition: var(--transition-base) !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection:hover {

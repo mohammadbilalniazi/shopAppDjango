@@ -12,6 +12,7 @@ class OrganizationUser(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.SET_NULL, null=True, blank=True, help_text="Primary branch assignment for this user")
     is_active = models.BooleanField(default=True)
     img = models.FileField(upload_to="OrganizationUser", null=True, blank=True)
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='member')

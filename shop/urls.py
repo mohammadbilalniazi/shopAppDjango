@@ -5,8 +5,8 @@ from django.conf.urls.static import static
 
 from bill import views_bill, views_bill_receive_payment
 from product import views_product, views_unit, views_stock
-from user import views_login, views_organization_user, views_session, views_groups, views_dashboard
-from configuration import views_organization, views_location, views_branch
+from user import views_login, views_organization_user, views_session, views_groups, views_dashboard, views_user
+from configuration import views_organization, views_location, views_branch, views_branch_api
 from expenditure import views as expenditure_view
 from asset import views as asset_view
 from django.shortcuts import redirect
@@ -51,6 +51,10 @@ urlpatterns = [
     path('configuration/branch/<int:branch_id>/toggle-status/', views_branch.branch_toggle_status, name='branch_toggle_status'),
     path('configuration/organization/<int:org_id>/users/', views_branch.get_organization_users, name='get_organization_users'),
 
+    # Branch API endpoints
+    path('api/branches/by-organization/<int:organization_id>/', views_branch_api.get_branches_by_organization, name='get_branches_by_organization'),
+    path('api/branches/user-accessible/', views_branch_api.get_all_user_branches, name='get_all_user_branches'),
+
     # Bills
     path('bill/delete/<id>/', views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>', views_bill.select_bill_no),
@@ -70,6 +74,7 @@ urlpatterns = [
     path('products/product_form/', views_product.form, name='product_form'),
     path('product/product/add/<id>', views_product.form, name='product_form'),
     path('stock/update/', views_stock.update, name='update_stock'),
+    path('stock/list/', views_stock.list_stocks, name='stock_list'),
     path('product/product/', views_product.show_html, name='product_show_html'),
     path('admin/product/product/', views_product.show_html, name='product_show_html'),
     path('admin/product/product/add/', views_product.form, name='product_form'),
@@ -81,6 +86,7 @@ urlpatterns = [
 
     # User Dashboard
     path('user/dashboard/', views_dashboard.user_dashboard, name='user_dashboard'),
+    path('user/profile/', views_user.profile, name='user_profile'),
     
     # Users & Organization Users
     path('admin/user/organizationuser/add/', views_organization_user.form, name='organization_user_form'),

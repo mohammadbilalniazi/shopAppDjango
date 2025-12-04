@@ -1,280 +1,294 @@
-  <input type="search" id="nav-filter" placeholder="Start typing to filter…" aria-label="Filter navigation items">
-  
-
-
-  
-    <div class="app-auth module">
-      <table>
-        <caption>
-          <a href="/admin/auth/" class="section" title="Models in the Authentication and Authorization application">Authentication and Authorization</a>
-        </caption>
-        
-          <tbody><tr class="model-group">
-            
-              <th scope="row"><a href="/admin/auth/group/">Groups</a></th>
-            
-
-            
-              <td><a href="/admin/auth/group/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-user">
-            
-              <th scope="row"><a href="/admin/auth/user/">Users</a></th>
-            
-
-            
-              <td><a href="/admin/auth/user/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-      </tbody></table>
+<!-- Sidebar Navigation -->
+<nav class="sidebar-nav">
+    <!-- Dashboard Section -->
+    <div class="nav-section">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    <i class="nav-icon bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
-    <div class="app-bill module">
-      <table>
-        <caption>
-          <a href="/admin/bill/" class="section" title="Models in the Bills application">Bills</a>
-        </caption>
-        
-          <tbody><tr class="model-bill_detail">
-            
-              <th scope="row"><a href="/admin/bill/bill_detail/">Bill detail</a></th>
-            
 
-            
-              <td><a href="/admin/bill/bill_detail/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-bill">
-            
-              <th scope="row"><a href="/admin/bill/bill/">Bills</a></th>
-            
-
-            
-              <td><a href="/admin/bill/bill/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-        
-      </tbody></table>
+    <!-- Products Section -->
+    <div class="nav-section">
+        <div class="nav-section-title">Products</div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/products/" class="nav-link {% if '/products/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-box"></i>
+                    <span>All Products</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/products/create/" class="nav-link">
+                    <i class="nav-icon bi bi-plus-circle"></i>
+                    <span>Add Product</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/products/stock/" class="nav-link {% if '/stock/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-boxes"></i>
+                    <span>Stock Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/products/categories/" class="nav-link">
+                    <i class="nav-icon bi bi-tags"></i>
+                    <span>Categories</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
-    <div class="app-chat module">
-      <table>
-        <caption>
-          <a href="/admin/chat/" class="section" title="Models in the Chat application">Chat</a>
-        </caption>
-        
-          <tbody><tr class="model-message">
-            
-              <th scope="row"><a href="/admin/chat/message/">Messages</a></th>
-            
 
-            
-              <td><a href="/admin/chat/message/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-room">
-            
-              <th scope="row"><a href="/admin/chat/room/">Rooms</a></th>
-            
-
-            
-              <td><a href="/admin/chat/room/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-      </tbody></table>
+    <!-- Sales & Bills Section -->
+    <div class="nav-section">
+        <div class="nav-section-title">Sales & Bills</div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/bills/" class="nav-link {% if '/bills/' in request.path and 'create' not in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-receipt"></i>
+                    <span>All Bills</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/bills/create/" class="nav-link {% if '/bills/create' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-plus-square"></i>
+                    <span>Create Bill</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/bills/purchase/" class="nav-link">
+                    <i class="nav-icon bi bi-cart"></i>
+                    <span>Purchases</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/bills/payment/" class="nav-link">
+                    <i class="nav-icon bi bi-credit-card"></i>
+                    <span>Payments</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
-    <div class="app-configuration module current-app">
-      <table>
-        <caption>
-          <a href="/admin/configuration/" class="section" title="Models in the Configuration application">Configuration</a>
-        </caption>
-        
-          <tbody><tr class="model-country">
-            
-              <th scope="row"><a href="/admin/configuration/country/">Countries</a></th>
-            
 
-            
-              <td><a href="/admin/configuration/country/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-language_detail">
-            
-              <th scope="row"><a href="/admin/configuration/language_detail/">Language Detail</a></th>
-            
-
-            
-              <td><a href="/admin/configuration/language_detail/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-location">
-              <th scope="row"><a href="/admin/configuration/location/">Locations</a></th>
-              <td><a href="/admin/configuration/location/add/" class="addlink">Add</a></td>
-          </tr>
-        
-          <tr class="model-member_user">
-              <th scope="row"><a href="/admin/configuration/member_user/">Member_ users</a></th>
-              <td><a href="/admin/configuration/member_user/add/" class="addlink">Add</a></td>
-          </tr>
-        
-          <tr class="model-organization current-model">
-              <th scope="row"><a href="/admin/configuration/organization/" aria-current="page">Organizations</a></th>
-              <td><a href="/admin/configuration/organization/add/" class="addlink">Add</a></td>
-          </tr>
-        
-      </tbody></table>
+    <!-- Users & Access Section -->
+    <div class="nav-section">
+        <div class="nav-section-title">Users & Access</div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/user/profile/" class="nav-link {% if '/user/profile/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/user/organization_user/get/" class="nav-link {% if '/user/organization_user/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-people"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/user/groups/" class="nav-link {% if '/groups/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-shield-lock"></i>
+                    <span>User Groups</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/user/add/" class="nav-link">
+                    <i class="nav-icon bi bi-person-plus"></i>
+                    <span>Add User</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
-    <div class="app-products module">
-      <table>
-        <caption>
-          <a href="/admin/product/" class="section" title="Models in the Products application">Products</a>
-        </caption>
-        
-          <tbody><tr class="model-category">
-            
-              <th scope="row"><a href="/admin/product/category/">Categorys</a></th>
-            
 
-            
-              <td><a href="/admin/product/category/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-product">
-            
-              <th scope="row"><a href="/admin/product/product/">Products</a></th>
-            
-
-            
-              <td><a href="/admin/product/product/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-service">
-            
-              <th scope="row"><a href="/admin/products/service/">Services</a></th>
-            
-
-            
-              <td><a href="/admin/products/service/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-subservice">
-              <th scope="row"><a href="/admin/products/subservice/">Sub services</a></th>
-              <td><a href="/admin/products/subservice/add/" class="addlink">Add</a></td>
-          </tr>
-        
-          <tr class="model-unit">
-              <th scope="row"><a href="/admin/products/unit/">Units</a></th>
-              <td><a href="/admin/products/unit/add/" class="addlink">Add</a></td>
-          </tr>
-        
-          <tr class="model-vendors">
-              <th scope="row"><a href="/admin/products/vendors/">Vendorss</a></th>
-              <td><a href="/admin/products/vendors/add/" class="addlink">Add</a></td>
-          </tr>
-        
-      </tbody></table>
+    <!-- Configuration Section -->
+    <div class="nav-section">
+        <div class="nav-section-title">Configuration</div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/configuration/organization/" class="nav-link {% if '/organization/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-building"></i>
+                    <span>Organizations</span>
+                </a>
+            </li>
+            {% if user_branches_count > 1 or user.is_superuser %}
+            <li class="nav-item">
+                <a href="/configuration/branch/{{ global_parent_organization.id|default:1 }}/" class="nav-link {% if '/branch/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-diagram-3"></i>
+                    <span>Branches</span>
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a href="/configuration/location/" class="nav-link">
+                    <i class="nav-icon bi bi-geo-alt"></i>
+                    <span>Locations</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/configuration/currency/" class="nav-link">
+                    <i class="nav-icon bi bi-currency-exchange"></i>
+                    <span>Currency</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
-    <div class="app-shopapp module">
-      <table>
-        <caption>
-          <a href="/admin/shopapp/" class="section" title="Models in the Shopapp application">Shopapp</a>
-        </caption>
-        
-          <tbody><tr class="model-asset">
-            
-              <th scope="row"><a href="/admin/shopapp/asset/">Asset</a></th>
-            
 
-            
-              <td><a href="/admin/shopapp/asset/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-log">
-            
-              <th scope="row"><a href="/admin/shopapp/log/">Log</a></th>
-            
-
-            
-              <td><a href="/admin/shopapp/log/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-      </tbody></table>
+    <!-- Reports & Analytics Section -->
+    <div class="nav-section">
+        <div class="nav-section-title">Reports</div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/asset/dashboard/" class="nav-link {% if '/asset/dashboard' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-graph-up"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/asset/profit_loss/" class="nav-link {% if '/profit_loss' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-bar-chart"></i>
+                    <span>Profit & Loss</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/asset/balance_sheet/" class="nav-link {% if '/balance_sheet' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-clipboard-data"></i>
+                    <span>Balance Sheet</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/asset/cash_flow/" class="nav-link {% if '/cash_flow' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-cash-stack"></i>
+                    <span>Cash Flow</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
-    <div class="app-user_requests module">
-      <table>
-        <caption>
-          <a href="/admin/user_requests/" class="section" title="Models in the User_Requests application">User_Requests</a>
-        </caption>
-        
-          <tbody><tr class="model-request">
-            
-              <th scope="row"><a href="/admin/user_requests/request/">Requests</a></th>
-            
 
-            
-              <td><a href="/admin/user_requests/request/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-          <tr class="model-services">
-            
-              <th scope="row"><a href="/admin/user_requests/services/">Servicess</a></th>
-            
-
-            
-              <td><a href="/admin/user_requests/services/add/" class="addlink">Add</a></td>
-            
-
-            
-          </tr>
-        
-      </tbody></table>
+    <!-- User Information Section -->
+    {% if user.is_authenticated %}
+    <div class="nav-section mt-auto">
+        <div class="nav-section-title">Account</div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/user/profile/" class="nav-link">
+                    <i class="nav-icon bi bi-person-gear"></i>
+                    <span>Profile Settings</span>
+                </a>
+            </li>
+            {% if user.is_superuser %}
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link" target="_blank">
+                    <i class="nav-icon bi bi-gear"></i>
+                    <span>Admin Panel</span>
+                    <i class="bi bi-box-arrow-up-right text-xs ml-auto"></i>
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a href="/admin/logout/" class="nav-link">
+                    <i class="nav-icon bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
     </div>
-  
+    {% endif %}
 
+    <!-- Branch Information -->
+    {% if current_branch %}
+    <div class="nav-section">
+        <div class="px-6 py-4 bg-gray-700 rounded-lg mx-4 mb-4">
+            <div class="text-xs text-gray-400 mb-1">Current Branch</div>
+            <div class="text-sm font-medium text-white">{{ current_branch.name }}</div>
+            {% if current_branch.organization %}
+                <div class="text-xs text-gray-400">{{ current_branch.organization.name }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</nav>
+
+<style>
+/* Sidebar Navigation Styles */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 80px); /* Adjust for sidebar header */
+    padding: var(--space-4) 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: var(--space-6);
+}
+
+.nav-section-title {
+    padding: var(--space-2) var(--space-6);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: var(--gray-400);
+    margin-bottom: var(--space-2);
+}
+
+.nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    margin-bottom: 2px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-6);
+    color: var(--gray-300);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    border-left: 3px solid transparent;
+    font-size: var(--font-size-sm);
+}
+
+.nav-link:hover {
+    background: var(--gray-700);
+    color: var(--white);
+    border-left-color: var(--brand-primary);
+    text-decoration: none;
+}
+
+.nav-link.active {
+    background: var(--gray-700);
+    color: var(--white);
+    border-left-color: var(--brand-primary);
+}
+
+.nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nav-section-title {
+        padding-left: var(--space-4);
+        padding-right: var(--space-4);
+    }
+    
+    .nav-link {
+        padding-left: var(--space-4);
+        padding-right: var(--space-4);
+    }
+}
+</style>

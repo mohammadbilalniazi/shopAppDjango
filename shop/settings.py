@@ -85,6 +85,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'common.context_processors.organizations_processor',  # Global organizations
+                'common.context_processors.branch_context',  # Branch data for templates
             ],
         },
     },

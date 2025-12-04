@@ -16,6 +16,16 @@ from django.contrib.auth.decorators import login_required
 def form(request,id=None):
     self_organization,user_orgs = find_userorganization(request)
     context={}
+    
+    # Get branches for the organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        branches = Branch.objects.filter(organization=self_organization, is_active=True)
+    else:
+        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
+    
+    context['branches'] = branches
+    
     if request.user.is_superuser:
         context['organizations']=Organization.objects.all() 
     else:
@@ -26,7 +36,7 @@ def form(request,id=None):
             # User has multiple organizations, use all of them
             context['organizations'] = user_orgs
     if id!="null" and id:
-        context['organization_user']=OrganizationUser.objects.get(id=int(id))
+        context['organization_user']=OrganizationUser.objects.select_related('branch').get(id=int(id))
     return render(request,"user/organization_user.html",context)
 
 
@@ -39,9 +49,23 @@ def insert(request):
     password = request.data.get("password")
     role = request.data.get("role")
     organization = request.data.get("organization")
+    branch_id = request.data.get("branch")  # Get branch from form
 
     with transaction.atomic():
         try:
+            # Handle branch if provided
+            branch = None
+            if branch_id:
+                try:
+                    from configuration.models import Branch
+                    branch = Branch.objects.get(
+                        id=int(branch_id), 
+                        organization_id=organization,
+                        is_active=True
+                    )
+                except Branch.DoesNotExist:
+                    return Response({"error": "Invalid branch selected."}, status=400)
+            
             if id:  # 🔹 UPDATE
                 instance = OrganizationUser.objects.get(id=int(id))
                 user = instance.user
@@ -57,6 +81,7 @@ def insert(request):
                 update_data["user"] = user.id
                 update_data["organization"] = organization
                 update_data["role"] = role
+                update_data["branch"] = branch.id if branch else None
 
                 serializer = OrganizationUserCreateSerializer(
                     instance, data=update_data, partial=True
@@ -89,6 +114,7 @@ def insert(request):
                 create_data["user"] = user.id
                 create_data["organization"] = organization
                 create_data["role"] = role
+                create_data["branch"] = branch.id if branch else None
 
                 serializer = OrganizationUserCreateSerializer(data=create_data)
 

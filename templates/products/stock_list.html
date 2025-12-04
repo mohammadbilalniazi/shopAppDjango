@@ -1,0 +1,259 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}Stock Management{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'assets/css/unified-styles.css' %}">
+<style>
+  .stock-container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 20px;
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    color: white;
+    padding: 25px;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .page-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .content-card {
+    background: white;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 30px;
+  }
+
+  .filter-section {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-group label {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 14px;
+  }
+
+  .filter-select {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    min-width: 200px;
+    background: white;
+    color: #333;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+
+  .stock-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .stock-table th {
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    color: white;
+    padding: 15px;
+    font-weight: 600;
+    text-align: left;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stock-table th:first-child {
+    border-radius: 0;
+  }
+
+  .stock-table th:last-child {
+    border-radius: 0;
+  }
+
+  .stock-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    color: var(--dark);
+    font-size: 14px;
+  }
+
+  .stock-table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .stock-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .stock-amount {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .low-stock {
+    color: #e74c3c;
+  }
+
+  .normal-stock {
+    color: #27ae60;
+  }
+
+  .no-stock {
+    color: #95a5a6;
+    font-style: italic;
+  }
+
+  .branch-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .no-branch {
+    background: #f5f5f5;
+    color: #666;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stock-container">
+  <div class="page-header">
+    <h1>📦 Stock Management</h1>
+  </div>
+  
+  <div class="content-card">
+    <!-- Filter Section -->
+    <form method="GET" action="">
+      <div class="filter-section">
+        <div class="filter-group">
+          <label for="branch">Filter by Branch:</label>
+          <select name="branch" id="branch" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Branches</option>
+            {% for branch in branches %}
+              <option value="{{ branch.id }}" {% if selected_branch == branch.id|stringformat:"s" %}selected{% endif %}>
+                {{ branch.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        {% if selected_branch %}
+          <div class="filter-group">
+            <label>&nbsp;</label>
+            <a href="?" class="btn-secondary" style="padding: 10px 20px; text-decoration: none; border-radius: 8px;">
+              Clear Filter
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- Stock Table -->
+    {% if stocks %}
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Branch</th>
+            <th>Current Stock</th>
+            <th>Organization</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stock in stocks %}
+            <tr>
+              <td>
+                <strong>{{ stock.product.name }}</strong>
+                {% if stock.product.model %}
+                  <br>
+                  <small style="color: #666;">Model: {{ stock.product.model }}</small>
+                {% endif %}
+              </td>
+              <td>
+                {% if stock.branch %}
+                  <span class="branch-badge">{{ stock.branch.name }}</span>
+                {% else %}
+                  <span class="branch-badge no-branch">No Branch</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="stock-amount {% if stock.current_amount <= 0 %}no-stock{% elif stock.current_amount < 10 %}low-stock{% else %}normal-stock{% endif %}">
+                  {{ stock.current_amount|floatformat:2 }}
+                </span>
+              </td>
+              <td>{{ stock.organization.name }}</td>
+              <td>
+                <small style="color: #666;">
+                  {% if stock.updated_at %}
+                    {{ stock.updated_at|date:"M j, Y H:i" }}
+                  {% else %}
+                    Not available
+                  {% endif %}
+                </small>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      {% if stocks.has_other_pages %}
+        <div style="margin-top: 30px; text-align: center;">
+          <div class="pagination">
+            {% if stocks.has_previous %}
+              <a href="?page={{ stocks.previous_page_number }}{% if selected_branch %}&branch={{ selected_branch }}{% endif %}" class="btn-secondary">« Previous</a>
+            {% endif %}
+            
+            <span style="margin: 0 15px; color: #666;">
+              Page {{ stocks.number }} of {{ stocks.paginator.num_pages }}
+            </span>
+            
+            {% if stocks.has_next %}
+              <a href="?page={{ stocks.next_page_number }}{% if selected_branch %}&branch={{ selected_branch }}{% endif %}" class="btn-secondary">Next »</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div style="text-align: center; padding: 50px; color: #666;">
+        <h3>No Stock Records Found</h3>
+        <p>{% if selected_branch %}No stock records found for the selected branch.{% else %}No stock records available.{% endif %}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

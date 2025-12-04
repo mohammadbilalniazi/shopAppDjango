@@ -42,9 +42,18 @@ def form(request,id=None):
     else:
         stock_query=Stock.objects.filter(organization__in=user_orgs)
         
+    # Get branches for the organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        branches = Branch.objects.filter(organization=self_organization, is_active=True)
+    else:
+        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
+    
+    context['branches'] = branches
+        
     if id!=None:
         try:
-            product=Product.objects.select_related('product_detail', 'product_detail__organization').get(id=int(id))
+            product=Product.objects.select_related('product_detail', 'product_detail__organization', 'product_detail__branch').get(id=int(id))
         except Product.DoesNotExist:
             # Handle case where product doesn't exist
             product = None
@@ -66,7 +75,7 @@ def form(request,id=None):
                         selling_price=0
                     )
                     # Reload the product with the new product_detail
-                    product = Product.objects.select_related('product_detail', 'product_detail__organization').get(id=int(id))
+                    product = Product.objects.select_related('product_detail', 'product_detail__organization', 'product_detail__branch').get(id=int(id))
                     context['product'] = product
             
             stock_query=stock_query.filter(product=product)
@@ -113,8 +122,9 @@ def create(request, id=None):
     stock_detail = {
         "current_amount": float(data.get("current_amount", 0))
     }
-    # Fetch organization from form data or user's organization
+    # Fetch organization and branch from form data or user's organization
     org_id = data.get("organization")
+    branch_id = data.get("branch")
     self_organization, user_orgs = find_userorganization(request)
     
     if org_id:
@@ -130,7 +140,22 @@ def create(request, id=None):
     if not selected_org:
         return Response({"message": "Please select a valid organization", "ok": False})
 
+    # Handle branch selection
+    selected_branch = None
+    if branch_id:
+        try:
+            from configuration.models import Branch
+            selected_branch = Branch.objects.get(
+                id=int(branch_id), 
+                organization=selected_org,
+                is_active=True
+            )
+        except (Branch.DoesNotExist, ValueError, TypeError):
+            # Branch is optional, so we continue without it
+            pass
+
     product_detail["organization"] = selected_org
+    product_detail["branch"] = selected_branch
         
     # Create or update Product
     if not product["id"] or str(product["id"]).strip() == "":
@@ -162,8 +187,9 @@ def create(request, id=None):
         product.img = request.FILES.get("img")  # Assign uploaded image
         product.save()
     
-    # Get organization for product detail and stock
+    # Get organization and branch for product detail and stock
     org_for_product = product_detail.get("organization")
+    branch_for_product = product_detail.get("branch")
     
     # Update or create Product_Detail
     product_detail_query = Product_Detail.objects.filter(product=product, organization=org_for_product)
@@ -173,10 +199,11 @@ def create(request, id=None):
     else:
         product_detail_obj = Product_Detail.objects.create(product=product, **product_detail)
     
-    # Always ensure stock exists for the organization
+    # Always ensure stock exists for the organization and branch
     stock, created = Stock.objects.get_or_create(
         product=product, 
         organization=org_for_product,
+        branch=branch_for_product,
         defaults={'current_amount': stock_detail.get("current_amount", 0)}
     )
     

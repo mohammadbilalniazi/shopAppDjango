@@ -3,39 +3,31 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}Shirkat{% endblock %}</title>
+    <title>{% block title %}Shirkat - Business Management System{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <meta name="description" content="Shirkat - Business Management System">
-    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Shirkat - Comprehensive Business Management System">
+    <meta name="theme-color" content="#2563eb">
     
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Unified Styles - Consistent buttons, colors, and components -->
-    <link rel="stylesheet" href="{% static 'assets/css/unified-styles.css' %}">
-    <!-- Select2 CSS for searchable dropdowns (common across templates) -->
-    <link href="{% static 'assets/css/select2.min.css' %}" rel="stylesheet" />
-    <!-- Select2 CDN CSS Fallback -->
-    <noscript><link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /></noscript>
-    <!-- Select2 Bootstrap 5 Theme CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- FontAwesome -->
     <link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
+    <!-- Design System - Core styling for consistent UI -->
+    <link rel="stylesheet" href="{% static 'assets/css/design-system.css' %}">
+    <!-- Select2 CSS for enhanced dropdowns -->
+    <link href="{% static 'assets/css/select2.min.css' %}" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Toastr notifications -->
     <link rel="stylesheet" href="{% static 'assets/css/toastr.min.css' %}">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
-    <link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
-    <!-- Responsive CSS -->
-    <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
     
     {% block head_extra %}{% endblock %}
     
     <style>
         /* ========================================
-           GLOBAL FIX: Ensure all form inputs have visible text
-           This fixes white text on white background issue
+           FORM INPUT VISIBILITY FIX
+           Ensures all form inputs have visible text
            ======================================== */
         input[type="text"],
         input[type="number"],
@@ -49,577 +41,305 @@
         input[type="datetime-local"],
         select,
         textarea,
-        .form-control,
-        .form-control-custom,
-        .inputs {
-            color: #000000 !important;
-            background-color: #ffffff !important;
-            -webkit-text-fill-color: #000000 !important;
+        .form-control {
+            color: var(--text-primary) !important;
+            background-color: var(--white) !important;
+            -webkit-text-fill-color: var(--text-primary) !important;
             opacity: 1 !important;
         }
         
         /* Placeholder styling */
         input::placeholder,
         textarea::placeholder {
-            color: #999999 !important;
+            color: var(--text-tertiary) !important;
             opacity: 1 !important;
-        }
-        
-        /* Dropdown options */
-        select option {
-            color: #000000 !important;
-            background-color: #ffffff !important;
         }
         
         /* Disabled inputs */
         input:disabled,
         select:disabled,
         textarea:disabled {
-            color: #666666 !important;
-            background-color: #f5f5f5 !important;
-            -webkit-text-fill-color: #666666 !important;
+            color: var(--text-secondary) !important;
+            background-color: var(--gray-50) !important;
+            -webkit-text-fill-color: var(--text-secondary) !important;
         }
         
-        /* Focus state - ensure text remains visible */
-        input:focus,
-        select:focus,
-        textarea:focus {
-            color: #000000 !important;
-            background-color: #ffffff !important;
-        }
-        
-        /* Autofill styling - important for Chrome/Edge */
+        /* Autofill styling */
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
         input:-webkit-autofill:active {
-            -webkit-text-fill-color: #000000 !important;
-            -webkit-box-shadow: 0 0 0 1000px white inset !important;
-            box-shadow: 0 0 0 1000px white inset !important;
+            -webkit-text-fill-color: var(--text-primary) !important;
+            -webkit-box-shadow: 0 0 0 1000px var(--white) inset !important;
         }
         
-        /* ======================================== */
-        
-        /* Body with sidebar layout */
-        body {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        
-        .page-wrapper {
-            display: flex;
-            flex: 1;
-        }
-        
-        /* Left Sidebar Styles */
-        .sidebar {
-            width: 260px;
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        /* Mobile overlay */
+        .sidebar-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            height: 100vh;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-        
-        /* Sidebar Header */
-        .sidebar-header {
-            padding: 1.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .sidebar-brand {
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .sidebar-brand:hover {
-            color: #3498db;
-        }
-        
-        /* Sidebar Navigation */
-        .sidebar-nav {
-            padding: 1rem 0;
-        }
-        
-        .sidebar-nav a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.875rem 1.5rem;
-            color: #ecf0f1;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-            font-size: 0.95rem;
-        }
-        
-        .sidebar-nav a:hover {
-            background: rgba(52, 152, 219, 0.15);
-            border-left-color: #3498db;
-            color: #fff;
-            padding-left: 1.75rem;
-        }
-        
-        .sidebar-nav a.active {
-            background: rgba(52, 152, 219, 0.2);
-            border-left-color: #3498db;
-            color: #fff;
-        }
-        
-        .sidebar-nav .nav-icon {
-            font-size: 1.25rem;
-            width: 24px;
-            text-align: center;
-        }
-        
-        /* Sidebar User Section */
-        .sidebar-user {
-            padding: 1rem 1.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: auto;
-            position: absolute;
-            bottom: 0;
             width: 100%;
-        }
-        
-        .sidebar-user-name {
-            color: #ecf0f1;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .sidebar-user a {
-            color: #3498db;
-            text-decoration: none;
-            font-size: 0.8rem;
-            display: block;
-            margin-top: 0.25rem;
-            transition: color 0.3s;
-        }
-        
-        .sidebar-user a:hover {
-            color: #5dade2;
-        }
-        
-        /* Main Content Area */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            width: calc(100% - 260px);
-        }
-        
-        /* Top Header */
-        .top-header {
-            background: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .header-user {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-        
-        /* Mobile Toggle Button */
-        .mobile-toggle {
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             display: none;
-            background: #3498db;
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.25rem;
+            z-index: 999;
         }
         
-        /* Responsive Styles */
-        @media (max-width: 992px) {
-            .sidebar {
-                left: -260px;
-            }
-            
-            .sidebar.active {
-                left: 0;
-            }
-            
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-            }
-            
-            .mobile-toggle {
-                display: block;
-            }
-            
-            /* Overlay for mobile */
-            .sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                display: none;
-                z-index: 999;
-            }
-            
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
             .sidebar-overlay.active {
                 display: block;
             }
         }
-        
-        @media (max-width: 768px) {
-            .top-header {
-                padding: 1rem;
-            }
-            
-            .header-title {
-                font-size: 1.25rem;
-            }
-            
-            .sidebar {
-                width: 240px;
-            }
-            
-            .sidebar.active {
-                left: 0;
-            }
-        }
-        
-        /* Scrollbar Styling */
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Content wrapper */
-        main.container {
-            flex: 1;
-        }
     </style>
 </head>
-<body class="bg-light">
-    <!-- Sidebar Overlay for Mobile -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    
-    <!-- Left Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <!-- Sidebar Header -->
-        <div class="sidebar-header">
-            <a class="sidebar-brand" href="{% url 'admin:index' %}">
-                <span class="nav-icon">📊</span>
-                <span>{{ organization|default:"Shirkat" }}</span>
-            </a>
-        </div>
-        
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar-nav">
-            <a href="{% url 'admin_dashboard' %}">
-                <span class="nav-icon">📊</span>
-                <span>Admin Dashboard</span>
-            </a>
-            <a href="{% url 'asset_dashboard' %}">
-                <span class="nav-icon">💰</span>
-                <span>Financial Reports</span>
-            </a>
-            <a href="{% url 'admin:index' %}">
-                <span class="nav-icon">🏠</span>
-                <span>Django Admin</span>
-            </a>
-            <a href="{% url 'bill_form_sell_purchase' %}">
-                <span class="nav-icon">🛒</span>
-                <span>Purchase/Sell</span>
-            </a>
-            <a href="{% url 'bill_form_receive_payment' %}">
-                <span class="nav-icon">💳</span>
-                <span>Receive/Payment</span>
-            </a>
-            <a href="{% url 'bill_form_loss_degrade_product' %}">
-                <span class="nav-icon">📉</span>
-                <span>Loss/Degrade</span>
-            </a>
-            <a href="{% url 'expense_form' %}">
-                <span class="nav-icon">💸</span>
-                <span>Expense</span>
-            </a>
-            <a href="{% url 'bill_show_html' %}">
-                <span class="nav-icon">📄</span>
-                <span>Bills</span>
-            </a>
-            <a href="{% url 'product_show_html' %}">
-                <span class="nav-icon">📦</span>
-                <span>Products</span>
-            </a>
-            <a href="{% url 'organization_form' %}">
-                <span class="nav-icon">🏢</span>
-                <span>Organizations</span>
-            </a>
-            <a href="{% url 'branch_select_organization' %}">
-                <span class="nav-icon">🏪</span>
-                <span>Branches</span>
-            </a>
-            <a href="{% url 'organization_user_get' %}">
-                <span class="nav-icon">👥</span>
-                <span>Users</span>
-            </a>
-        </nav>
-        
-        <!-- Sidebar User Section -->
-        <div class="sidebar-user">
-            <div class="sidebar-user-name">
-                <span>👤</span>
-                <span>{{ user|default:"Guest" }}</span>
+
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Sidebar Brand -->
+            <div class="sidebar-brand">
+                <img src="{% static 'assets/img/logo.png' %}" alt="Shirkat" onerror="this.style.display='none'">
+                <span class="sidebar-brand-text">Shirkat</span>
             </div>
-            <a href="/">View Site</a>
-            <a href="/admin/password_change/">Change Password</a>
-            <a href="/admin/logout/">Logout</a>
-        </div>
-    </aside>
-    
-    <!-- Main Content Wrapper -->
-    <div class="main-content">
-        <!-- Top Header -->
-        <header class="top-header">
-            <div class="d-flex align-items-center gap-3">
-                <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
-                <h1 class="header-title m-0">{% block page_title %}Dashboard{% endblock %}</h1>
-            </div>
-            <div class="header-user d-none d-md-flex">
-                <div class="user-avatar">{{ user.username|default:"G"|slice:":1"|upper }}</div>
-                <div>
-                    <div style="font-weight: 600; font-size: 0.9rem;">{{ user.username|default:"Guest" }}</div>
-                    <div style="font-size: 0.75rem; color: #7f8c8d;">{{ user.email|default:"user@shirkat.com" }}</div>
+            
+            <!-- Sidebar Navigation -->
+            {% include 'configurations/nav_sidebar.html' %}
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Page Header -->
+            <header class="page-header">
+                <div class="d-flex justify-between items-center">
+                    <div>
+                        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                        <nav class="breadcrumb">
+                            {% block breadcrumb %}
+                                <span>Home</span>
+                            {% endblock %}
+                        </nav>
+                    </div>
+                    <div class="d-flex items-center gap-4">
+                        <!-- User Info -->
+                        {% if user.is_authenticated %}
+                            <div class="d-flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="font-medium text-sm">{{ user.get_full_name|default:user.username }}</div>
+                                    <div class="text-xs text-secondary">
+                                        {% if current_branch %}
+                                            {{ current_branch.name }}
+                                        {% else %}
+                                            All Branches
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="w-8 h-8 rounded-full bg-gray-200 d-flex items-center justify-center">
+                                    <i class="bi bi-person text-gray-600"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Mobile Sidebar Toggle -->
+                        <button class="btn btn-ghost d-lg-none" onclick="toggleSidebar()">
+                            <i class="bi bi-list"></i>
+                        </button>
+                    </div>
                 </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="p-6">
+                {% block content %}
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="text-secondary">Welcome to Shirkat Business Management System</p>
+                        </div>
+                    </div>
+                {% endblock %}
             </div>
-        </header>
-
-        {% block hero %}{% endblock %}
-
-        <main class="container my-4">
-            {% block content %}{% endblock %}
         </main>
-
-        <footer class="bg-dark text-white py-4 mt-auto">
-            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                <span class="fw-semibold">© {{ current_year|default:2025 }} Shirkat</span>
-                <div class="d-flex gap-3 small">
-                    <a class="text-decoration-none text-warning" href="{% url 'product_show' %}">Product Catalog</a>
-                    <a class="text-decoration-none text-warning" href="{% url 'organization_form' %}">Add Organization</a>
-                    <a class="text-decoration-none text-warning" href="{% url 'host_to_heroku_login_form' %}">Login</a>
-                </div>
-            </div>
-        </footer>
     </div>
 
-    <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- JavaScript Libraries -->
+    <script src="{% static 'assets/js/jquery.min.js' %}"></script>
     <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
-    <!-- Select2 JS for searchable dropdowns (common) -->
     <script src="{% static 'assets/js/select2.min.js' %}"></script>
-    <!-- Select2 CDN Fallback - loads if local file fails -->
-    <script>
-        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 === 'undefined') {
-            console.warn('⚠️  Local Select2 failed to load, using CDN fallback...');
-            document.write('<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"><\/script>');
-        }
-    </script>
-    <script src="{% static 'assets/js/axios.min.js' %}"></script>
-    <script src="{% static 'assets/js/cookie.js' %}"></script>
     <script src="{% static 'assets/js/toastr.min.js' %}"></script>
-    <script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
-    <script src="{% static 'assets/js/common_entities/call_shirkat.js' %}"></script>
-    <script src="{% static 'assets/js/show_message.js' %}"></script>
-    
-    <!-- Sidebar Toggle Script -->
+
     <script>
-        // Toggle sidebar for mobile
+        // ========================================
+        // SIDEBAR FUNCTIONALITY
+        // ========================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('mobile-open');
+            
+            if (sidebar.classList.contains('mobile-open')) {
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            } else {
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
         }
-        
-        // Set active link based on current URL
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPath = window.location.pathname;
-            const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = event.target.closest('.btn[onclick="toggleSidebar()"]');
             
-            sidebarLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                }
-            });
-            
-            // Add data-label attributes to table cells for mobile view
-            const tables = document.querySelectorAll('table');
-            tables.forEach(table => {
-                const headers = table.querySelectorAll('th');
-                const rows = table.querySelectorAll('tbody tr');
-                
-                rows.forEach(row => {
-                    const cells = row.querySelectorAll('td');
-                    cells.forEach((cell, index) => {
-                        if (headers[index]) {
-                            cell.setAttribute('data-label', headers[index].textContent.trim());
-                        }
-                    });
-                });
-            });
+            if (!sidebar.contains(event.target) && !toggleBtn && sidebar.classList.contains('mobile-open')) {
+                toggleSidebar();
+            }
         });
-        
-        // Close sidebar when clicking a link on mobile
-        document.querySelectorAll('.sidebar-nav a').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 992) {
-                    toggleSidebar();
-                }
-            });
-        });
-    </script>
-    
-    <!-- Select2 JS for searchable dropdowns (loaded globally) -->
-    <script src="{% static 'assets/js/select2.min.js' %}"></script>
-    <script>
-        /**
-         * Global Select2 Initialization
-         * Automatically makes all organization dropdowns searchable
-         * Can be disabled per-page by setting window.CUSTOM_SELECT2_INIT = true
-         */
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if page has custom Select2 initialization
+
+        // ========================================
+        // SELECT2 INITIALIZATION
+        // ========================================
+        function initSelectDropdowns() {
+            // Skip if custom init is set
             if (window.CUSTOM_SELECT2_INIT === true) {
-                console.log('⏭️  Skipping global Select2 init - page has custom initialization');
                 return;
             }
             
-            // Check if jQuery and Select2 are loaded
-            if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
-                
-                // Initialize all organization select dropdowns
-                function initOrganizationSelects() {
-                    // Skip if custom init is set
-                    if (window.CUSTOM_SELECT2_INIT === true) {
-                        return;
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                // Initialize organization selects
+                $('select[name="organization"], .organization-select').each(function() {
+                    if (!$(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2({
+                            theme: 'bootstrap-5',
+                            placeholder: 'Select Organization',
+                            allowClear: true,
+                            width: '100%'
+                        });
                     }
-                    
-                    jQuery('.organization-select, select[name="organization"], select[id="organization"], #bill_rcvr_org, #purchased_asset_organization, .searchable-dropdown').each(function() {
-                        if (!jQuery(this).hasClass('select2-hidden-accessible')) {
-                            jQuery(this).select2({
-                                placeholder: jQuery(this).data('placeholder') || 'Select Organization',
-                                allowClear: false,
-                                width: '100%',
-                                theme: 'default',
-                                minimumResultsForSearch: 0, // ENABLE SEARCH - shows search box for any number of options
-                                dropdownAutoWidth: true,
-                                dropdownParent: jQuery('body'), // Ensure dropdown appears above other elements
-                                language: {
-                                    noResults: function() {
-                                        return 'No organization found';
-                                    },
-                                    searching: function() {
-                                        return 'Searching...';
-                                    }
-                                },
-                                // Custom CSS for better visibility
-                                containerCssClass: 'select2-organization-container',
-                                dropdownCssClass: 'select2-organization-dropdown'
-                            });
-                        }
-                    });
-                    console.log('✅ Organization dropdowns initialized with Select2 (global)');
+                });
+                
+                // Initialize other searchable dropdowns
+                $('select.searchable-dropdown, select[class*="searchable"]').each(function() {
+                    if (!$(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2({
+                            theme: 'bootstrap-5',
+                            placeholder: $(this).attr('placeholder') || 'Select Option',
+                            allowClear: true,
+                            width: '100%'
+                        });
+                    }
+                });
+            }
+        }
+
+        // Initialize on document ready
+        $(document).ready(function() {
+            initSelectDropdowns();
+            
+            // Observe DOM changes to reinitialize Select2 on dynamic content
+            const observer = new MutationObserver(function(mutations) {
+                if (window.CUSTOM_SELECT2_INIT === true) {
+                    return;
                 }
                 
-                // Initial load
-                initOrganizationSelects();
-                
-                // Observe DOM changes to reinitialize Select2 on dynamic content
-                const observer = new MutationObserver(function(mutations) {
-                    // Skip if custom init is set
-                    if (window.CUSTOM_SELECT2_INIT === true) {
-                        return;
-                    }
-                    
-                    mutations.forEach(function(mutation) {
-                        if (mutation.addedNodes.length) {
-                            mutation.addedNodes.forEach(function(node) {
-                                if (node.nodeType === 1) { // Element node
-                                    // Check if the added node is a select or contains selects
-                                    if (node.matches && node.matches('select')) {
-                                        initOrganizationSelects();
-                                    } else if (node.querySelectorAll) {
-                                        const selects = node.querySelectorAll('select[name="organization"], .organization-select, .searchable-dropdown');
-                                        if (selects.length > 0) {
-                                            initOrganizationSelects();
-                                        }
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) {
+                                if (node.matches && node.matches('select')) {
+                                    initSelectDropdowns();
+                                } else if (node.querySelectorAll) {
+                                    const selects = node.querySelectorAll('select');
+                                    if (selects.length > 0) {
+                                        initSelectDropdowns();
                                     }
                                 }
-                            });
-                        }
-                    });
+                            }
+                        });
+                    }
                 });
-                
-                // Start observing the document body for DOM changes
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-                
-            } else {
-                console.warn('⚠️  jQuery or Select2 not loaded. Organization dropdowns will not be searchable.');
-            }
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         });
+
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            if (typeof toastr !== 'undefined') {
+                toastr.options = {
+                    closeButton: true,
+                    progressBar: true,
+                    positionClass: 'toast-top-right',
+                    timeOut: 4000
+                };
+                
+                switch (type) {
+                    case 'success':
+                        toastr.success(message);
+                        break;
+                    case 'error':
+                        toastr.error(message);
+                        break;
+                    case 'warning':
+                        toastr.warning(message);
+                        break;
+                    default:
+                        toastr.info(message);
+                }
+            } else {
+                console.log(`${type.toUpperCase()}: ${message}`);
+            }
+        }
+
+        // Form validation helper
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Add loading state to buttons
+        function setButtonLoading(button, loading = true) {
+            if (loading) {
+                button.disabled = true;
+                const originalText = button.textContent;
+                button.dataset.originalText = originalText;
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
+            } else {
+                button.disabled = false;
+                button.textContent = button.dataset.originalText || button.textContent;
+            }
+        }
     </script>
+
+    <!-- Centralized API Management System -->
+    <script src="{% static 'assets/js/api-endpoints.js' %}"></script>
+    <script src="{% static 'assets/js/api-manager.js' %}"></script>
+    <script src="{% static 'assets/js/api-examples.js' %}"></script>
     
     {% block scripts %}{% endblock %}
 </body>
