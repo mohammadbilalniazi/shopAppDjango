@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 from bill import views_bill, views_bill_receive_payment
 from product import views_product, views_unit, views_stock
-from user import views_login, views_organization_user, views_session, views_groups, views_dashboard, views_user
+from user import views_login, views_organization_user, views_session, views_groups, views_dashboard, views_user, views_admin
 from configuration import views_organization, views_location, views_branch, views_branch_api
 from expenditure import views as expenditure_view
 from asset import views as asset_view
@@ -114,9 +114,10 @@ urlpatterns = [
     # Units
     path('units/<id>/', views_unit.show, name='unit_show'),
 
-    # Admin
-    path('admin/', admin.site.urls),
-    path('', lambda request: redirect('admin:index')),
+    # Custom Admin Dashboard (replaces Django admin)
+    path('admin/', views_admin.custom_admin_dashboard, name='custom_admin_dashboard'),
+    path('django-admin/', admin.site.urls, name='django_admin'),  # Keep Django admin accessible if needed
+    path('', views_admin.custom_admin_dashboard),  # Redirect root to custom admin
 
     # Auth/Login
     path('host_to_heroku_login_form/', views_login.host_to_heroku_login_form, name='host_to_heroku_login_form'),

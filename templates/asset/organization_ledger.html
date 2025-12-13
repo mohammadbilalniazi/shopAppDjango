@@ -1,0 +1,238 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}Organization Ledger Summary{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ledger-container {
+        padding: 20px;
+    }
+    
+    .ledger-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .ledger-header h1 {
+        margin: 0 0 15px 0;
+        font-size: 2rem;
+    }
+    
+    .org-selector {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .org-selector select {
+        width: 100%;
+        max-width: 400px;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+    
+    .ledger-table-container {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .ledger-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .ledger-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .ledger-table td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .ledger-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .amount-positive {
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .amount-negative {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .amount-neutral {
+        color: #6c757d;
+    }
+    
+    .ledger-summary-card {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .summary-item {
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .summary-item.receivable {
+        background: #d4edda;
+        border: 2px solid #28a745;
+    }
+    
+    .summary-item.payable {
+        background: #f8d7da;
+        border: 2px solid #dc3545;
+    }
+    
+    .summary-item.balanced {
+        background: #d1ecf1;
+        border: 2px solid #17a2b8;
+    }
+    
+    .summary-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .summary-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ledger-container">
+    <div class="ledger-header">
+        <h1>📊 Organization Ledger Summary</h1>
+        <p>View account balances between organizations - Who owes whom</p>
+    </div>
+    
+    <!-- Organization Selector -->
+    <div class="org-selector">
+        <label for="organization-select"><strong>Select Your Organization:</strong></label>
+        <form method="GET">
+            <select name="organization" id="organization-select" onchange="this.form.submit()">
+                {% for org in user_organizations %}
+                <option value="{{ org.id }}" {% if selected_organization and org.id == selected_organization.id %}selected{% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    {% if selected_organization %}
+    <div class="ledger-table-container">
+        <h2>Ledger for: {{ selected_organization.name }}</h2>
+        <p style="color: #6c757d; margin-bottom: 20px;">
+            Shows balances with other organizations based on all transactions
+        </p>
+        
+        {% if ledger_data %}
+        <!-- Summary Cards -->
+        <div class="ledger-summary-card">
+            {% with total_receivable=0 total_payable=0 %}
+                {% for item in ledger_data %}
+                    {% if item.net_position > 0 %}
+                        {% widthratio item.net_position 1 1 as temp_receivable %}
+                    {% elif item.net_position < 0 %}
+                        {% widthratio item.net_position -1 1 as temp_payable %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+        </div>
+        
+        <!-- Detailed Ledger Table -->
+        <table class="ledger-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Total Sold To Them</th>
+                    <th>Payment Received</th>
+                    <th>They Owe Us</th>
+                    <th>Total Purchased From Them</th>
+                    <th>Payment Made</th>
+                    <th>We Owe Them</th>
+                    <th>Net Position</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ledger_data %}
+                <tr>
+                    <td><strong>{{ item.organization.name }}</strong></td>
+                    <td>{{ item.total_sold|floatformat:2 }}</td>
+                    <td>{{ item.payment_received|floatformat:2 }}</td>
+                    <td class="{% if item.receivable > 0 %}amount-positive{% else %}amount-neutral{% endif %}">
+                        {{ item.receivable|floatformat:2 }}
+                    </td>
+                    <td>{{ item.total_purchased|floatformat:2 }}</td>
+                    <td>{{ item.payment_made|floatformat:2 }}</td>
+                    <td class="{% if item.payable > 0 %}amount-negative{% else %}amount-neutral{% endif %}">
+                        {{ item.payable|floatformat:2 }}
+                    </td>
+                    <td>
+                        {% if item.net_position > 0 %}
+                            <span class="amount-positive">
+                                +{{ item.net_position|floatformat:2 }}
+                                <small>(They owe us)</small>
+                            </span>
+                        {% elif item.net_position < 0 %}
+                            <span class="amount-negative">
+                                {{ item.net_position|floatformat:2 }}
+                                <small>(We owe them)</small>
+                            </span>
+                        {% else %}
+                            <span class="amount-neutral">
+                                {{ item.net_position|floatformat:2 }}
+                                <small>(Balanced)</small>
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <p><strong>Legend:</strong></p>
+            <ul>
+                <li><span class="amount-positive">Positive Net Position:</span> They owe us money (Receivable)</li>
+                <li><span class="amount-negative">Negative Net Position:</span> We owe them money (Payable)</li>
+                <li>Example: If ABC has 10,000 upon XYZ, ABC's net position with XYZ will be <span class="amount-positive">+10,000</span></li>
+            </ul>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <p>No transactions found with other organizations</p>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px;">
+        <p>No organization selected or you don't have access to any organization</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

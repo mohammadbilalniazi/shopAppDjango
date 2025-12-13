@@ -110,7 +110,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='customuser',
-            constraint=models.CheckConstraint(check=models.Q(('role__in', ['EMPLOYEE', 'MANAGER', 'ADMIN'])), name='valid_user_type'),
+            constraint=models.CheckConstraint(condition=models.Q(('role__in', ['EMPLOYEE', 'MANAGER', 'ADMIN'])), name='valid_user_type'),
         ),
         migrations.AddConstraint(
             model_name='customuser',

@@ -1,0 +1,319 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}Admin: Adjust Asset Summaries{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-adjust-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .admin-header h1 {
+        margin: 0 0 10px 0;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .warning-box strong {
+        color: #856404;
+    }
+    
+    .org-filter {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .summaries-table-container {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .summaries-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .summaries-table th {
+        background: #343a40;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+    }
+    
+    .summaries-table td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .summaries-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .editable-field {
+        padding: 6px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 120px;
+        font-family: monospace;
+    }
+    
+    .editable-field:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    
+    .save-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 6px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .save-btn:hover {
+        background: #218838;
+    }
+    
+    .bill-type-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .badge-purchase { background: #f8d7da; color: #721c24; }
+    .badge-selling { background: #d4edda; color: #155724; }
+    .badge-payment { background: #fff3cd; color: #856404; }
+    .badge-receivement { background: #d1ecf1; color: #0c5460; }
+    .badge-expense { background: #f5c6cb; color: #721c24; }
+    .badge-lossdegrade { background: #e2e3e5; color: #383d41; }
+    
+    .toast-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        z-index: 10000;
+        display: none;
+    }
+    
+    .toast-success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    
+    .toast-error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-adjust-container">
+    <div class="admin-header">
+        <h1>🛠️ Admin: Adjust Asset Summaries</h1>
+        <p>Manually adjust cached financial summary values when needed</p>
+    </div>
+    
+    <div class="warning-box">
+        <strong>⚠️ Warning:</strong> These are cached values used for performance. Changes here will affect financial reports.
+        Only adjust when necessary (e.g., corrections, manual entries, system migrations).
+    </div>
+    
+    <!-- Organization Filter -->
+    <div class="org-filter">
+        <label><strong>Filter by Organization:</strong></label>
+        <form method="GET" style="display: inline;">
+            <select name="organization" onchange="this.form.submit()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                <option value="">-- All Organizations --</option>
+                {% for org in organizations %}
+                <option value="{{ org.id }}" {% if selected_organization and org.id == selected_organization.id %}selected{% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    <!-- Summaries Table -->
+    <div class="summaries-table-container">
+        <h3>Asset Whole Bill Summaries</h3>
+        <p style="color: #6c757d;">These values are automatically calculated from bills. Edit only when necessary.</p>
+        
+        {% if summaries %}
+        <table class="summaries-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Bill Type</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Outstanding</th>
+                    <th>Profit</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in summaries %}
+                <tr id="row-{{ summary.id }}">
+                    <td><strong>{{ summary.organization.name }}</strong></td>
+                    <td>
+                        <span class="bill-type-badge badge-{{ summary.bill_type|lower }}">
+                            {{ summary.bill_type }}
+                        </span>
+                    </td>
+                    <td>
+                        <input type="number" 
+                               step="0.01" 
+                               class="editable-field" 
+                               data-summary-id="{{ summary.id }}" 
+                               data-field="total"
+                               value="{{ summary.total }}"
+                               id="total-{{ summary.id }}">
+                    </td>
+                    <td>
+                        <input type="number" 
+                               step="0.01" 
+                               class="editable-field" 
+                               data-summary-id="{{ summary.id }}" 
+                               data-field="payment"
+                               value="{{ summary.payment }}"
+                               id="payment-{{ summary.id }}">
+                    </td>
+                    <td>
+                        <span id="outstanding-{{ summary.id }}">
+                            {{ summary.total|add:summary.payment|floatformat:2 }}
+                        </span>
+                    </td>
+                    <td>
+                        <input type="number" 
+                               class="editable-field" 
+                               data-summary-id="{{ summary.id }}" 
+                               data-field="profit"
+                               value="{{ summary.profit }}"
+                               id="profit-{{ summary.id }}">
+                    </td>
+                    <td>
+                        <button class="save-btn" onclick="saveSummary({{ summary.id }})">
+                            Save
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <p>No summaries found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toast Message -->
+<div id="toast" class="toast-message"></div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = `toast-message toast-${type}`;
+    toast.style.display = 'block';
+    
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
+}
+
+function saveSummary(summaryId) {
+    const total = document.getElementById(`total-${summaryId}`).value;
+    const payment = document.getElementById(`payment-${summaryId}`).value;
+    const profit = document.getElementById(`profit-${summaryId}`).value;
+    
+    const csrftoken = getCookie('csrfmiddlewaretoken');
+    
+    // Save all fields
+    const fields = [
+        { field: 'total', value: total },
+        { field: 'payment', value: payment },
+        { field: 'profit', value: profit }
+    ];
+    
+    let savedCount = 0;
+    
+    fields.forEach(item => {
+        fetch('/asset/admin/update-ajax/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken
+            },
+            body: `summary_id=${summaryId}&field=${item.field}&value=${item.value}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            savedCount++;
+            if (savedCount === fields.length) {
+                if (data.success) {
+                    showToast('Summary updated successfully!', 'success');
+                    // Update outstanding
+                    const outstanding = parseFloat(total) - parseFloat(payment);
+                    document.getElementById(`outstanding-${summaryId}`).textContent = outstanding.toFixed(2);
+                } else {
+                    showToast('Error: ' + data.error, 'error');
+                }
+            }
+        })
+        .catch(error => {
+            showToast('Network error occurred', 'error');
+        });
+    });
+}
+</script>
+{% endblock %}

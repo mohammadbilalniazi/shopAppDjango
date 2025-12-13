@@ -7,7 +7,52 @@
 {{ block.super }}
 {% if form %}{{ form.media.css }}{% endif %}
 <style>
-    /* Bill Detail Page using Design System */
+    /* Bill Detail Page - Beautiful Modern Design */
+    
+    /* Stat Box Styling */
+    .stat-box {
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, var(--bs-body-bg) 0%, rgba(255,255,255,0.5) 100%);
+    }
+    
+    .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    }
+    
+    .stat-box input {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        text-align: right;
+        padding: 0.5rem 0;
+    }
+    
+    .stat-box input:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Background Gradient for Header */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+    
+    /* Enhanced Table Styling */
+    .table-hover tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.05) !important;
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .table thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
     
     /* Enhanced Select/Dropdown Styling */
     .form-select-custom,
@@ -155,6 +200,29 @@
         outline: none !important;
     }
 
+    /* Card Footer Styling */
+    .card-footer {
+        background-color: #f8f9fa;
+        padding: 1rem 1.5rem;
+    }
+    
+    /* Input Group Enhancement */
+    .input-group-text {
+        border: 2px solid #dee2e6 !important;
+        border-right: none !important;
+    }
+    
+    .input-group .form-control {
+        border-left: none !important;
+    }
+    
+    /* Button Enhancements */
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
     /* Ensure dropdowns are visible over tables */
     .table-responsive {
         overflow: visible !important;
@@ -164,83 +232,200 @@
     .card-body {
         overflow: visible !important;
     }
+    
+    /* Animation for loading states */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .card-custom {
+        animation: fadeIn 0.3s ease;
+    }
 
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
+<!-- Page Header with Actions -->
 <div class="gradient-card mb-4">
-    <h1><i class="bi bi-receipt-cutoff"></i> Bill Management & Analytics</h1>
-</div>
-
-<!-- Summary Statistics Section -->
-<div class="card-custom mb-4">
-    <div class="card-custom-header">
-        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Financial Summary</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-modern mb-0">
-                <thead>
-                    <tr>
-                        <th>اخستنی مجموعه</th>
-                        <th><input type="number" name="total_sum_purchase" id="total_sum_purchase" class="form-control-custom"></th>
-                        <th>اخستنی په وخت نغدی اداشوی</th>
-                        <th><input type="number" name="payment_sum_purchase" id="payment_sum_purchase" class="form-control-custom"></th>
-                        <th>په قرضو اخستل شوی مال مجموعه</th>
-                        <th><input type="number" name="notpaid_purchase" id="notpaid_purchase" class="form-control-custom"></th>
-                    </tr>
-                    <tr>
-                        <th>مجموعه خرڅلاو</th>
-                        <th><input type="number" name="total_sum_selling" id="total_sum_selling" class="form-control-custom"></th>
-                        <th>دخرڅلاو په وخت نغدی اخستل شوی</th>
-                        <th><input type="number" name="payment_sum_selling" id="payment_sum_selling" class="form-control-custom"></th>
-                        <th>په قرضو خرڅلاو شوی مجموعه</th>
-                        <th><input type="number" name="notpaid_sell" id="notpaid_sell" class="form-control-custom"></th>
-                    </tr>
-                    <tr>
-                        <th>مجموعه نغدی اداشوی</th>
-                        <th><input type="number" name="payment_sum_payment" id="payment_sum_payment" class="form-control-custom"></th>
-                        <th>مجموعه نغدی ترلاسه شوی</th>
-                        <th><input type="number" name="receivement_sum" id="receivement_sum" class="form-control-custom"></th>
-                        <th>خلاصه کهاته</th>
-                        <th><input type="number" name="total_summary" id="total_summary" class="form-control-custom"></th>
-                    </tr>
-                    <tr>
-                        <th>مصرف</th>
-                        <th><input type="number" name="payment_sum_expense" id="payment_sum_expense" class="form-control-custom"></th>
-                        <th>مات شوی تاوان شوی</th>
-                        <th><input type="number" name="payment_sum_loss" id="payment_sum_loss" class="form-control-custom bg-danger text-white"></th>
-                        <th>مجموعه ګټه</th>
-                        <th><input type="number" name="profit_sum" id="profit_sum" class="form-control-custom"></th>
-                    </tr>
-                    <tr>
-                        <th colspan="4"></th>
-                        <th>خلاصه ګټه (مجموعه ګټه - مصرف)</th>
-                        <th><input type="number" name="net_profit_sum" id="net_profit_sum" class="form-control-custom"></th>
-                    </tr>
-                    
-                </thead>
-            </table>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="mb-2"><i class="bi bi-receipt-cutoff"></i> Bill Management & Analytics</h1>
+            <p class="mb-0 text-white-50">Comprehensive bill tracking and financial analysis</p>
+        </div>
+        <div class="btn-group" role="group">
+            <a href="{% url 'bill_form_sell_purchase' %}" class="btn btn-light btn-lg">
+                <i class="bi bi-cart-plus"></i> New Sale/Purchase
+            </a>
+            <a href="{% url 'bill_form_receive_payment' %}" class="btn btn-success btn-lg">
+                <i class="bi bi-cash-coin"></i> Payment/Receive
+            </a>
+            <a href="{% url 'expense_form' %}" class="btn btn-warning btn-lg">
+                <i class="bi bi-wallet2"></i> Expense
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Filter Section -->
+<!-- Financial Summary - Beautiful Grid Layout -->
 <div class="card-custom mb-4">
-    <div class="card-custom-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Bill Filters</h5>
-      
+    <div class="card-custom-header">
+        <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Financial Summary Dashboard</h5>
     </div>
     <div class="card-body">
-        <div class="row g-3">
+        <!-- Purchases Section -->
+        <div class="row g-3 mb-4 pb-4 border-bottom">
+            <div class="col-12">
+                <h6 class="text-primary fw-bold mb-3">
+                    <i class="bi bi-bag-check"></i> اخستنی (Purchases)
+                </h6>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-danger-subtle border-start border-danger border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">اخستنی مجموعه (Total Purchases)</label>
+                    <input type="number" name="total_sum_purchase" id="total_sum_purchase" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-danger" readonly>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-success-subtle border-start border-success border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">اخستنی په وخت نغدی اداشوی (Paid Cash)</label>
+                    <input type="number" name="payment_sum_purchase" id="payment_sum_purchase" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-success" readonly>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-warning-subtle border-start border-warning border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">په قرضو اخستل شوی مال مجموعه (Credit)</label>
+                    <input type="number" name="notpaid_purchase" id="notpaid_purchase" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-warning" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Section -->
+        <div class="row g-3 mb-4 pb-4 border-bottom">
+            <div class="col-12">
+                <h6 class="text-success fw-bold mb-3">
+                    <i class="bi bi-cart-check"></i> خرڅلاو (Sales)
+                </h6>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-success-subtle border-start border-success border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">مجموعه خرڅلاو (Total Sales)</label>
+                    <input type="number" name="total_sum_selling" id="total_sum_selling" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-success" readonly>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-primary-subtle border-start border-primary border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">دخرڅلاو په وخت نغدی اخستل شوی (Cash Received)</label>
+                    <input type="number" name="payment_sum_selling" id="payment_sum_selling" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-primary" readonly>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-warning-subtle border-start border-warning border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">په قرضو خرڅلاو شوی مجموعه (Credit Sales)</label>
+                    <input type="number" name="notpaid_sell" id="notpaid_sell" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-warning" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments & Receivables Section -->
+        <div class="row g-3 mb-4 pb-4 border-bottom">
+            <div class="col-12">
+                <h6 class="text-info fw-bold mb-3">
+                    <i class="bi bi-cash-stack"></i> نغدی تبادله (Cash Transactions)
+                </h6>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-danger-subtle border-start border-danger border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">مجموعه نغدی اداشوی (Total Payments Made)</label>
+                    <input type="number" name="payment_sum_payment" id="payment_sum_payment" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-danger" readonly>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-success-subtle border-start border-success border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">مجموعه نغدی ترلاسه شوی (Total Received)</label>
+                    <input type="number" name="receivement_sum" id="receivement_sum" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-success" readonly>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box bg-info-subtle border-start border-info border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">خلاصه کهاته (Net Balance)</label>
+                    <input type="number" name="total_summary" id="total_summary" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-info" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses & Profit Section -->
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <h6 class="text-warning fw-bold mb-3">
+                    <i class="bi bi-graph-up"></i> مصرف او ګټه (Expenses & Profit)
+                </h6>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box bg-warning-subtle border-start border-warning border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">مصرف (Expenses)</label>
+                    <input type="number" name="payment_sum_expense" id="payment_sum_expense" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-warning" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box bg-danger-subtle border-start border-danger border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">مات شوی تاوان شوی (Loss/Damage)</label>
+                    <input type="number" name="payment_sum_loss" id="payment_sum_loss" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-danger" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box bg-success-subtle border-start border-success border-4 p-3 rounded">
+                    <label class="text-muted small d-block mb-1">مجموعه ګټه (Gross Profit)</label>
+                    <input type="number" name="profit_sum" id="profit_sum" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-success" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box bg-primary-subtle border-start border-primary border-4 p-3 rounded shadow-sm">
+                    <label class="text-muted small d-block mb-1 fw-semibold">
+                        <i class="bi bi-trophy"></i> خلاصه ګټه (Net Profit)
+                    </label>
+                    <input type="number" name="net_profit_sum" id="net_profit_sum" 
+                           class="form-control form-control-lg fw-bold border-0 bg-transparent text-primary fs-4" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filter Section -->
+<div class="card-custom mb-4 shadow-sm">
+    <div class="card-custom-header bg-gradient-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel-fill"></i> Bill Filters & Search
+            </h5>
+            <button id="search_kahatha" class="btn btn-light btn-sm">
+                <i class="bi bi-search"></i> کهاته لـټول
+            </button>
+        </div>
+    </div>
+    <div class="card-body bg-light">
+        <!-- Primary Filters -->
+        <div class="row g-3 mb-3">
             <div class="col-md-3">
                 <label for="organization" class="form-label-custom">
-                    <i class="bi bi-building"></i> Organization
+                    <i class="bi bi-building text-primary"></i> Organization
                 </label>
                 <select name="organization" class="form-select-custom" required id="organization">
-                    <option value="">Select Organization</option>
+                    <option value="">🏢 Select Organization</option>
                     {% for row in organizations %}
                         <option value="{{ row.id }}">{{ row }}</option>
                     {% endfor %}
@@ -248,86 +433,147 @@
             </div>
             <div class="col-md-2">
                 <label for="bill_no" class="form-label-custom">
-                    <i class="bi bi-hash"></i> Bill No
+                    <i class="bi bi-hash text-info"></i> Bill No
                 </label>
-                <input class="form-control-custom" type="number" placeholder="Bill Number" name="bill_no" id="bill_no">
-            </div>
-            <div class="col-md-2">
-                <label for="bill_type" class="form-label-custom">
-                    <i class="bi bi-tag"></i> Bill Type
-                </label>
-                <select class="form-select-custom" name="bill_type" id="bill_type">
-                    <option value="all">All bills</option>
-                    <option value="PURCHASE">PURCHASE</option>
-                    <option value="SELLING">SELLING</option>
-                    <option value="PAYMENT">PAYMENT</option>
-                    <option value="RECEIVEMENT">RECEIVEMENT</option>
-                    <option value="LOSSDEGRADE">مات شوی تاوان</option>
-                    <option value="EXPENSE">EXPENSE</option>
-                </select>
+                <input class="form-control-custom" type="number" placeholder="Enter bill number" 
+                       name="bill_no" id="bill_no" min="0">
             </div>
             <div class="col-md-3">
+                <label for="bill_type" class="form-label-custom">
+                    <i class="bi bi-tag text-warning"></i> Bill Type
+                </label>
+                <select class="form-select-custom" name="bill_type" id="bill_type">
+                    <option value="all">📋 All Bill Types</option>
+                    <option value="PURCHASE">🛒 PURCHASE</option>
+                    <option value="SELLING">💰 SELLING</option>
+                    <option value="PAYMENT">💳 PAYMENT</option>
+                    <option value="RECEIVEMENT">💵 RECEIVEMENT</option>
+                    <option value="LOSSDEGRADE">⚠️ مات شوی تاوان</option>
+                    <option value="EXPENSE">💸 EXPENSE</option>
+                </select>
+            </div>
+            <div class="col-md-4">
                 <label for="bill_rcvr_org" class="form-label-custom">
-                    <i class="bi bi-shop"></i> Receiver Organization
+                    <i class="bi bi-shop text-success"></i> Receiver Organization
                 </label>
                 <select class="form-select-custom" name="bill_rcvr_org" id="bill_rcvr_org">
-                    <option value="">All Shirkat/Shop</option>
+                    <option value="">🏪 All Organizations</option>
                     {% for row in rcvr_orgs %}
                         <option value="{{ row.id }}">{{ row }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end gap-2">
-                <button id="search_kahatha" class="btn btn-success-gradient flex-grow-1">
-                    <i class="bi bi-search"></i> کهاته لـټول
-                </button>
-            </div>
         </div>
-        <div class="row g-3 mt-2">
-            <div class="col-md-4">
+
+        <!-- Date Range & Actions -->
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
                 <label class="form-label-custom">
-                    <i class="bi bi-calendar-check"></i> From Date
+                    <i class="bi bi-calendar-check text-success"></i> From Date
                 </label>
-                <div>{{ form.start_date }}</div>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-calendar3"></i></span>
+                    {{ form.start_date }}
+                </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label-custom">
-                    <i class="bi bi-calendar-x"></i> To Date
+                    <i class="bi bi-calendar-x text-danger"></i> To Date
                 </label>
-                <div>{{ form.end_date }}</div>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-calendar3"></i></span>
+                    {{ form.end_date }}
+                </div>
             </div>
-            <div class="col-md-4 d-flex align-items-end gap-2">
-                <button class="btn btn-warning-gradient flex-grow-1" id="finalize_ledger" onclick="finalize_ledger()">
-                    <i class="bi bi-arrow-counterclockwise"></i> کهاته صفر کول
+            <div class="col-md-3">
+                <button class="btn btn-warning-gradient w-100 btn-lg shadow-sm" id="finalize_ledger" onclick="finalize_ledger()">
+                    <i class="bi bi-arrow-counterclockwise"></i> کهاته صفر کول (Reset Ledger)
                 </button>
-                <span id="pagination_id" class="badge-custom badge-success-custom fs-6"></span>
+            </div>
+            <div class="col-md-3 text-end">
+                <div class="d-flex align-items-center justify-content-end gap-2">
+                    <span class="badge bg-success fs-6 py-2 px-3" id="pagination_id">
+                        <i class="bi bi-file-earmark-text"></i> Ready to search
+                    </span>
+                </div>
             </div>
         </div>
         <input type="hidden" id="organization_hidden" name="organization">
     </div>
 </div>
 
-<!-- Bills Table Section -->
-<div class="card-custom">
-    <div class="card-custom-header">
-        <h5 class="mb-0"><i class="bi bi-table"></i> Bills List</h5>
+<!-- Bills Table Section - Modern Design -->
+<div class="card-custom shadow-sm">
+    <div class="card-custom-header bg-white border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-table text-primary"></i> Bills List
+            </h5>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge bg-primary-subtle text-primary border border-primary">
+                    <i class="bi bi-filter-circle"></i> Filtered Results
+                </span>
+            </div>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-modern mb-0">
-                <thead>
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-dark">
                     <tr>
-                        <th><i class="bi bi-building"></i> Organization</th>
-                        <th><i class="bi bi-hash"></i> Bill No</th>
-                        <th><i class="bi bi-people"></i> (Opposit) Vendors</th>
-                        <th><i class="bi bi-currency-dollar"></i> Total Bill</th>
-                        <th><i class="bi bi-cash"></i> Payment</th>
-                        <th><i class="bi bi-calendar-event"></i> Date</th>
-                        <th><i class="bi bi-gear"></i> Actions</th>
+                        <th class="text-center" style="width: 5%;">
+                            <i class="bi bi-hash"></i>
+                        </th>
+                        <th style="width: 15%;">
+                            <i class="bi bi-building"></i> Organization
+                        </th>
+                        <th style="width: 10%;" class="text-center">
+                            <i class="bi bi-receipt"></i> Bill No
+                        </th>
+                        <th style="width: 15%;">
+                            <i class="bi bi-people"></i> Vendor/Customer
+                        </th>
+                        <th style="width: 12%;" class="text-end">
+                            <i class="bi bi-currency-dollar"></i> Total
+                        </th>
+                        <th style="width: 12%;" class="text-end">
+                            <i class="bi bi-cash"></i> Payment
+                        </th>
+                        <th style="width: 12%;" class="text-end">
+                            <i class="bi bi-exclamation-circle"></i> Balance
+                        </th>
+                        <th style="width: 10%;" class="text-center">
+                            <i class="bi bi-calendar-event"></i> Date
+                        </th>
+                        <th style="width: 9%;" class="text-center">
+                            <i class="bi bi-gear"></i> Actions
+                        </th>
                     </tr>
                 </thead>
-                <tbody id="bill_tbody"></tbody>
+                <tbody id="bill_tbody">
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <div class="d-flex flex-column align-items-center gap-3">
+                                <i class="bi bi-search fs-1 text-secondary"></i>
+                                <div>
+                                    <h6>Select an organization and click search to view bills</h6>
+                                    <p class="small mb-0">Use the filters above to refine your search</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
+        </div>
+    </div>
+    <div class="card-footer bg-light border-top">
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Click on any bill to view details
+            </small>
+            <div id="table_pagination">
+                <!-- Pagination will be inserted here by JavaScript -->
+            </div>
         </div>
     </div>
 </div>

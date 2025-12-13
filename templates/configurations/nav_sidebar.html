@@ -17,27 +17,21 @@
         <div class="nav-section-title">Products</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/products/" class="nav-link {% if '/products/' in request.path %}active{% endif %}">
+                <a href="{% url 'product_show_html' %}" class="nav-link {% if '/product/product/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-box"></i>
                     <span>All Products</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/products/create/" class="nav-link">
+                <a href="{% url 'product_form' %}" class="nav-link">
                     <i class="nav-icon bi bi-plus-circle"></i>
                     <span>Add Product</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/products/stock/" class="nav-link {% if '/stock/' in request.path %}active{% endif %}">
+                <a href="{% url 'stock_list' %}" class="nav-link {% if '/stock/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-boxes"></i>
                     <span>Stock Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/products/categories/" class="nav-link">
-                    <i class="nav-icon bi bi-tags"></i>
-                    <span>Categories</span>
                 </a>
             </li>
         </ul>
@@ -48,27 +42,33 @@
         <div class="nav-section-title">Sales & Bills</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/bills/" class="nav-link {% if '/bills/' in request.path and 'create' not in request.path %}active{% endif %}">
+                <a href="{% url 'bill_show_html' %}" class="nav-link {% if '/bill/bill/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-receipt"></i>
                     <span>All Bills</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/bills/create/" class="nav-link {% if '/bills/create' in request.path %}active{% endif %}">
+                <a href="{% url 'bill_form_sell_purchase' %}" class="nav-link {% if 'bill/add' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-plus-square"></i>
-                    <span>Create Bill</span>
+                    <span>Sell/Purchase</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/bills/purchase/" class="nav-link">
-                    <i class="nav-icon bi bi-cart"></i>
-                    <span>Purchases</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/bills/payment/" class="nav-link">
+                <a href="{% url 'bill_form_receive_payment' %}" class="nav-link {% if 'receive_payment' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-credit-card"></i>
-                    <span>Payments</span>
+                    <span>Receive/Payment</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'expense_form' %}" class="nav-link {% if '/expenditure/' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-wallet2"></i>
+                    <span>Expenses</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'bill_form_loss_degrade_product' %}" class="nav-link">
+                    <i class="nav-icon bi bi-exclamation-triangle"></i>
+                    <span>Loss/Degrade</span>
                 </a>
             </li>
         </ul>
@@ -110,29 +110,21 @@
         <div class="nav-section-title">Configuration</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/configuration/organization/" class="nav-link {% if '/organization/' in request.path %}active{% endif %}">
+                <a href="{% url 'organization_show' %}" class="nav-link {% if '/organization/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-building"></i>
                     <span>Organizations</span>
                 </a>
             </li>
-            {% if user_branches_count > 1 or user.is_superuser %}
             <li class="nav-item">
-                <a href="/configuration/branch/{{ global_parent_organization.id|default:1 }}/" class="nav-link {% if '/branch/' in request.path %}active{% endif %}">
+                <a href="{% url 'branch_select_organization' %}" class="nav-link {% if '/branch/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-diagram-3"></i>
                     <span>Branches</span>
                 </a>
             </li>
-            {% endif %}
             <li class="nav-item">
-                <a href="/configuration/location/" class="nav-link">
+                <a href="{% url 'location_show' %}" class="nav-link {% if '/location/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-geo-alt"></i>
                     <span>Locations</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/configuration/currency/" class="nav-link">
-                    <i class="nav-icon bi bi-currency-exchange"></i>
-                    <span>Currency</span>
                 </a>
             </li>
         </ul>
@@ -140,32 +132,52 @@
 
     <!-- Reports & Analytics Section -->
     <div class="nav-section">
-        <div class="nav-section-title">Reports</div>
+        <div class="nav-section-title">Financial Reports</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="/asset/dashboard/" class="nav-link {% if '/asset/dashboard' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-graph-up"></i>
-                    <span>Dashboard</span>
+                <a href="{% url 'asset_dashboard' %}" class="nav-link {% if '/asset/dashboard' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-speedometer"></i>
+                    <span>Asset Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/asset/profit_loss/" class="nav-link {% if '/profit_loss' in request.path %}active{% endif %}">
+                <a href="{% url 'financial_dashboard' %}" class="nav-link {% if '/asset/financial' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-graph-up"></i>
+                    <span>Financial Summary</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'organization_ledger' %}" class="nav-link {% if '/asset/ledger' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-book"></i>
+                    <span>Organization Ledger</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'profit_loss' %}" class="nav-link {% if '/profit-loss' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-bar-chart"></i>
                     <span>Profit & Loss</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/asset/balance_sheet/" class="nav-link {% if '/balance_sheet' in request.path %}active{% endif %}">
+                <a href="{% url 'balance_sheet' %}" class="nav-link {% if '/balance-sheet' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-clipboard-data"></i>
                     <span>Balance Sheet</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/asset/cash_flow/" class="nav-link {% if '/cash_flow' in request.path %}active{% endif %}">
+                <a href="{% url 'cash_flow' %}" class="nav-link {% if '/cash-flow' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-cash-stack"></i>
                     <span>Cash Flow</span>
                 </a>
             </li>
+            {% if user.is_superuser or user.is_staff %}
+            <li class="nav-item">
+                <a href="{% url 'admin_adjust' %}" class="nav-link {% if '/asset/admin/adjust' in request.path %}active{% endif %}">
+                    <i class="nav-icon bi bi-sliders"></i>
+                    <span>Adjust Summary</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
     </div>
 
@@ -182,15 +194,15 @@
             </li>
             {% if user.is_superuser %}
             <li class="nav-item">
-                <a href="/admin/" class="nav-link" target="_blank">
+                <a href="/django-admin/" class="nav-link" target="_blank">
                     <i class="nav-icon bi bi-gear"></i>
-                    <span>Admin Panel</span>
+                    <span>Django Admin</span>
                     <i class="bi bi-box-arrow-up-right text-xs ml-auto"></i>
                 </a>
             </li>
             {% endif %}
             <li class="nav-item">
-                <a href="/admin/logout/" class="nav-link">
+                <a href="/host_to_heroku_login_form/" class="nav-link">
                     <i class="nav-icon bi bi-box-arrow-right"></i>
                     <span>Logout</span>
                 </a>

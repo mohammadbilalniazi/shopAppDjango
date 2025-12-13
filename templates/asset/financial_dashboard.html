@@ -1,0 +1,247 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}Financial Dashboard - {{ selected_organization.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .financial-dashboard {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-header h1 {
+        margin: 0 0 10px 0;
+        font-size: 2rem;
+    }
+    
+    .org-selector {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .metric-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-left: 4px solid var(--card-color);
+    }
+    
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--card-color);
+    }
+    
+    .metric-subtitle {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .summary-section {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .summary-section h3 {
+        margin: 0 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .summary-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .summary-table td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .positive { color: #28a745; font-weight: bold; }
+    .negative { color: #dc3545; font-weight: bold; }
+    .neutral { color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="financial-dashboard">
+    <div class="dashboard-header">
+        <h1>💰 Financial Dashboard</h1>
+        <p>Comprehensive financial overview using cached data for performance</p>
+    </div>
+    
+    <!-- Organization Selector -->
+    <div class="org-selector">
+        <label><strong>Select Organization:</strong></label>
+        <form method="GET">
+            <select name="organization" onchange="this.form.submit()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-width: 300px;">
+                {% for org in user_organizations %}
+                <option value="{{ org.id }}" {% if selected_organization and org.id == selected_organization.id %}selected{% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    {% if selected_organization %}
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card" style="--card-color: #28a745;">
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-value">{{ total_revenue|floatformat:2 }}</div>
+            <div class="metric-subtitle">From Sales</div>
+        </div>
+        
+        <div class="metric-card" style="--card-color: #dc3545;">
+            <div class="metric-label">Total Cost</div>
+            <div class="metric-value">{{ total_cost|floatformat:2 }}</div>
+            <div class="metric-subtitle">Purchases</div>
+        </div>
+        
+        <div class="metric-card" style="--card-color: #17a2b8;">
+            <div class="metric-label">Gross Profit</div>
+            <div class="metric-value">{{ gross_profit|floatformat:2 }}</div>
+            <div class="metric-subtitle">Revenue - Cost</div>
+        </div>
+        
+        <div class="metric-card" style="--card-color: #ffc107;">
+            <div class="metric-label">Net Profit</div>
+            <div class="metric-value" style="color: {% if net_profit >= 0 %}#28a745{% else %}#dc3545{% endif %};">
+                {{ net_profit|floatformat:2 }}
+            </div>
+            <div class="metric-subtitle">After Expenses & Losses</div>
+        </div>
+    </div>
+    
+    <!-- Financial Summary Details -->
+    <div class="summary-section">
+        <h3>📊 Detailed Financial Summary</h3>
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Outstanding</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill_type, data in financial_summary.items %}
+                <tr>
+                    <td><strong>{{ bill_type }}</strong></td>
+                    <td>{{ data.total|floatformat:2 }}</td>
+                    <td>{{ data.payment|floatformat:2 }}</td>
+                    <td class="{% if data.outstanding > 0 %}negative{% else %}neutral{% endif %}">
+                        {{ data.outstanding|floatformat:2 }}
+                    </td>
+                    <td>{{ data.profit }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #6c757d;">No financial data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Balance Sheet Summary -->
+    <div class="summary-section">
+        <h3>📋 Balance Sheet Summary</h3>
+        <div class="metrics-grid">
+            <div class="metric-card" style="--card-color: #28a745;">
+                <div class="metric-label">Accounts Receivable</div>
+                <div class="metric-value">{{ accounts_receivable|floatformat:2 }}</div>
+                <div class="metric-subtitle">Customers owe us</div>
+            </div>
+            
+            <div class="metric-card" style="--card-color: #dc3545;">
+                <div class="metric-label">Accounts Payable</div>
+                <div class="metric-value">{{ accounts_payable|floatformat:2 }}</div>
+                <div class="metric-subtitle">We owe suppliers</div>
+            </div>
+            
+            <div class="metric-card" style="--card-color: #17a2b8;">
+                <div class="metric-label">Loans Receivable</div>
+                <div class="metric-value">{{ loans_receivable|floatformat:2 }}</div>
+                <div class="metric-subtitle">Loans given</div>
+            </div>
+            
+            <div class="metric-card" style="--card-color: #ffc107;">
+                <div class="metric-label">Loans Payable</div>
+                <div class="metric-value">{{ loans_payable|floatformat:2 }}</div>
+                <div class="metric-subtitle">Loans received</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h4>Net Position: 
+                <span style="font-size: 1.5rem; {% if net_position >= 0 %}color: #28a745;{% else %}color: #dc3545;{% endif %}">
+                    {{ net_position|floatformat:2 }}
+                </span>
+            </h4>
+            <p style="color: #6c757d; margin: 5px 0 0 0;">
+                {% if net_position > 0 %}
+                    Organization has a positive net position (more assets than liabilities)
+                {% elif net_position < 0 %}
+                    Organization has a negative net position (more liabilities than assets)
+                {% else %}
+                    Organization is balanced
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+        <p><strong>ℹ️ Note:</strong> All data is cached from AssetWholeBillSummary for optimal performance. 
+        This ensures fast loading even with thousands of bills.</p>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px;">
+        <p>No organization selected</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

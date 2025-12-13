@@ -1,5 +1,23 @@
 var data;
 
+/**
+ * Get CSRF token from cookies
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 async function make_table(response_data)
 {
     console.log("make_table response_data", response_data)
@@ -28,6 +46,25 @@ async function make_table(response_data)
     profit_sum=document.getElementById("profit_sum");
     profit_sum.value = statistics.profit_sum || 0;
     total_summary.value = statistics.total_summary || 0;
+    
+    // Update display cards (modern design)
+    const total_sum_purchase_display = document.getElementById("total_sum_purchase_display");
+    const payment_sum_purchase_display = document.getElementById("payment_sum_purchase_display");
+    const notpaid_purchase_display = document.getElementById("notpaid_purchase_display");
+    const total_sum_selling_display = document.getElementById("total_sum_selling_display");
+    const payment_sum_selling_display = document.getElementById("payment_sum_selling_display");
+    const notpaid_sell_display = document.getElementById("notpaid_sell_display");
+    const profit_sum_display = document.getElementById("profit_sum_display");
+    const net_profit_sum_display = document.getElementById("net_profit_sum_display");
+    
+    if(total_sum_purchase_display) total_sum_purchase_display.textContent = (statistics.total_sum_purchase || 0).toLocaleString();
+    if(payment_sum_purchase_display) payment_sum_purchase_display.textContent = (statistics.payment_sum_purchase || 0).toLocaleString();
+    if(notpaid_purchase_display) notpaid_purchase_display.textContent = (statistics.notpaid_purchase || 0).toLocaleString();
+    if(total_sum_selling_display) total_sum_selling_display.textContent = (statistics.total_sum_selling || 0).toLocaleString();
+    if(payment_sum_selling_display) payment_sum_selling_display.textContent = (statistics.payment_sum_selling || 0).toLocaleString();
+    if(notpaid_sell_display) notpaid_sell_display.textContent = (statistics.notpaid_sell || 0).toLocaleString();
+    if(profit_sum_display) profit_sum_display.textContent = (statistics.profit_sum || 0).toLocaleString();
+    if(net_profit_sum_display) net_profit_sum_display.textContent = (statistics.net_profit_sum || 0).toLocaleString();
     
     if(total_summary.value < 0)
     {
@@ -102,7 +139,8 @@ async function make_table(response_data)
         return;
     }
     
-    // Populate table rows
+    // Populate table rows with modern design
+    let rowNumber = 1;
     for(key in bills){     
         var bill_rcvr_org="";
         
@@ -111,28 +149,63 @@ async function make_table(response_data)
          bill_rcvr_org=bills[key]['bill_receiver2']['bill_rcvr_org'];
         }
         else{
-         bill_rcvr_org=null;
+         bill_rcvr_org="<span class='text-muted'>N/A</span>";
         }
      
         let update_href=`/bill/detail/${bills[key]['id']}/`;
         if(bills[key]['bill_type']=="EXPENSE"){
             update_href=`/expenditure/bill/form/${bills[key]['id']}/`;
         }
+        
+        // Calculate balance
+        const total = parseFloat(bills[key]['total']) || 0;
+        const payment = parseFloat(bills[key]['payment']) || 0;
+        const balance = total - payment;
+        
+        // Badge color based on bill type
+        const billTypeColors = {
+            'PURCHASE': 'danger',
+            'SELLING': 'success',
+            'PAYMENT': 'warning',
+            'RECEIVEMENT': 'info',
+            'EXPENSE': 'dark',
+            'LOSSDEGRADE': 'secondary'
+        };
+        const badgeColor = billTypeColors[bills[key]['bill_type']] || 'primary';
+        
+        // Balance styling
+        const balanceClass = balance > 0 ? 'text-danger fw-bold' : balance < 0 ? 'text-success fw-bold' : 'text-muted';
+        
         let row=`
-            <tr>
-                <td>${bills[key]['organization']}</td>
-                <td>${bills[key]['bill_no']}(<span style="color:green;font-weight:600">${bills[key]['bill_type']}</span>)</td>
+            <tr class="bill-row">
+                <td class="text-center text-muted fw-semibold">${rowNumber++}</td>
+                <td><strong>${bills[key]['organization']}</strong></td>
+                <td class="text-center">
+                    <span class="badge bg-${badgeColor} fs-6">#${bills[key]['bill_no']}</span><br>
+                    <small class="text-muted">${bills[key]['bill_type']}</small>
+                </td>
                 <td>${bill_rcvr_org}</td>
-                <td>${bills[key]['total']}</td>
-                <td>${bills[key]['payment']}</td>
-                <td>${bills[key]['date']}</td>
-                <td> <a href="${update_href}"  class="btn btn-success" role="button">update</a> | <a href="/bill/delete/${bills[key]['id']}"  onclick="return confirm('do you want to delete');" role="button"  class="btn btn-danger">delete</a>
+                <td class="text-end fw-bold">${total.toLocaleString()}</td>
+                <td class="text-end text-success fw-semibold">${payment.toLocaleString()}</td>
+                <td class="text-end ${balanceClass}">${balance.toLocaleString()}</td>
+                <td class="text-center"><small>${bills[key]['date']}</small></td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="${update_href}" class="btn btn-outline-primary" title="View/Edit">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/bill/delete/${bills[key]['id']}" 
+                           onclick="return confirm('⚠️ Are you sure you want to delete this bill?');" 
+                           class="btn btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>`; 
         bill_tbody.insertAdjacentHTML('beforeend', row);
     }
     
-    console.log(`✓ Loaded ${Object.keys(bills).length} bills`);
+    console.log(`✓ Loaded ${Object.keys(bills).length} bills with modern styling`);
 }
 async function search_bills(url=null)
 {
