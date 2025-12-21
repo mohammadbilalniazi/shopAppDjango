@@ -1,12 +1,18 @@
+############################
 # Python
+############################
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+############################
+# Build / Packaging
+############################
 build/
-develop-eggs/
 dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/
@@ -23,39 +29,51 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+############################
 # Django
+############################
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-/media
-/staticfiles
+/media/
+/staticfiles/
 *.pot
+/static/
+static_collected/
+media/
 
-# Virtual Environment
+############################
+# Virtual Environments
+############################
 venv/
 env/
 ENV/
+.venv/
 env.bak/
 venv.bak/
-.venv/
 
-# IDE - VSCode
+############################
+# IDEs & Editors
+############################
+# VS Code
 .vscode/
 *.code-workspace
 .history/
 
-# IDE - PyCharm
+# PyCharm
 .idea/
 *.iml
 *.iws
 .idea_modules/
 
-# IDE - Sublime Text
+# Sublime Text
 *.sublime-project
 *.sublime-workspace
 
+############################
 # OS Files
+############################
 .DS_Store
 .DS_Store?
 ._*
@@ -65,27 +83,39 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# Environment variables
+############################
+# Environment Variables
+############################
 .env
+.env.*
 .env.local
 .env.*.local
 *.env
 
-# Database
+############################
+# Databases
+############################
 *.sqlite
 *.sqlite3
 *.db
+*.sql
+*.dump
 
+############################
 # Logs
+############################
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Testing
+############################
+# Testing & Coverage
+############################
 .coverage
 .coverage.*
+coverage/
 htmlcov/
 .tox/
 .nox/
@@ -97,30 +127,63 @@ coverage.xml
 *.py,cover
 .cache
 
-# Jupyter Notebook
-.ipynb_checkpoints
+############################
+# Jupyter
+############################
+.ipynb_checkpoints/
 *.ipynb
 
+############################
 # Celery
+############################
 celerybeat-schedule
 celerybeat.pid
 
+############################
 # Translations
+############################
 *.mo
+locale/*/LC_MESSAGES/django.po
 
-# Django migrations (optional - uncomment if you don't want to track migrations)
-# */migrations/*.py
-# !*/migrations/__init__.py
+############################
+# Node / Frontend
+############################
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
 
-# Static files (collected)
-/static/
-staticfiles/
-static_collected/
+############################
+# Sass / CSS
+############################
+.sass-cache/
+*.css.map
 
-# Media files (uploaded by users)
-media/
+############################
+# Redis
+############################
+dump.rdb
 
-# Backup files
+############################
+# Static Analysis / Typing
+############################
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+############################
+# Cython
+############################
+cython_debug/
+
+############################
+# Temporary & Backup Files
+############################
+tmp/
+temp/
+*.tmp
 *.bak
 *.backup
 *.swp
@@ -128,70 +191,20 @@ media/
 *~
 .*.swp
 
-# Documentation builds
-docs/_build/
-site/
-
-# Node modules (if using frontend tools)
-node_modules/
-npm-debug.log
-yarn.lock
-package-lock.json
-
-# Sass
-.sass-cache/
-*.css.map
-
-# Compiled translations
-locale/*/LC_MESSAGES/django.po
-
-# Redis dump
-dump.rdb
-
-# Pytest
-.pytest_cache/
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre
-.pyre/
-
-# pytype
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# Project specific
-*.pyc
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Secret keys and sensitive data
+############################
+# Secrets & Certificates
+############################
 secrets.json
 credentials.json
 *.pem
 *.key
 *.crt
 
-# Database backups
-*.sql
-*.dump
-
-# Custom backup files
-*.backup.*
-*_backup.*
-
-# Documentation generated files
+############################
+# Documentation
+############################
+docs/_build/
+site/
 *.md.backup
 BUGFIX_*.md
 FIX_*.md
@@ -207,21 +220,25 @@ RESPONSIVE_*.md
 PRODUCT_*.md
 BUTTON_*.md
 
-# Test coverage
-.coverage
-coverage/
-
+############################
 # Heroku
+############################
 Procfile.local
 
+############################
 # Docker
+############################
 docker-compose.override.yml
 .dockerignore
 
+############################
 # AWS
+############################
 .aws/
 
+############################
 # Terraform
+############################
 *.tfstate
 *.tfstate.backup
 .terraform/
