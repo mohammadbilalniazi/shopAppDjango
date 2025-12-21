@@ -50,6 +50,7 @@
                                 </option>
                                 {% endfor %}
                             </select>
+                            <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% else %}{% endif %}">
                         </span>
                     </td>
                 </tr>
@@ -62,8 +63,8 @@
                                 <option value="">Select Branch (Optional)</option>
                                 {% if branches %}
                                     {% for branch in branches %}
-                                    <option value="{{ branch.id }}" {% if bill.branch == branch %}selected{% endif %}>
-                                        {{ branch.name }}
+                                    <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch == branch %}selected{% endif %}>
+                                        {{ branch.name }} - {{ branch.organization.name }}
                                     </option>
                                     {% endfor %}
                                 {% endif %}
@@ -143,7 +144,7 @@
                     <td>Bill Receiver Organization</td>
                     <td>
                         <span style="display:flex; align-items:center; gap:5px;" id="rcvr_org_span">
-                            <select type="text" name="bill_rcvr_org" placeholder="مقابل لوری" required id="bill_rcvr_org" style="flex:1;">
+                            <select type="text" name="bill_rcvr_org"  placeholder="مقابل لوری" required id="bill_rcvr_org" style="flex:1;">
                                 {% for row in rcvr_orgs %}
                                 <option {% if bill.bill_receiver2.bill_rcvr_org == row %}selected{% endif %} value="{{ row.id }}">
                                     {{ row }}
@@ -589,6 +590,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const organizationSelect = document.getElementById('organization');
     const branchSelect = document.getElementById('branch');
+    const initialBranchInput = document.getElementById('initial_branch_id');
+    const initialBranchId = initialBranchInput ? initialBranchInput.value : '';
     
     if (organizationSelect && branchSelect) {
         organizationSelect.addEventListener('change', async function() {
@@ -611,16 +614,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                if (response.ok) {
+                    if (response.ok) {
                     const data = await response.json();
                     
                     if (data.branches && data.branches.length > 0) {
+                        // Determine selected organization name to append to branch labels
+                        const orgName = organizationSelect.options[organizationSelect.selectedIndex]?.text || '';
                         data.branches.forEach(branch => {
                             const option = document.createElement('option');
                             option.value = branch.id;
-                            option.textContent = branch.name;
+                            // attach organization id to option for reverse lookup when branch changes
+                            option.setAttribute('data-organization-id', organizationId);
+                            option.textContent = orgName ? `${branch.name} - ${orgName}` : branch.name;
                             branchSelect.appendChild(option);
                         });
+                        // If there is an initial branch id (editing), select it
+                        if (initialBranchId) {
+                            branchSelect.value = initialBranchId;
+                        }
                     } else {
                         // No branches available
                         const option = document.createElement('option');
@@ -634,6 +645,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error loading branches:', error);
             }
         });
+        
+        // When a branch is selected, update the organization select to match the branch's organization
+        branchSelect.addEventListener('change', function() {
+            const selectedOption = branchSelect.options[branchSelect.selectedIndex];
+            if (!selectedOption) return;
+            const orgId = selectedOption.getAttribute('data-organization-id');
+            if (orgId && organizationSelect) {
+                // If organizationSelect already has this value, no change; otherwise set it
+                if (organizationSelect.value !== orgId.toString()) {
+                    organizationSelect.value = orgId;
+                    // trigger change so dependent UI updates (branches will reload)
+                    const event = new Event('change', { bubbles: true });
+                    organizationSelect.dispatchEvent(event);
+                }
+            }
+        });
+
+        // Trigger initial load of branches for current organization on page load
+        if (organizationSelect.value) {
+            const ev = new Event('change', { bubbles: true });
+            organizationSelect.dispatchEvent(ev);
+        }
     }
 });
 </script>

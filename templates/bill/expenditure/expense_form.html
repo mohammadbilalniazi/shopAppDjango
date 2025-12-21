@@ -87,13 +87,29 @@
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                <select type="text" name="organization"  id="organization"> 
-                                    <option {% if bill.organization %}  value="{{bill.organization.id}}" {% else %}  value="{{organization.id}}" {% endif %}>
-                                        {% if bill %}  {{bill.organization}} {% else %}  {{organization}} {% endif %}
-                                    </option>
+                                <select type="text" name="organization"  id="organization">
+                                    {% for row in organizations %}
+                                    <option value="{{ row.id }}" {% if row == bill.organization or row == organization %}selected{% endif %}>{{ row }}</option>
+                                    {% endfor %}
                                 </select>
                             </span>  
                     </td> 
+                    <td>
+                        Branch
+                    </td>
+                    <td>
+                        <span style="display:inline;margin:3%">
+                            <select name="branch" id="branch">
+                                <option value="">Select Branch (Optional)</option>
+                                {% if branches %}
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch == branch %}selected{% endif %}>{{ branch.name }} - {{ branch.organization.name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                            <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% else %}{% endif %}">
+                        </span>
+                    </td>
 
                     <td> 
                         <span>System Bill ID 

@@ -1,5 +1,6 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
@@ -208,6 +209,7 @@ def bill_detail_delete(request,bill_detail_id=None):
 
 @login_required(login_url='/admin')
 def bill_form_sell_purchase(request):
+    print("bill_form_sell_purchase called")
     template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
     self_organization,user_orgs = find_userorganization(request)
@@ -329,215 +331,199 @@ def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
     except Exception as e:
         ok=False    
     return ok
-
 @login_required(login_url='/admin')
-@api_view(['POST','PUT'])
-@transaction.atomic
-def bill_insert(request):  
-    ########################################## Bill input taking############################
-    bill_no=int(request.data.get("bill_no",None))  
-    id=request.data.get("id")
-    date=request.data.get("date")
-    year=date.split("-")[0]
-    print("type of year")
-    status=int(request.data.get("status",0))
-    ############before request.data  and request.data.getlist
-    organization=request.data.get("organization")
-    organization=Organization.objects.get(id=int(organization))
-    self_organization,user_orgs = find_userorganization(request,organization.id)
+@api_view(['POST', 'PUT'])
+def bill_insert(request):
 
-    # Handle branch
-    branch_id = request.data.get("branch")
+    data = request.data
+    user = request.user
+    # -----------------------------
+    # Basic fields
+    # -----------------------------
+    bill_id = data.get("id")
+    bill_no = int(data.get("bill_no"))
+    date = data.get("date")
+    year = date.split("-")[0]
+    status = int(data.get("status", 0))
+    bill_type = data.get("bill_type")
+    total = float(data.get("total") or 0)
+    payment = float(data.get("total_payment") or 0)
+
+    organization = Organization.objects.get(id=int(data.get("organization")))
+    self_org, _ = find_userorganization(request, organization.id)
+
+    # -----------------------------
+    # Branch (optional)
+    # -----------------------------
     branch = None
+    branch_id = data.get("branch")
     if branch_id:
-        try:
-            from configuration.models import Branch
-            branch = Branch.objects.get(
-                id=int(branch_id), 
-                organization=organization,
-                is_active=True
-            )
-        except Branch.DoesNotExist:
-            pass  # Branch is optional
+        branch = Branch.objects.filter(
+            id=int(branch_id),
+            organization=organization,
+            is_active=True
+        ).first()
 
-    bill_type=request.data.get("bill_type",None)
-    creator=request.user
-    total=request.data.get("total",0)
-    if total=='' or total=="" or total==None:
-        total=0
-    payment=request.data.get("total_payment",0)      
-    ###################bill_detail###############
-    product=request.data.get('item_name',0)        #getlist=> get
-    item_amount=request.data.get('item_amount',0)#getlist=> get
-    unit=request.data.get('unit',None)#getlist=> get
-    item_price=request.data.get('item_price',0)#getlist=> get
-    return_qty=request.data.get('return_qty',0)#getlist=> get
-    bill_detail_id=request.data.get('bill_detail_id',"")#getlist=> get
-    ################## bill_receiver2#######################
-    bill_rcvr_org=request.data.get("bill_rcvr_org",None) #id
-    if bill_type!="LOSSDEGRADE":
+    # -----------------------------
+    # Receiver organization
+    # -----------------------------
+    bill_rcvr_org = None
+    if bill_type != "LOSSDEGRADE":
         try:
-            bill_rcvr_org=Organization.objects.get(id=int(bill_rcvr_org))
-        except Exception as e:
-            return Response({"message":str(e),"ok":False,"data":None,"bill_id":None}) 
+            bill_rcvr_org = Organization.objects.get(id=int(data.get("bill_rcvr_org")))
+        except Organization.DoesNotExist:
+            return Response({"ok": False, "message": "Invalid receiver organization"})
+
+    # -----------------------------
+    # Approval logic
+    # -----------------------------
+    is_approved = str(data.get("is_approved")).lower() in ["1", "true", "on"]
+    approval_user = None
+    approval_date = None
+
+    if bill_rcvr_org == self_org:
+        if is_approved or status == 1:
+            status = 1
+            is_approved = True
+            approval_user = user
+            approval_date = datetime.now()
     else:
-        bill_rcvr_org=None
-    is_approved=request.data.get("is_approved",False)
-    if is_approved==1 or is_approved=="1" or is_approved=="on":
-        is_approved=True
-    else:
-        is_approved=False
-    approval_date=request.data.get("approval_date",None)
-    # print("approval_date ",approval_date)
-    try:
-        approval_date = date2jalali(datetime.now())
-        approval_date=datetime.strptime(date.strftime('%Y-%m-%d'),'%Y-%m-%d')
-    except Exception as e:
-        date_str=str(date2jalali(datetime.now()))
-        date_str=handle_day_out_of_range(date_str)
-        approval_date=datetime.strptime(date_str,'%Y-%m-%d')
-    #print("1status ",status," approval_date=",approval_date," is_approved= ",is_approved)
-    if bill_rcvr_org==self_organization:
-        if is_approved or int(status)==1:
-            status=1
-            approval_user=request.user
-            is_approved=True
-        elif status==0:
-            approval_user=None
-            is_approved=False
+        status = 0
+        is_approved = False
+
+    # -----------------------------
+    # Detail arrays
+    # -----------------------------
+    products = data.get("item_name", [])
+    amounts = data.get("item_amount", [])
+    prices = data.get("item_price", [])
+    units = data.get("unit", [])
+    returns = data.get("return_qty", [])
+    detail_ids = data.get("bill_detail_id", [])
+
+    # -----------------------------
+    # Atomic transaction
+    # -----------------------------
+    with transaction.atomic():
+
+        # =============================
+        # CREATE / UPDATE BILL
+        # =============================
+        if bill_id:
+            bill = get_object_or_404(Bill, id=bill_id)
+
+            if hasattr(bill, 'bill_receiver2') and bill.bill_receiver2.is_approved:
+                return Response({"ok": False, "message": "Approved bill cannot be updated"})
+
+            bill.bill_no = bill_no
+            bill.total = total
+            bill.payment = payment
+            bill.bill_type = bill_type
+            bill.branch = branch
+
         else:
-            approval_user=request.user
-            is_approved=False
-    else:
-        status=0
-        approval_date=None
-        approval_user=None
-        is_approved=False
-    #########endof data prepration########
-    if id!="" and id!='':
-        ###############update#########################
-        bill_query=Bill.objects.filter(id=int(id))
-        bill_obj=bill_query[0] 
-        print("update with id== something bill_query.count()==0 ",bill_query.count()==0) 
-        if bill_query.count()==0:
-            ok=False
-            message="The Bill with Id {} not exist ".format(id)
-            return Response({"message":message,"ok":ok})
-        # bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=int(bill_obj.year)),Q(Q(organization=organization),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org)) | Q(Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org),Q(organization=organization)))
-        bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=int(bill_obj.year)),Q(organization=organization),Q(bill_type=bill_type),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org) )
-        if bill_query.exists() and bill_no!=bill_obj.bill_no: # it means already we have some other bill which has such characters
-            if bill_query[0].id!=bill_obj.id:
-                message="Bill No {} Already Exists For {} ".format(bill_no,bill_obj.year)
-                ok=False
-                return Response({"message":message,"ok":ok})
-        if hasattr(bill_obj,'bill_receiver2'):
-            if bill_obj.bill_receiver2.approval_user!=None or bill_obj.bill_receiver2.is_approved: # it means approved
-                message="Bill Id {} is can not be updated it is already approved".format(id)
-                ok=False
-                return Response({"message":message,"ok":ok})
-        bill_obj.total=total
-        bill_obj.bill_no=bill_no
-        bill_obj.payment=payment
-        bill_obj.bill_type=bill_type
-        bill_obj.branch=branch
-        bill_obj.profit=0
-    else: ############### new insert Bill if not in system#############
-        # opposit_bill=get_opposit_bill(bill_type)
-        # bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=year),Q(Q(bill_type=bill_type),Q(organization=organization)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=organization)))
-        bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=int(year)),Q(organization=organization),Q(bill_type=bill_type),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org) )
-        if bill_query.count()>0: # if we are not having update then we check if such bill present or not if exists we not enter
-            ok=False
-            message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
-            return Response({"message":message,"ok":ok})
-        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment,branch=branch)
-    try:
-        bill_obj.save()
-        if bill_type!='LOSSDEGRADE':
-            bill_receiver2_query=Bill_Receiver2.objects.filter(bill=bill_obj)
-            if bill_receiver2_query.count()>0:
-                bill_receiver2_query.update(bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
-                bill_receiver2=bill_receiver2_query[0]
+            if Bill.objects.filter(
+                bill_no=bill_no,
+                year=year,
+                organization=organization,
+                bill_type=bill_type,
+                bill_receiver2__bill_rcvr_org=bill_rcvr_org
+            ).exists():
+                return Response({"ok": False, "message": "Bill already exists"})
+
+            bill = Bill.objects.create(
+                bill_no=bill_no,
+                date=date,
+                year=year,
+                bill_type=bill_type,
+                organization=organization,
+                creator=user,
+                total=total,
+                payment=payment,
+                branch=branch
+            )
+
+        bill.save()
+
+        # =============================
+        # Receiver
+        # =============================
+        if bill_type != "LOSSDEGRADE":
+            Bill_Receiver2.objects.update_or_create(
+                bill=bill,
+                defaults={
+                    "bill_rcvr_org": bill_rcvr_org,
+                    "is_approved": is_approved,
+                    "approval_user": approval_user,
+                    "approval_date": approval_date
+                }
+            )
+        else:
+            Bill_Receiver2.objects.filter(bill=bill).delete()
+
+        # =============================
+        # BILL DETAILS
+        # =============================
+        calculated_total = 0
+
+        for i in range(len(products)):
+            product = Product.objects.get(id=products[i])
+            unit = Unit.objects.get(id=units[i])
+
+            qty = float(amounts[i])
+            ret = float(returns[i])
+            net_qty = qty - ret
+            price = float(prices[i])
+
+            detail_data = {
+                "bill": bill,
+                "product": product,
+                "unit": unit,
+                "item_amount": qty,
+                "item_price": price,
+                "return_qty": ret,
+            }
+
+            if not detail_ids[i]:
+                detail = Bill_detail.objects.create(**detail_data)
             else:
-                bill_receiver2=Bill_Receiver2(bill=bill_obj,bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
-                bill_receiver2.save() 
-        elif hasattr(bill_obj,'bill_receiver2'):
-            bill_obj.bill_receiver2.delete()
-        ok=True
-        message="bill No {} Successfully Insert".format(bill_no)
-    except Exception as e:
-        ok=False
-        message=str(e)
-        print("e ",e)
-        return Response({"message":message,"ok":ok})
-    eachdetailtotal=0
-    for i in range(len(product)):
-        try:
-            unit_obj=Unit.objects.get(id=unit[i])
-            product_obj=Product.objects.get(id=product[i])
-        except Exception as e:
-            return Response({"message":str(e),"ok":False})
-        # print("product_of_bill_rcvr_org ",product_of_bill_rcvr_org)
-        net_amount=float(item_amount[i])-float(return_qty[i]) 
-        if bill_detail_id[i]=='':
-            bill_detail=Bill_detail(bill=bill_obj,product=product_obj,unit=unit_obj,item_amount=item_amount[i],item_price=item_price[i],return_qty=return_qty[i])     
-            try:    
-                bill_detail.save()
-                if bill_obj.bill_type=='SELLING':
-                    purchased_price=product_obj.product_detail.purchased_price
-                    if purchased_price==None:
-                        purchased_price=item_price[i]-10
-                    profit=(float(item_price[i])-float(purchased_price))*net_amount
-                    # profit=(float(item_price[i])-float(purchased_price))*(float(item_amount[i])-float(return_qty[i]))
-                    ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                elif bill_obj.bill_type=='LOSSDEGRADE':
-                    profit=float(item_price[i])*net_amount
-                    ok=handle_profit_loss(bill_detail,profit,operation='DECREASE')
-                
-            except Exception as e:
-                ok=False
-                message=str(e)
-        else:       
-            bill_detail_query=Bill_detail.objects.filter(id=int(bill_detail_id[i]))
-            if bill_detail_query.count()>0:       
-                bill_detail=bill_detail_query[0]
-                if hasattr(bill_detail.product,'product_detail'):
-                    purchased_price=bill_detail.product.product_detail.purchased_price
-                else:
-                    purchased_price=bill_detail.item_price
-                bill_detail.bill=bill_obj
-                bill_detail.unit=unit_obj
-                if product_obj.id!=bill_detail.product.id: # if product item is changed to another then change  in detail
-                    bill_detail.product=product_obj
-                bill_detail.item_amount=item_amount[i]
-                bill_detail.item_price=item_price[i]
-                bill_detail.return_qty=return_qty[i]
-                bill_detail.profit=0
-                try:        
-                    bill_detail.save() 
-                    if bill_type=='SELLING':
-                        if purchased_price==None:
-                            purchased_price=0
-                        profit=(float(item_price[i])-float(purchased_price))*net_amount
-                        ok=handle_profit_loss(bill_detail,profit,operation='INCREASE')
-                    elif bill_obj.bill_type=='LOSSDEGRADE':
-                        profit=float(item_price[i])*net_amount
-                        ok=handle_profit_loss(bill_detail,profit,operation='DECREASE')
-                except Exception as e:
-                    ok=False
-                    message=str(e)
-                    print("e ",e)
-        eachdetailtotal=eachdetailtotal+net_amount*float(item_price[i])
-    if float(eachdetailtotal)!=float(total):
-        bill_obj.total=float(eachdetailtotal)
-        bill_obj.save()
-    
-    if ok==False:
-        messages.error(request,message)
-    else:  
-        messages.success(request,message)
-    return Response({"message":message,"ok":ok,"data":model_to_dict(bill_obj),"bill_id":bill_obj.id})    
+                detail = Bill_detail.objects.get(id=int(detail_ids[i]))
+                for k, v in detail_data.items():
+                    setattr(detail, k, v)
+                detail.save()
+
+            # Profit handling
+            purchased_price = getattr(
+                getattr(product, "product_detail", None),
+                "purchased_price",
+                price
+            )
+
+            if bill.bill_type == "SELLING":
+                profit = (price - purchased_price) * net_qty
+                handle_profit_loss(detail, profit, "INCREASE")
+
+            elif bill.bill_type == "LOSSDEGRADE":
+                handle_profit_loss(detail, price * net_qty, "DECREASE")
+
+            calculated_total += net_qty * price
+
+        # =============================
+        # Recalculate total
+        # =============================
+        if calculated_total != bill.total:
+            bill.total = calculated_total
+            bill.save()
+
+    return Response({
+        "ok": True,
+        "message": f"Bill {bill.bill_no} saved successfully",
+        "bill_id": bill.id,
+        "data": model_to_dict(bill)
+    })
+
+
 def get_statistics_bill(query):
-        
     payment_sum_expense=query.filter(
     bill_type='EXPENSE').aggregate(Sum("payment"))['payment__sum']
     payment_sum_loss=query.filter(

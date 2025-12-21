@@ -57,6 +57,12 @@ def bill_form(request):
         'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
         'date':date,
     } 
+    # Add branches for the selected organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        context['branches'] = Branch.objects.filter(organization=self_organization, is_active=True).order_by('name')
+    else:
+        context['branches'] = Branch.objects.filter(organization__in=user_orgs, is_active=True).order_by('organization__name', 'name')
     return HttpResponse(template.render(context,request))
 
 @login_required(login_url='/admin')

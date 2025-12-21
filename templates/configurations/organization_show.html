@@ -466,12 +466,17 @@
 
     // Edit organization
     async function editOrganization(id) {
+        window.location.href=`/configuration/organization/form/${id}`
         try {
-            // Fetch organization data
-            const response = await fetch(`/configuration/organization/form/${id}`);
+            // Fetch organization data (request JSON) and populate form
+            const response = await fetch(`/configuration/organization/form/${id}`, {
+                headers: { 'Accept': 'application/json' }
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch organization data');
             }
+
+            const payload = await response.json();
 
             // Open modal
             const modal = new bootstrap.Modal(document.getElementById('organizationModal'));
@@ -485,9 +490,24 @@
             // Update form action
             document.getElementById('organizationForm').action = `/configuration/organization/form/create/${id}`;
 
-            // TODO: Populate form fields with organization data
-            // This requires the backend to return JSON data or you can make an AJAX call
-            
+            // Populate form fields if backend provided data
+            if (payload && payload.success && payload.data) {
+                const data = payload.data;
+                if (document.getElementById('name')) document.getElementById('name').value = data.name || '';
+                if (document.getElementById('owner')) document.getElementById('owner').value = data.owner || '';
+                if (document.getElementById('email')) document.getElementById('email').value = data.email || '';
+                if (document.getElementById('type')) document.getElementById('type').value = data.type || 'NONE';
+                if (document.getElementById('location') && data.location) {
+                    // Try to select the location if the option exists
+                    const locSelect = document.getElementById('location');
+                    const opt = locSelect.querySelector(`option[value="${data.location}"]`);
+                    if (opt) {
+                        locSelect.value = data.location;
+                    }
+                }
+                if (document.getElementById('is_active')) document.getElementById('is_active').checked = !!data.is_active;
+            }
+
             toastr.info('Loading organization data...');
         } catch (error) {
             console.error('Error loading organization:', error);

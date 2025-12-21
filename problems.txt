@@ -1,0 +1,6 @@
+1.I have not saved the products but in bill when i save the product is not in the system error 
+but bill and bill_receiver is saved
+it should be atomic
+2. The category should be the popup when i insert the item.
+3. The login page is not there 
+4. The system icons are dependant of internet

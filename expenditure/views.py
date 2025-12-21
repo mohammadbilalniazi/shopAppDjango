@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from bill.views_bill import getBillNo
 from configuration.models import Organization
+from configuration.models import Branch
 from bill.models import Bill
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
@@ -58,6 +59,11 @@ def expense_form(request,id=None):
     if id!=None:
         bill=Bill.objects.get(id=int(id))
         context['bill']=bill
+    # Provide branches related to the selected organization(s)
+    if self_organization is not None:
+        context['branches'] = Branch.objects.filter(organization=self_organization, is_active=True).order_by('name')
+    else:
+        context['branches'] = Branch.objects.filter(organization__in=user_orgs, is_active=True).order_by('organization__name', 'name')
     return HttpResponse(template.render(context,request))
 
 

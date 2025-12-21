@@ -120,8 +120,8 @@ urlpatterns = [
     path('', views_admin.custom_admin_dashboard),  # Redirect root to custom admin
 
     # Auth/Login
-    path('host_to_heroku_login_form/', views_login.host_to_heroku_login_form, name='host_to_heroku_login_form'),
-    path("host_to_heroku_login_form/submit/", views_login.host_to_heroku_submit, name="host_to_heroku_submit"),
+    path('login_form/', views_login.login_form, name='login_form'),
+    path("login_form/submit/", views_login.login, name="login_submit"),
 ]
 
 

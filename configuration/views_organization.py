@@ -1,7 +1,7 @@
 
 from django.db.models import Sum
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from jalali_date import date2jalali
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -155,6 +155,19 @@ def form(request,id=None):
         print('organization is_active',organization.is_active)
         context['organization']=organization
         context['id']=int(id)
+        # If the request expects JSON (called via fetch for edit), return organization data
+        accept = request.META.get('HTTP_ACCEPT', '')
+        if 'application/json' in accept or request.headers.get('Accept', '').find('application/json') != -1:
+            data = {
+                'id': organization.id,
+                'name': organization.name,
+                'owner': organization.owner.username if organization.owner else None,
+                'email': organization.owner.email if organization.owner else '',
+                'type': organization.organization_type,
+                'location': organization.location.id if organization.location else None,
+                'is_active': organization.is_active,
+            }
+            return JsonResponse({'success': True, 'data': data})
     template=loader.get_template('configurations/organization_form.html')
     
     self_organization, user_orgs = find_userorganization(request)

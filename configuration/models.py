@@ -111,6 +111,7 @@ STATUS=((0,"CANCELLED"),(1,"CREATED"))
 class Branch(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20)
+    branch_type=models.CharField(max_length=20,null=True,blank=True,default="main")
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="branches")
     location = models.ForeignKey(Location, on_delete=models.CASCADE, null=True, blank=True)
     address = models.TextField(max_length=200, null=True, blank=True)
@@ -142,6 +143,48 @@ class Role(models.Model):
     is_active=models.BooleanField(default=True)
     class Meta:
         unique_together=(("name","parent","organization"),)
+
+
+# Automatically create a main Branch when a new Organization is created
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=Organization)
+def create_main_branch_for_organization(sender, instance, created, **kwargs):
+    """Create a default main branch for each newly created Organization.
+
+    Uses the organization's `owner` as `created_by`. If a main branch already
+    exists for the organization, does nothing.
+    """
+    if not created:
+        return
+
+    # Avoid creating duplicate main branches
+    try:
+        existing = Branch.objects.filter(organization=instance, branch_type__iexact='main').exists()
+    except Exception:
+        existing = False
+
+    if existing:
+        return
+
+    # Use the organization owner as created_by when available
+    created_by_user = getattr(instance, 'owner', None)
+    # Fallback: if owner is missing, skip creating branch (or could use a system user)
+    if created_by_user is None:
+        return
+
+    # Generate a simple unique code for the branch
+    branch_code = f"MAIN-{instance.id if instance.id else ''}".strip('-')
+
+    Branch.objects.create(
+        name='Main',
+        code=branch_code or 'MAIN',
+        branch_type='main',
+        organization=instance,
+        created_by=created_by_user,
+    )
 
 
 

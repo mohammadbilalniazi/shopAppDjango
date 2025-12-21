@@ -12,8 +12,8 @@ async function get_units() {
     const unit_url = `/units/${id}/`;
     let unit_data = localStorage.getItem("unit_data");
 
-    if (!unit_data) {
-        console.log("Fetching unit data...");
+    if (!unit_data ) {
+        // console.log("Fetching unit data...");
         let response = await call_shirkat(unit_url, 'GET');
         unit_data = response.data;
         localStorage.setItem("unit_data", JSON.stringify(unit_data));
@@ -32,7 +32,7 @@ async function get_products(organization = "all", change_price = true) {
     if (storedProductData) {
         product_data = JSON.parse(storedProductData);
     } else {
-        console.log("Fetching product data...");
+        // console.log("Fetching product data...");
         const postData={'organization_id':organization}
         let response = await call_shirkat(url, 'POST',postData);
         product_data = response.data;
@@ -63,7 +63,6 @@ function change_price_field(item_db_id, index, bill_type_field) {
     const item_price = document.getElementsByClassName("item_price")[index];
     
     if (!item_price) {
-        console.warn(`Price field not found at index ${index}`);
         return;
     }
     
@@ -103,7 +102,7 @@ function change_price_field(item_db_id, index, bill_type_field) {
  * Adds event listeners to dynamically created elements.
  */
 function add_events_to_elements(change_price = true) {
-    console.log("Adding events to elements...");
+    // console.log("Adding events to elements...");
     
     try {
         let item_amount = document.getElementsByClassName("item_amount");
@@ -211,6 +210,7 @@ async function add_row() {
 
     try {
         const unitData = JSON.parse(localStorage.getItem("unit_data")) || {};
+        console.warn("unitData ",unitData);
         for (const key in unitData) {
             if (Object.hasOwn(unitData, key)) {
                 const unit = unitData[key];
@@ -264,7 +264,6 @@ async function add_row() {
             width: '100%',
             theme: 'default'
         });
-        console.log(`✓ Select2 initialized on ${selectId}`);
         
         // ✅ Listen for Select2 selection event to auto-fill price
         jQuery(selectItemName).on('select2:select', function(e) {
@@ -306,7 +305,6 @@ try {
 }
 
 function generate_total_amount_bill() {
-  console.log("Generating total amount bill...");
 
   const itemAmounts = document.getElementsByClassName("item_amount");
   const itemPrices = document.getElementsByClassName("item_price");
@@ -432,7 +430,7 @@ try{
 
      
 
-     console.log("flage ",flag," bill_obj ",bill_obj)
+    //  console.log("flage ",flag," bill_obj ",bill_obj)
      // return ;
      if(flag)
      {
@@ -441,7 +439,7 @@ try{
                  "POST",
                  JSON.stringify(bill_obj)
              );
-         console.log("response bill insert",response)
+        //  console.log("response bill insert",response)
          if(response.status==200 || response.status==201){
              if(response.data.ok)
              {
@@ -498,7 +496,7 @@ async function select_rcvr_orgs() {
         width: '100%',
         theme: 'default'
       });
-      console.log('✓ Dynamically created bill_rcvr_org Select2 initialized');
+    //   console.log('✓ Dynamically created bill_rcvr_org Select2 initialized');
     }
 
     // ✅ Attach event listener after element is in the DOM
@@ -728,7 +726,7 @@ function openProductModal() {
             if (itemNameField) itemNameField.focus();
         }, 100);
         
-        console.log('✓ Product modal opened');
+        // console.log('✓ Product modal opened');
     }
 }
 
@@ -739,13 +737,13 @@ function closeProductModal() {
     if (modal && form) {
         modal.style.display = 'none';
         form.reset();
-        console.log('✓ Product modal closed');
+        // console.log('✓ Product modal closed');
     }
 }
 
 // Refresh product dropdowns after adding new product
 function refreshProductDropdowns() {
-    console.log('✓ Product saved, refreshing product data...');
+    // console.log('✓ Product saved, refreshing product data...');
     
     // Clear localStorage to force fresh data fetch
     localStorage.removeItem('product_data');
@@ -756,7 +754,7 @@ function refreshProductDropdowns() {
     const organizationSelect = document.getElementById('organization');
     if (organizationSelect) {
         get_products(organizationSelect.value, false).then(() => {
-            console.log('✓ Product data refreshed');
+            // console.log('✓ Product data refreshed');
             // Update any existing Select2 dropdowns with new data
             const itemSelects = document.querySelectorAll('.item_name');
             itemSelects.forEach(select => {
@@ -804,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             openProductModal();
         });
-        console.log('✓ Product modal link initialized');
+        // console.log('✓ Product modal link initialized');
     }
     
     // Close modal when clicking the X button
@@ -829,7 +827,7 @@ document.addEventListener('DOMContentLoaded', function() {
         productForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            console.log('Submitting product form...');
+            // console.log('Submitting product form...');
             
             // Get form data
             const formData = new FormData(productForm);
@@ -858,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {'Content-Type': 'multipart/form-data'}
                 );
                 
-                console.log('Product create response:', response);
+                // console.log('Product create response:', response);
                 
                 if (response.status === 200 || response.status === 201) {
                     if (response.data.ok) {
@@ -875,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 show_message('Error creating product: ' + error.message, 'error');
             }
         });
-        console.log('✓ Product form submission handler initialized');
+        // console.log('✓ Product form submission handler initialized');
     }
     
     // Auto-calculate selling price when purchased price changes

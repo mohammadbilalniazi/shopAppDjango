@@ -26,7 +26,7 @@ async function submit_login()
     }
     // console.log("form ",form);
 
-    url="/host_to_heroku_login_form/submit/"
+    url="/login_form/submit/"
     
     // const response=await call_shirkat(url,'POST',JSON.stringify(form));
     

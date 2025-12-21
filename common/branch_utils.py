@@ -98,6 +98,16 @@ class BranchManager:
         # If no specific branch, return first available branch in organization
         user_branches = BranchManager.get_user_branches(user, organization)
         return user_branches.first()
+
+    @staticmethod
+    def get_user_default_branch(user, organization):
+        """
+        Backwards-compatible alias for `get_default_branch_for_user`.
+
+        Some parts of the codebase call `BranchManager.get_user_default_branch`.
+        Keep this alias to avoid AttributeError when older call sites remain.
+        """
+        return BranchManager.get_default_branch_for_user(user, organization)
     
     @staticmethod
     def assign_user_to_branch(user, branch, role='employee'):
