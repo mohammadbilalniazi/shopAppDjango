@@ -15,7 +15,7 @@ from django.shortcuts import redirect
 from . import admin_config
 
 urlpatterns = [
-    path('login/check', views_login.host_to_heroku_submit),
+    path('login/check', views_login.submit),
 
     # Asset Management & Financial Reports
     path('asset/', include('asset.urls')),
@@ -120,8 +120,9 @@ urlpatterns = [
     path('', views_admin.custom_admin_dashboard),  # Redirect root to custom admin
 
     # Auth/Login
+    path('accounts/login/', views_login.login_form, name='login_form'),
     path('login_form/', views_login.login_form, name='login_form'),
-    path("login_form/submit/", views_login.login, name="login_submit"),
+    path("login_form/submit/", views_login.submit, name="login_submit"),
 ]
 
 

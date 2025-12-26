@@ -210,7 +210,6 @@ async function add_row() {
 
     try {
         const unitData = JSON.parse(localStorage.getItem("unit_data")) || {};
-        console.warn("unitData ",unitData);
         for (const key in unitData) {
             if (Object.hasOwn(unitData, key)) {
                 const unit = unitData[key];
@@ -292,7 +291,10 @@ async function init() {
   const addNawajans = getElement("addnawajans");
   addNawajans.disabled = true;
   await get_products(getElement("organization").value, false);
-  await get_units();
+   // console.log("Fetching unit data...");
+    let response = await call_shirkat(`/units/all/`, 'GET');
+    unit_data = response.data;
+    localStorage.setItem("unit_data", JSON.stringify(unit_data));
   addNawajans.disabled = false;
 }
 

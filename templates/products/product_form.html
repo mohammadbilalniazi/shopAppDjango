@@ -648,7 +648,12 @@ product_form.addEventListener("submit",async function(e){
      if(response.status==200 || response.status==201){
         if(response.data.ok)
         { 
-            alert("Product Saved")
+            alert("Product Saved");
+             // console.log("Fetching product data...");
+            const postData={'organization_id':organization.value}
+            let response = await call_shirkat(url, 'POST',postData);
+            product_data = response.data;
+            localStorage.setItem("product_data", JSON.stringify(product_data)); 
             id.value=response.data.id;
             window.location.href="/products/product/add/"+id.value;
         }

@@ -63,37 +63,39 @@ def bill_show(request,bill_id=None):
     else:
         branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
     
-    context['branches'] = branches
-    
+    organizations=Organization.objects.all()
+    organization=self_organization
+
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
             # Superuser can see all organizations
-            context['organizations'] = Organization.objects.all()
-            context['organization'] = None
+            organizations = Organization.objects.all()
+            organization = None
         else:
             # Regular user with multiple orgs but no self org - use first org or show error
             if user_orgs and user_orgs.count() > 0:
-                self_organization = user_orgs.first()
-                context['organizations'] = user_orgs
-                context['organization'] = self_organization
+                organizations = user_orgs
+                organization = user_orgs.first()
             else:
                 # No organizations assigned to user
                 from django.contrib import messages
                 messages.error(request, "No organizations assigned to your account. Please contact administrator.")
-                context['organizations'] = Organization.objects.none()
-                context['organization'] = None
+                organizations = Organization.objects.none()
+                organization = None
     else:
         # Normal case - self_organization exists
-        context['organization'] = self_organization
+        organization = self_organization
         if request.user.is_superuser:
-            context['organizations'] = Organization.objects.all()
+            organizations = Organization.objects.all()
         else:
-            context['organizations'] = Organization.objects.filter(id=self_organization.id)
-    
+            organizations = Organization.objects.filter(id=self_organization.id)
+    rcvr_orgs=Organization.objects.all()
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
-        context['rcvr_orgs']=Organization.objects.all() 
+        context['rcvr_orgs']=rcvr_orgs
+        context['organizations']=organizations
+        context['organization']=organization
         template=loader.get_template('bill/bill_detail_show.html')
     else:  
         bill=Bill.objects.get(id=int(bill_id))
@@ -107,22 +109,27 @@ def bill_show(request,bill_id=None):
         elif bill.bill_type in ("LOSSDEGRADE"):
             template=loader.get_template('bill/expenditure/bill_form_loss.html')
             context['products']=Product.objects.all()
+            context['units']=Unit.objects.all()
         else:
             template=loader.get_template('bill/bill_form_sell_purchase.html')
             # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
             context['products']=Product.objects.all()
-        context['units']=Unit.objects.all()
+            context['units']=Unit.objects.all()
         if self_organization and (bill.organization==self_organization or request.user.is_superuser):                 
-            context['rcvr_orgs']=Organization.objects.all().order_by("-pk") 
+            rcvr_orgs=Organization.objects.all().order_by("-pk") 
             if request.user.is_superuser:
-                context['organizations']=Organization.objects.all() 
+                organizations=Organization.objects.all() 
             else:
-                context['organizations']=Organization.objects.filter(id=self_organization.id)
+                organizations=Organization.objects.filter(id=self_organization.id)
         elif hasattr(bill,'bill_receiver2') and self_organization:
             if bill.bill_receiver2.bill_rcvr_org==self_organization:
                 #  bill_obj.bill_receiver2:
-                context['rcvr_orgs']=Organization.objects.filter(id=self_organization.id)
+                rcvr_orgs=Organization.objects.filter(id=self_organization.id)
     
+    context['organizations'] = organizations
+    context['organization'] =organization
+    context['branches'] = branches
+    context['rcvr_orgs']=rcvr_orgs
     return HttpResponse(template.render(context,request))
 
 
@@ -398,6 +405,7 @@ def bill_insert(request):
     amounts = data.get("item_amount", [])
     prices = data.get("item_price", [])
     units = data.get("unit", [])
+    # print("units ",units)
     returns = data.get("return_qty", [])
     detail_ids = data.get("bill_detail_id", [])
 
@@ -467,9 +475,8 @@ def bill_insert(request):
         calculated_total = 0
 
         for i in range(len(products)):
-            product = Product.objects.get(id=products[i])
-            unit = Unit.objects.get(id=units[i])
-
+            product = Product.objects.get(id=int(products[i]))
+            unit = Unit.objects.get(id=int(units[i]))
             qty = float(amounts[i])
             ret = float(returns[i])
             net_qty = qty - ret

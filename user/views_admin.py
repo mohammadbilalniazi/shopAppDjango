@@ -24,7 +24,7 @@ def is_admin_user(user):
 
 
 @login_required
-@user_passes_test(is_admin_user, login_url='/host_to_heroku_login_form/')
+@user_passes_test(is_admin_user, login_url='/login_form/')
 def custom_admin_dashboard(request):
     """
     Custom Admin Dashboard - Main Entry Point

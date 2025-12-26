@@ -15,7 +15,7 @@ def login_form(request):
     #return render(request,"User/vertical/login_django_admin.html",context_instance=RequestContext(request))
     return render(request,"user/login_django_admin.html",context)
 
-def host_to_heroku_submit(request):
+def submit(request):
     print("request.body=",request.body)
     raw_data=request.body
     data=raw_data.decode("utf-8")

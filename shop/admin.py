@@ -49,7 +49,7 @@ class SupermarketAdminSite(AdminSite):
             'configuration': [
                 {'name': 'Locations', 'url': reverse('location_show'), 'icon': '📍'},
                 {'name': 'Countries', 'url': reverse('get_countries'), 'icon': '🌍'},
-                {'name': 'Login Form', 'url': reverse('host_to_heroku_login_form'), 'icon': '🔐'},
+                {'name': 'Login Form', 'url': reverse('login_form'), 'icon': '🔐'},
             ],
         }
         
