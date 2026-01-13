@@ -70,6 +70,8 @@ async function make_table(data)
     // total_sum_expense.value=data.statistics.total_sum_expense;
     payment_sum_expense=document.getElementById("payment_sum_expense");
     payment_sum_expense.value=data.statistics.payment_sum_expense;
+   payment_sum_loss=document.getElementById("payment_sum_loss");
+    payment_sum_loss.value=data.statistics.payment_sum_loss;
 
     pagination = document.querySelector("#pagination_id");
     // console.log("pagination ",pagination.innerHTML)
@@ -115,7 +117,7 @@ async function make_table(data)
                 <td>${data['serializer_data'][key]['bill_no']}(<span style="color:green;font-weight:600">${data['serializer_data'][key]['bill_type']}</span>)</td>
                 <td>${bill_rcvr_org}</td><td>${data['serializer_data'][key]['total']}</td>
                 <td>${data['serializer_data'][key]['payment']}</td><td>${data['serializer_data'][key]['date']}</td>
-                <td> <a href="${update_href}"  class="btn btn-success" role="button">update</a> | <a href="/bill/delete/${data['serializer_data'][key]['id']}"  onclick="return confirm('do you want to delete');" role="button" class="btn btn-success">delete</a>
+                <td> <a href="${update_href}"  class="btn btn-success" role="button">update</a> | <a href="/bill/delete/${data['serializer_data'][key]['id']}"  onclick="return confirm('do you want to delete');" role="button"  class="btn btn-danger">delete</a>
                 </td>
             </tr>`; 
         bill_tbody.insertAdjacentHTML('beforeend', row);

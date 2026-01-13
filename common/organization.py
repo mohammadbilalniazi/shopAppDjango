@@ -9,7 +9,6 @@ def top_parent(organization):
 
 
 def find_userorganization(request, organization_id=None):
-    print(f"##############{request.user} {request.user.is_superuser}#############")
     """
     Returns:
         (organization, parent_organization, user_organizations)
@@ -19,7 +18,7 @@ def find_userorganization(request, organization_id=None):
     """
     if organization_id is not None:
         user_orgs = OrganizationUser.objects.filter(organization_id=organization_id)
-        print("organization_id is not none",user_orgs)
+        print("organization_id",user_orgs)
     elif request.user.is_superuser:
         user_orgs = OrganizationUser.objects.all()
         print("user.is_superuser ",user_orgs)
@@ -28,7 +27,6 @@ def find_userorganization(request, organization_id=None):
         user_orgs = OrganizationUser.objects.filter(user=request.user)
         print("organizations of user=request.user ",user_orgs)
         
-    # Get actual Organization objects
     orgs = Organization.objects.filter(id__in=user_orgs.values_list("organization_id", flat=True))
     if orgs.count() == 1:
         organization = orgs.first()

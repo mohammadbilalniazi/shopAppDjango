@@ -69,6 +69,7 @@ async function search_product(url=null,search_by_org=false)
                 <td>${minimum_requirement}</td>
                 <td>${data['serializer_data'][key]['purchase_amount']}</td>
                 <td>${data['serializer_data'][key]['selling_amount']}</td> 
+                <td>${data['serializer_data'][key]['loss_amount']}</td> 
                 <td>
                     <input type="number" id="stock_input_${data['serializer_data'][key]['id']}" value="${data['serializer_data'][key]['current_amount']}" class="form-control" />
                 </td>

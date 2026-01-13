@@ -16,10 +16,11 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
     category=serializers.SerializerMethodField()
     purchase_amount=serializers.SerializerMethodField()
     selling_amount=serializers.SerializerMethodField()
+    loss_amount=serializers.SerializerMethodField()
     img=serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields =['id','item_name','model','img','product_detail','category','purchase_amount','selling_amount','current_amount']
+        fields =['id','item_name','model','img','product_detail','category','purchase_amount','selling_amount','current_amount','loss_amount']
 
     def get_purchase_amount(self,obj):
         organization=Organization.objects.get(id=int(self.context.get('organization')))
@@ -33,16 +34,15 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
             else:
                 return obj.img.url
         return None
-
     def get_selling_amount(self,obj):
         return self.stock.selling_amount
     def get_category(self,obj):
         return obj.category.name
-
     def get_current_amount(self,obj):
         return self.stock.current_amount
+    def get_loss_amount(self,obj):
+        return self.stock.loss_amount
   
-
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model=Unit

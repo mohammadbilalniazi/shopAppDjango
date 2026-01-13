@@ -8,6 +8,7 @@ from common.organization import find_userorganization
 from common.date import handle_day_out_of_range
 from configuration.models import *
 from datetime import datetime
+from decimal import Decimal
 from django.contrib import messages
 from .models import Bill, Bill_detail,Bill_Receiver2
 from django.forms.models import model_to_dict
@@ -455,7 +456,8 @@ def get_statistics_bill(query):
         
     payment_sum_expense=query.filter(
     bill_type='EXPENSE').aggregate(Sum("payment"))['payment__sum']
-    
+    payment_sum_loss=query.filter(
+    bill_type='LOSSDEGRADE').aggregate(Sum("total"))['total__sum']
     total_sum_purchase=query.filter(
     bill_type='PURCHASE').aggregate(Sum("total"))['total__sum']
     payment_sum_purchase=query.filter(
@@ -487,7 +489,8 @@ def get_statistics_bill(query):
 
     if payment_sum_payment==None:
         payment_sum_payment=0
-    
+    if payment_sum_loss==None:
+        payment_sum_loss=0
     if payment_sum_expense==None:
         payment_sum_expense=0
     
@@ -502,10 +505,10 @@ def get_statistics_bill(query):
     total_upon_opposit_org=total_sum_selling+payment_sum_payment+payment_sum_purchase
     total_upon_self_org=total_sum_purchase+payment_sum_selling+receivement_sum
     total_summary=total_upon_opposit_org-total_upon_self_org
-    possessed_cash_asset=(payment_sum_selling+receivement_sum)-(payment_sum_purchase+payment_sum_expense+payment_sum_payment)
+    possessed_cash_asset=(payment_sum_selling+receivement_sum)-(payment_sum_purchase+payment_sum_expense+payment_sum_payment+payment_sum_loss)
     possessed_non_cash_asset=total_sum_purchase-total_sum_selling
     total_asset=possessed_cash_asset+possessed_non_cash_asset
-    net_profit_sum=profit_sum-payment_sum_expense
+    net_profit_sum=profit_sum-payment_sum_expense-payment_sum_loss
     #current_profit=total_asset-initial_total_asset
 
     statistics=dict({
@@ -521,6 +524,7 @@ def get_statistics_bill(query):
                     "notpaid_sell":notpaid_sell,
                     "payment_sum_payment":payment_sum_payment,
                     "payment_sum_expense":payment_sum_expense,
+                    "payment_sum_loss":payment_sum_loss,
                     "payment_sum_receivement":receivement_sum,
                     "possessed_cash_asset":possessed_cash_asset,
                     "possessed_non_cash_asset":possessed_non_cash_asset,
@@ -565,9 +569,6 @@ def search(request,page=None):
     statistics=get_statistics_bill(query)    
     serializer_context={"message":"OK","ok":True,"statistics":statistics,"serializer_data":serializer.data}
     return paginator.get_paginated_response(serializer_context)
-
-from decimal import Decimal
-from django.db import transaction
 
 @login_required(login_url='/admin')
 @api_view(['POST'])

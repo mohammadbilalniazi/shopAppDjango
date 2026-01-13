@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Project apps
-    'product', 'expenditure', 'bill', 'user', 'configuration',
+    'product', 'expenditure', 'bill', 'user', 'configuration','asset',
 
     # Third-party
     'rest_framework', 'corsheaders', 'jalali_date',
