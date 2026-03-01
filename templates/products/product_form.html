@@ -229,18 +229,7 @@
                 <tr>
                     <td>Organization</td>
                     <td colspan="2">
-                        <select name="organization" class="form-control-custom organization-select" id="organization">
-                            <option value="">Select Organization</option>
-                            {% if organizations %}
-                                {% for org in organizations %}
-                                    <option {% if product and product.product_detail and product.product_detail.organization and org.id == product.product_detail.organization.id %} selected {% endif %} value='{{org.id}}'>{{org}}</option>
-                                {% endfor %}
-                            {% elif global_organizations %}
-                                {% for org in global_organizations %}
-                                    <option {% if product and product.product_detail and product.product_detail.organization and org.id == product.product_detail.organization.id %} selected {% endif %} value='{{org.id}}'>{{org.name}}</option>
-                                {% endfor %}
-                            {% endif %}
-                        </select>
+                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations_list selected_org=selected_org %}
                     </td>
                 </tr>
                 
@@ -249,11 +238,9 @@
                     <td colspan="2">
                         <select name="branch" class="form-control-custom branch-select" id="branch">
                             <option value="">Select Branch (Optional)</option>
-                            {% if branches %}
-                                {% for branch in branches %}
-                                    <option {% if product and product.product_detail and product.product_detail.branch and branch.id == product.product_detail.branch.id %} selected {% endif %} value='{{branch.id}}'>{{branch.name}}</option>
-                                {% endfor %}
-                            {% endif %}
+                            {% for branch in all_branches %}
+                                <option data-organization-id="{{ branch.organization.id }}" {% if product and product.product_detail and product.product_detail.branch and branch.id == product.product_detail.branch.id %} selected {% endif %} value="{{ branch.id }}">{{ branch.name }} ({{ branch.organization.name }})</option>
+                            {% endfor %}
                         </select>
                     </td>
                 </tr>
@@ -576,6 +563,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading branches:', error);
         }
     });
+    // Trigger initial load of branches for current organization on page load
+    if (organizationSelect.value) {
+        const ev = new Event('change', { bubbles: true });
+        organizationSelect.dispatchEvent(ev);
+    }
 });
 </script>
 
@@ -627,7 +619,6 @@ product_form.addEventListener("submit",async function(e){
     // prev_selling_price=document.getElementById("prev_selling_price");
     // const product = new FormData();
     const formData=new FormData();
-    
     formData.append("id",id.value);
     formData.append("item_name",item_name.value);
     formData.append("category",category.value);
@@ -687,39 +678,72 @@ document.getElementById("purchased_price").addEventListener("change",(e)=>{
 </script>
 
 <script>
-// Debug organization selection on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const orgSelect = document.getElementById('organization');
-    if (orgSelect) {
-        console.log('🔍 Organization dropdown found. Options:', orgSelect.options.length);
-        console.log('🔍 Selected organization value:', orgSelect.value);
-        console.log('🔍 Selected organization text:', orgSelect.options[orgSelect.selectedIndex]?.text);
-        
-        // Log all available options
-        Array.from(orgSelect.options).forEach((option, index) => {
-            if (option.value) {
-                console.log(`🔍 Option ${index}: value="${option.value}", text="${option.text}", selected=${option.selected}`);
-            }
-        });
+document.addEventListener('DOMContentLoaded', function () {
+
+    const organizationSelect = document.getElementById('organization');
+    const branchSelect = document.getElementById('branch');
+
+    if (!organizationSelect || !branchSelect) {
+        console.log("Organization or Branch select not found");
+        return;
     }
-    
-    // Log product data if available
-    {% if product %}
-        console.log('🔍 Product data available:', {
-            id: {{ product.id }},
-            name: "{{ product.item_name }}",
-            has_product_detail: {{ product.product_detail|yesno:"true,false" }},
-            {% if product.product_detail and product.product_detail.organization %}
-            organization_id: {{ product.product_detail.organization.id }},
-            organization_name: "{{ product.product_detail.organization.name }}"
-            {% else %}
-            organization_id: null,
-            organization_name: "No organization assigned"
-            {% endif %}
-        });
-    {% else %}
-        console.log('🔍 No product data (creating new product)');
-    {% endif %}
+
+    async function loadBranches(organizationId) {
+
+        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+
+        if (!organizationId) return;
+
+        try {
+
+            const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.log("API Error:", errorData);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.branches.length > 0) {
+
+                data.branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.id;
+                    option.textContent = branch.name;
+                    branchSelect.appendChild(option);
+                });
+
+            } else {
+
+                const option = document.createElement('option');
+                option.textContent = 'No branches available';
+                option.disabled = true;
+                branchSelect.appendChild(option);
+            }
+
+        } catch (error) {
+            console.error("Branch load error:", error);
+        }
+    }
+
+    organizationSelect.addEventListener('change', function () {
+        console.log("Organization changed:", this.value);
+        loadBranches(this.value);
+    });
+
+    // Load branches automatically in edit mode
+    if (organizationSelect.value) {
+        loadBranches(organizationSelect.value);
+    }
+
 });
 </script>
 

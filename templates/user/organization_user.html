@@ -314,14 +314,9 @@
           </td>
           <td>Organization</td>
           <td colspan="2">
-            <select name="organization" class="form-control-custom organization-select" id="organization" onchange="search()">
-              <option value="">Select Organization</option>
-              {% for organization in organizations %}
-                <option value="{{organization.id}}" {% if organization_user.organization == organization %}selected{% endif %}>
-                  {{organization}}
-                </option>
-              {% endfor %}
-            </select>
+            {% if organization_user %}
+              {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization_user.organization %}
+            {% endif %}
           </td>
         </tr>
 
@@ -508,6 +503,72 @@
       searchInput.value = '';
     }
   });
+
+  // Organization-Branch filtering functionality
+  const organizationSelect = document.getElementById('organization');
+  const branchSelect = document.getElementById('branch');
+  
+  if (organizationSelect && branchSelect) {
+    async function loadBranchesForOrganization(organizationId) {
+      branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+      
+      if (!organizationId) {
+        return;
+      }
+      
+      try {
+        branchSelect.disabled = true;
+        branchSelect.innerHTML = '<option value="">Loading branches...</option>';
+        
+        const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          console.error("Failed to load branches");
+          branchSelect.innerHTML = '<option value="">Error loading branches</option>';
+          return;
+        }
+        
+        const data = await response.json();
+        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+        
+        if (data.branches && data.branches.length > 0) {
+          data.branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.id;
+            option.textContent = branch.name;
+            branchSelect.appendChild(option);
+          });
+        } else {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No branches available';
+          option.disabled = true;
+          branchSelect.appendChild(option);
+        }
+      } catch (error) {
+        console.error("Error loading branches:", error);
+        branchSelect.innerHTML = '<option value="">Error loading branches</option>';
+      } finally {
+        branchSelect.disabled = false;
+      }
+    }
+    
+    // Load branches when organization changes
+    organizationSelect.addEventListener('change', function() {
+      loadBranchesForOrganization(this.value);
+    });
+    
+    // Load branches on page load if editing existing user
+    if (organizationSelect.value) {
+      loadBranchesForOrganization(organizationSelect.value);
+    }
+  }
 </script>
 {% endblock %}
 

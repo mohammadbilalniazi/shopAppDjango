@@ -143,10 +143,19 @@ class Product_Detail(models.Model):
     purchased_price= models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     selling_price=models.DecimalField(default=0,max_digits=22, decimal_places=2,null=True)
     unit=models.ForeignKey(Unit,on_delete=models.DO_NOTHING,default=None,null=True)
-     
+    
+    def clean(self):
+        # check the branch belongs to the organization
+        if self.branch and self.organization and self.branch.organization != self.organization:
+            raise ValidationError("Selected branch does not belong to the selected organization.")
+    
+    def save(self, *args, **kwargs):
+        self.clean()  # Ensure validation is called before saving
+        super().save(*args, **kwargs)
+
 class Stock(models.Model):
-    organization=models.ForeignKey(Organization,on_delete=models.DO_NOTHING,default=None,blank=True,null=True)
-    branch=models.ForeignKey('configuration.Branch',on_delete=models.SET_NULL,null=True,blank=True,help_text="Branch where this stock is held")
+    organization=models.ForeignKey(Organization,on_delete=models.CASCADE,default=None,blank=True,null=True)
+    branch=models.ForeignKey('configuration.Branch',on_delete=models.CASCADE,null=True,blank=True,help_text="Branch where this stock is held")
     product=models.ForeignKey(Product,on_delete=models.CASCADE,null=True,blank=True)
     current_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
@@ -155,3 +164,11 @@ class Stock(models.Model):
     class Meta:
         unique_together=("organization","product","branch")
 
+    def clean(self):
+        # check the branch belongs to the organization
+        if self.branch and self.organization and self.branch.organization != self.organization:
+            raise ValidationError("Selected branch does not belong to the selected organization.")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Ensure validation is called before saving
+        super().save(*args, **kwargs)

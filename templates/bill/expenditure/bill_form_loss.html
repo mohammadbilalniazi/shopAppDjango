@@ -85,11 +85,7 @@
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                <select type="text"  name="organization"  id="organization">
-                                    {% for row in organizations %}
-                                    <option value="{{ row.id }}" {% if row == bill.organization or row == organization %} selected {% endif %}>{{ row }}</option>
-                                    {% endfor %}
-                                </select>
+                                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization if bill %}
                             </span>  
                     </td> 
                     <td>
@@ -351,5 +347,107 @@
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <script>
 add_event_to_total()
+</script>
+<script>
+// Branch loading functionality for LOSSDEGRADE bill form
+document.addEventListener('DOMContentLoaded', function() {
+    const organizationSelect = document.getElementById('organization');
+    const branchSelect = document.getElementById('branch');
+    const initialBranchInput = document.getElementById('initial_branch_id');
+    const initialBranchId = initialBranchInput ? initialBranchInput.value : '';
+    // Cache original server-rendered branch options to allow client-side filtering fallback
+    const originalBranchOptions = branchSelect ? Array.from(branchSelect.querySelectorAll('option')).map(opt => ({
+        value: opt.value,
+        orgId: opt.getAttribute('data-organization-id'),
+        text: opt.textContent,
+        disabled: opt.disabled
+    })) : [];
+
+    if (organizationSelect && branchSelect) {
+        organizationSelect.addEventListener('change', async function() {
+            const organizationId = this.value;
+            console.log('Organization changed to', organizationId);
+            // Clear current branches
+            branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+
+            if (!organizationId) {
+                return;
+            }
+
+            let fetched = false;
+            try {
+                const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.branches && data.branches.length > 0) {
+                        const orgName = organizationSelect.options[organizationSelect.selectedIndex]?.text || '';
+                        data.branches.forEach(branch => {
+                            const option = document.createElement('option');
+                            option.value = branch.id;
+                            option.setAttribute('data-organization-id', organizationId);
+                            option.textContent = orgName ? `${branch.name} - ${orgName}` : branch.name;
+                            branchSelect.appendChild(option);
+                        });
+                        fetched = true;
+                        if (initialBranchId) branchSelect.value = initialBranchId;
+                    }
+                } else {
+                    console.warn('Branch API responded with status', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading branches from API:', error);
+            }
+
+            // Fallback: use original server-rendered options if fetch failed or returned none
+            if (!fetched) {
+                const fallback = originalBranchOptions.filter(o => o.orgId && o.orgId.toString() === organizationId.toString());
+                if (fallback.length > 0) {
+                    fallback.forEach(o => {
+                        const option = document.createElement('option');
+                        option.value = o.value;
+                        if (o.orgId) option.setAttribute('data-organization-id', o.orgId);
+                        option.textContent = o.text;
+                        option.disabled = o.disabled;
+                        branchSelect.appendChild(option);
+                    });
+                    if (initialBranchId) branchSelect.value = initialBranchId;
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No branches available';
+                    option.disabled = true;
+                    branchSelect.appendChild(option);
+                }
+            }
+        });
+
+        // When a branch is selected, update the organization select to match the branch's organization
+        branchSelect.addEventListener('change', function() {
+            const selectedOption = branchSelect.options[branchSelect.selectedIndex];
+            if (!selectedOption) return;
+            const orgId = selectedOption.getAttribute('data-organization-id');
+            if (orgId && organizationSelect) {
+                if (organizationSelect.value !== orgId.toString()) {
+                    organizationSelect.value = orgId;
+                    const event = new Event('change', { bubbles: true });
+                    organizationSelect.dispatchEvent(event);
+                }
+            }
+        });
+
+        // Trigger initial load of branches for current organization on page load
+        if (organizationSelect.value) {
+            const ev = new Event('change', { bubbles: true });
+            organizationSelect.dispatchEvent(ev);
+        }
+    }
+});
 </script>
 {% endblock %}

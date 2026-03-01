@@ -90,7 +90,11 @@ def bill_show(request,bill_id=None):
             organizations = Organization.objects.all()
         else:
             organizations = Organization.objects.filter(id=self_organization.id)
-    rcvr_orgs=Organization.objects.all()
+    # Receiver organizations: if a current organization is set, exclude it from receiver list
+    if organization:
+        rcvr_orgs = Organization.objects.exclude(id=organization.id)
+    else:
+        rcvr_orgs = Organization.objects.all()
     if bill_id==None :
         context['bills']=Bill.objects.all().order_by("-pk")
         context['rcvr_orgs']=rcvr_orgs
@@ -116,7 +120,10 @@ def bill_show(request,bill_id=None):
             context['products']=Product.objects.all()
             context['units']=Unit.objects.all()
         if self_organization and (bill.organization==self_organization or request.user.is_superuser):                 
-            rcvr_orgs=Organization.objects.all().order_by("-pk") 
+            if self_organization:
+                rcvr_orgs = Organization.objects.exclude(id=self_organization.id).order_by("-pk")
+            else:
+                rcvr_orgs = Organization.objects.all().order_by("-pk")
             if request.user.is_superuser:
                 organizations=Organization.objects.all() 
             else:
@@ -242,7 +249,8 @@ def bill_form_sell_purchase(request):
             if user_orgs and user_orgs.count() > 0:
                 self_organization = user_orgs.first()
                 organizations = user_orgs
-                rcvr_orgs = Organization.objects.all()  # Can bill to any org
+                # User's organization present; receiver orgs should exclude user's own org
+                rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
             else:
                 # No organizations assigned
                 from django.contrib import messages
@@ -256,7 +264,7 @@ def bill_form_sell_purchase(request):
             rcvr_orgs = Organization.objects.all()
         else:
             organizations = Organization.objects.filter(id=self_organization.id)
-            rcvr_orgs = Organization.objects.all()  # Can bill to any org
+            rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
     
     context={
         'form':form,

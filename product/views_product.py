@@ -48,8 +48,9 @@ def form(request,id=None):
         branches = Branch.objects.filter(organization=self_organization, is_active=True)
     else:
         branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
-    
     context['branches'] = branches
+    # Provide all branches for client-side filtering
+    context['all_branches'] = Branch.objects.filter(is_active=True)
         
     if id!=None:
         try:
@@ -87,11 +88,18 @@ def form(request,id=None):
             current_amount=stock.current_amount
             context['current_amount']=current_amount
     template=loader.get_template('products/product_form.html')
-    context['self_organization']=self_organization
-    context['parent_organization']=None  # Deprecated field
-    context['organizations']=user_orgs
-    context['categories']=Category.objects.all()
-    return HttpResponse(template.render(context,request))
+    context['self_organization'] = self_organization
+    context['parent_organization'] = None  # Deprecated field
+    context['organizations'] = user_orgs
+    context['categories'] = Category.objects.all()
+    # Always provide organizations_list for the dropdown
+    context['organizations_list'] = user_orgs
+    # Set selected_org for add/edit
+    if 'product' in context and hasattr(context['product'], 'product_detail') and context['product'].product_detail and context['product'].product_detail.organization:
+        context['selected_org'] = context['product'].product_detail.organization
+    else:
+        context['selected_org'] = self_organization
+    return HttpResponse(template.render(context, request))
 
 
 

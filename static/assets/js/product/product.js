@@ -39,17 +39,30 @@ async function search_product(url = null, search_by_org = false) {
         
         const data = response.data;
         
-        // Check if data is valid
-        if (!data || !data.ok) {
+        // Handle paginated response structure: {count, next, previous, results: {ok, serializer_data}}
+        let productData;
+        if (data.results && typeof data.results === 'object') {
+            // Paginated response
+            productData = data.results;
+            
+            // Check if data is valid
+            if (!productData.ok) {
+                apiManager.showToast(productData.message || 'No products found', 'warning');
+                return;
+            }
+            
+            // Update pagination using paginated response links
+            updatePagination(data.previous, data.next, search_by_org);
+            
+            // Update product list
+            updateProductTable(productData.serializer_data);
+        } else if (data.ok) {
+            // Non-paginated response
+            updateProductTable(data.serializer_data || data);
+        } else {
             apiManager.showToast(data?.message || 'No products found', 'warning');
             return;
         }
-        
-        // Update pagination
-        updatePagination(data.previous, data.next, search_by_org);
-        
-        // Update product list
-        updateProductTable(data.serializer_data);
         
     } catch (error) {
         console.error('Search product error:', error);

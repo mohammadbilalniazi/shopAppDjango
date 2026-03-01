@@ -43,13 +43,7 @@
                     <td>Bill Creator Organization</td>
                     <td>
                         <span style="display:inline;margin:3%">
-                            <select type="text" name="organization" id="organization">
-                                {% for row in organizations %}
-                                <option value="{{ row.id }}" {% if row == bill.organization or row == organization %}selected{% endif %}>
-                                    {{ row }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization if bill %}
                             <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% else %}{% endif %}">
                         </span>
                     </td>
@@ -61,13 +55,15 @@
                         <span style="display:inline;margin:3%">
                             <select name="branch" id="branch">
                                 <option value="">Select Branch (Optional)</option>
-                                {% if branches %}
-                                    {% for branch in branches %}
-                                    <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch == branch %}selected{% endif %}>
-                                        {{ branch.name }} - {{ branch.organization.name }}
-                                    </option>
-                                    {% endfor %}
-                                {% endif %}
+                                {% with branch_list=branches|default:user_branches %}
+                                    {% if branch_list %}
+                                        {% for branch in branch_list %}
+                                        <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch == branch %}selected{% endif %}>
+                                            {{ branch.name }} - {{ branch.organization.name }}
+                                        </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endwith %}
                             </select>
                         </span>
                     </td>

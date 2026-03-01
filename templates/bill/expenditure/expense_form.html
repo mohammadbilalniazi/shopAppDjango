@@ -87,11 +87,33 @@
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                <select type="text" name="organization"  id="organization">
-                                    {% for row in organizations %}
-                                    <option value="{{ row.id }}" {% if row == bill.organization or row == organization %}selected{% endif %}>{{ row }}</option>
-                                    {% endfor %}
-                                </select>
+                                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization if bill %}
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var orgSelect = document.getElementById('organization');
+                                var branchSelect = document.getElementById('branch');
+                                if (!orgSelect || !branchSelect) return;
+
+                                // Store all branch options
+                                var allBranchOptions = Array.from(branchSelect.options);
+
+                                function filterBranches() {
+                                    var selectedOrgId = orgSelect.value;
+                                    // Remove all options except the first (placeholder)
+                                    branchSelect.options.length = 1;
+                                    allBranchOptions.forEach(function(option, idx) {
+                                        if (idx === 0) return; // skip placeholder
+                                        if (!selectedOrgId || option.getAttribute('data-organization-id') === selectedOrgId) {
+                                            branchSelect.appendChild(option.cloneNode(true));
+                                        }
+                                    });
+                                }
+
+                                orgSelect.addEventListener('change', filterBranches);
+                                // Initial filter on page load
+                                filterBranches();
+                            });
+                            </script>
                             </span>  
                     </td> 
                     <td>

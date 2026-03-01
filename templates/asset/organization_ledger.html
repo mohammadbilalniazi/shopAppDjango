@@ -133,13 +133,7 @@
     <div class="org-selector">
         <label for="organization-select"><strong>Select Your Organization:</strong></label>
         <form method="GET">
-            <select name="organization" id="organization-select" onchange="this.form.submit()">
-                {% for org in user_organizations %}
-                <option value="{{ org.id }}" {% if selected_organization and org.id == selected_organization.id %}selected{% endif %}>
-                    {{ org.name }}
-                </option>
-                {% endfor %}
-            </select>
+            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization-select' organizations_list=user_organizations selected_org=selected_organization %}
         </form>
     </div>
     

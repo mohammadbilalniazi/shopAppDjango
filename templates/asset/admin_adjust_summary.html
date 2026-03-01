@@ -155,14 +155,7 @@
     <div class="org-filter">
         <label><strong>Filter by Organization:</strong></label>
         <form method="GET" style="display: inline;">
-            <select name="organization" onchange="this.form.submit()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                <option value="">-- All Organizations --</option>
-                {% for org in organizations %}
-                <option value="{{ org.id }}" {% if selected_organization and org.id == selected_organization.id %}selected{% endif %}>
-                    {{ org.name }}
-                </option>
-                {% endfor %}
-            </select>
+            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=selected_organization %}
         </form>
     </div>
     

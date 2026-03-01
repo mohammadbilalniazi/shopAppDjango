@@ -43,11 +43,7 @@
                     <td>Bill Creator Organization</td>
                     <td>
                         <span style="display:inline;margin:3%">
-                            <select type="text" name="organization" id="organization">
-                                {% for row in organizations %}
-                                <option value="{{ row.id }}" {% if row == bill.organization or row == organization %}selected{% endif %}>{{ row }}</option>
-                                {% endfor %}
-                            </select>
+                            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization if bill %}
                         </span>
                     </td>
                 </tr> 
@@ -461,6 +457,80 @@
     // Also check periodically (every 2 seconds) to ensure button stays
     setInterval(ensureOrganizationButton, 2000);
 })();
+</script>
+
+<script>
+// Organization-Branch filtering functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const organizationSelect = document.getElementById('organization');
+    const branchSelect = document.getElementById('branch');
+    const initialBranchInput = document.getElementById('initial_branch_id');
+    const initialBranchId = initialBranchInput ? initialBranchInput.value : '';
+    
+    if (organizationSelect && branchSelect) {
+        async function loadBranchesForOrganization(organizationId) {
+            // Clear current branches
+            branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+            
+            if (!organizationId) {
+                return;
+            }
+            
+            try {
+                branchSelect.disabled = true;
+                
+                // Fetch branches for the selected organization
+                const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.branches && data.branches.length > 0) {
+                        const orgName = organizationSelect.options[organizationSelect.selectedIndex]?.text || '';
+                        data.branches.forEach(branch => {
+                            const option = document.createElement('option');
+                            option.value = branch.id;
+                            option.setAttribute('data-organization-id', organizationId);
+                            option.textContent = orgName ? `${branch.name} - ${orgName}` : branch.name;
+                            branchSelect.appendChild(option);
+                        });
+                        
+                        // If there is an initial branch id (editing), select it
+                        if (initialBranchId) {
+                            branchSelect.value = initialBranchId;
+                        }
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No branches available';
+                        option.disabled = true;
+                        branchSelect.appendChild(option);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            } finally {
+                branchSelect.disabled = false;
+            }
+        }
+        
+        // Load branches when organization changes
+        organizationSelect.addEventListener('change', function() {
+            loadBranchesForOrganization(this.value);
+        });
+        
+        // Trigger initial load if organization is already selected
+        if (organizationSelect.value) {
+            loadBranchesForOrganization(organizationSelect.value);
+        }
+    }
+});
 </script>
 
 {% if detail %}

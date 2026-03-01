@@ -315,18 +315,7 @@
             
             <div class="filter-group">
                 <label for="organization">🏢 Organization</label>
-                <select type="text" name="organization" id="organization" class="organization-select">
-                    <option value="">All Organizations</option>
-                    {% if organizations %}
-                        {% for row in organizations %}
-                        <option value="{{row.id}}">{{row}}</option>
-                        {% endfor %}
-                    {% elif global_organizations %}
-                        {% for row in global_organizations %}
-                        <option value="{{row.id}}">{{row.name}}</option>
-                        {% endfor %}
-                    {% endif %}
-                </select>
+                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations %}
             </div>
             
             <div class="filter-group" style="display: flex; align-items: flex-end;">

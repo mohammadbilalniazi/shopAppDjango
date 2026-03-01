@@ -424,12 +424,7 @@
                 <label for="organization" class="form-label-custom">
                     <i class="bi bi-building text-primary"></i> Organization
                 </label>
-                <select name="organization" class="form-select-custom" required id="organization">
-                    <option value="">🏢 Select Organization</option>
-                    {% for row in organizations %}
-                        <option value="{{ row.id }}">{{ row }}</option>
-                    {% endfor %}
-                </select>
+                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization required=True %}
             </div>
             <div class="col-md-2">
                 <label for="bill_no" class="form-label-custom">
