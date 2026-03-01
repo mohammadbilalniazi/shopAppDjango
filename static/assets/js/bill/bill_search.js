@@ -194,6 +194,9 @@ async function make_table(response_data)
                         <a href="${update_href}" class="btn btn-outline-primary" title="View/Edit">
                             <i class="bi bi-eye"></i>
                         </a>
+                        <a href="/bill/payment/${bills[key]['id']}/" class="btn btn-outline-success" title="Pay with Card">
+                            <i class="bi bi-credit-card"></i>
+                        </a>
                         <a href="/bill/delete/${bills[key]['id']}" 
                            onclick="return confirm('⚠️ Are you sure you want to delete this bill?');" 
                            class="btn btn-outline-danger" title="Delete">

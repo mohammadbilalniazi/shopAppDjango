@@ -1,6 +1,10 @@
 import os
 from pathlib import Path
 import django_heroku
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ---------------------------
 # Base Directory
@@ -186,3 +190,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 ADMIN_SITE_HEADER = 'Welcome to Supermarket Management System'
 ADMIN_SITE_TITLE = 'Supermarket Management System'
 ADMIN_INDEX_TITLE = 'Supermarket Management Dashboard'
+
+# ---------------------------
+# Stripe Payment Gateway Configuration
+# ---------------------------
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+
+# Stripe Currency Settings
+STRIPE_CURRENCY = os.getenv('STRIPE_CURRENCY', 'USD')
+

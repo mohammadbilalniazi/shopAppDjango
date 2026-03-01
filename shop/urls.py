@@ -9,6 +9,7 @@ from user import views_login, views_organization_user, views_session, views_grou
 from configuration import views_organization, views_location, views_branch, views_branch_api
 from expenditure import views as expenditure_view
 from asset import views as asset_view
+from bill import views_stripe
 from django.shortcuts import redirect
 
 # Import admin configuration to customize admin interface
@@ -68,6 +69,13 @@ urlpatterns = [
     path('loss_degrade_product/bill/add/', views_bill.bill_form_loss_degrade_product,name="bill_form_loss_degrade_product"),
     path('bill/detail/delete/<bill_detail_id>', views_bill.bill_detail_delete),
     path('bill/insert/', views_bill.bill_insert, name="bill_insert"),
+
+    # Stripe Payment Gateway
+    path('bill/payment/<int:bill_id>/', views_stripe.payment_page, name='stripe_payment_page'),
+    path('bill/payment/create-intent/', views_stripe.create_payment_intent, name='stripe_create_intent'),
+    path('bill/payment/status/<int:payment_id>/', views_stripe.get_payment_status, name='stripe_payment_status'),
+    path('bill/payment/history/<int:bill_id>/', views_stripe.get_bill_payments, name='stripe_bill_payments'),
+    path('stripe/webhook/', views_stripe.stripe_webhook, name='stripe_webhook'),
 
     # Products
     path('products/', views_product.show, name='product_show'),

@@ -191,6 +191,9 @@
                                         {% if bill %}
                                         
                                         <input type="submit" value="Update" style="background-color:green; color:white" class="default" name="_save">
+                                        <a href="/bill/payment/{{bill.id}}/" class="button" style="background-color:#667eea; color:white; padding:10px 15px; text-decoration:none; border-radius:4px; display:inline-block; margin-left:10px;">
+                                            <i class="bi bi-credit-card"></i> Pay with Card
+                                        </a>
                                         {% else %}
                                         <input type="submit" value="Save" class="default" name="_save">
                                         {% endif %}
