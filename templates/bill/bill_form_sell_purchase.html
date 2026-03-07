@@ -43,7 +43,7 @@
                     <td>Bill Creator Organization</td>
                     <td>
                         <span style="display:inline;margin:3%">
-                            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization if bill %}
+                            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization %}
                             <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% else %}{% endif %}">
                         </span>
                     </td>
@@ -482,7 +482,7 @@
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
 <script src="{% static 'assets/js/common_entities/generate_ihsaya.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_location_modal.js' %}"></script>
-<script src="{% static 'assets/js/bill/bill.js' %}?v=5"></script>
+<script src="{% static 'assets/js/bill/bill.js' %}"></script>
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <!-- Searchable Selects Module -->
 <script src="{% static 'assets/js/bill/searchable_selects.js' %}"></script>

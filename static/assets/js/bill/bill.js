@@ -25,15 +25,15 @@ async function get_units() {
 /**
  * Fetches products and updates local storage.
  */
-async function get_products(organization = "all", change_price = true) {
+async function get_products(organization_id = "all", change_price = true) {
     const url = `/products/`;
     let storedProductData = localStorage.getItem("product_data");
-
+    console.warn({storedProductData,organization_id})
     if (storedProductData) {
         product_data = JSON.parse(storedProductData);
     } else {
         // console.log("Fetching product data...");
-        const postData={'organization_id':organization}
+        const postData={'organization_id':organization_id}
         let response = await call_shirkat(url, 'POST',postData);
         product_data = response.data;
         localStorage.setItem("product_data", JSON.stringify(product_data));
@@ -290,7 +290,12 @@ function getElement(id) {
 async function init() {
   const addNawajans = getElement("addnawajans");
   addNawajans.disabled = true;
-  await get_products(getElement("organization").value, false);
+  const organization_id=getElement("organization").value;
+  if(!organization_id){
+    organization_id="all";
+  }
+  console.warn({organization_id})
+  await get_products(organization_id, false);
    // console.log("Fetching unit data...");
     let response = await call_shirkat(`/units/all/`, 'GET');
     unit_data = response.data;

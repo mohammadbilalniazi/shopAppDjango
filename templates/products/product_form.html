@@ -518,56 +518,114 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     const organizationSelect = document.getElementById('organization');
     const branchSelect = document.getElementById('branch');
-    
-    // Load branches when organization changes
-    organizationSelect.addEventListener('change', async function() {
-        const organizationId = this.value;
-        
-        // Clear current branches
+    if (!organizationSelect || !branchSelect) {
+        return;
+    }
+
+    const initialSelectedBranchId = branchSelect.value;
+    const allBranchOptions = Array.from(
+        branchSelect.querySelectorAll('option[data-organization-id]')
+    ).map(option => option.cloneNode(true));
+
+    function resetBranchOptions() {
         branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
-        
+    }
+
+    function renderBranchesFromLocal(organizationId, preferredBranchId = '') {
+        const matchingBranches = allBranchOptions.filter(
+            option => String(option.dataset.organizationId) === String(organizationId)
+        );
+
+        if (!matchingBranches.length) {
+            return false;
+        }
+
+        matchingBranches.forEach(option => {
+            const cloned = option.cloneNode(true);
+            if (preferredBranchId && String(cloned.value) === String(preferredBranchId)) {
+                cloned.selected = true;
+            }
+            branchSelect.appendChild(cloned);
+        });
+
+        return true;
+    }
+
+    function showNoBranchesOption() {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'No branches available';
+        emptyOption.disabled = true;
+        branchSelect.appendChild(emptyOption);
+    }
+
+    function resolveOrganizationId() {
+        if (organizationSelect.value) {
+            return organizationSelect.value;
+        }
+
+        if (organizationSelect.tagName === 'SELECT') {
+            const validOptions = Array.from(organizationSelect.options || []).filter(option => option.value);
+            if (validOptions.length === 1) {
+                organizationSelect.value = validOptions[0].value;
+                return validOptions[0].value;
+            }
+        }
+
+        return organizationSelect.value;
+    }
+
+    async function renderBranchesForOrganization(organizationId, preferredBranchId = '') {
+        resetBranchOptions();
+
         if (!organizationId) {
             return;
         }
-        
+
+        let rendered = false;
+
         try {
-            // Fetch branches for the selected organization
             const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
                 method: 'GET',
                 headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
                     'Accept': 'application/json'
                 }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
-                
                 if (data.branches && data.branches.length > 0) {
                     data.branches.forEach(branch => {
                         const option = document.createElement('option');
                         option.value = branch.id;
                         option.textContent = branch.name;
+                        if (preferredBranchId && String(branch.id) === String(preferredBranchId)) {
+                            option.selected = true;
+                        }
                         branchSelect.appendChild(option);
                     });
-                } else {
-                    // No branches available
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'No branches available';
-                    option.disabled = true;
-                    branchSelect.appendChild(option);
+                    rendered = true;
                 }
             }
         } catch (error) {
             console.error('Error loading branches:', error);
         }
-    });
-    // Trigger initial load of branches for current organization on page load
-    if (organizationSelect.value) {
-        const ev = new Event('change', { bubbles: true });
-        organizationSelect.dispatchEvent(ev);
+
+        if (!rendered) {
+            rendered = renderBranchesFromLocal(organizationId, preferredBranchId);
+        }
+
+        if (!rendered) {
+            showNoBranchesOption();
+        }
     }
+
+    organizationSelect.addEventListener('change', function() {
+        renderBranchesForOrganization(this.value);
+    });
+
+    const initialOrganizationId = resolveOrganizationId();
+    renderBranchesForOrganization(initialOrganizationId, initialSelectedBranchId);
 });
 </script>
 
@@ -607,6 +665,7 @@ product_form.addEventListener("submit",async function(e){
     item_name=document.getElementById('item_name');
     category=document.getElementById("category");
     organization=document.getElementById("organization");
+    branch=document.getElementById("branch");
     img=document.getElementById("img");
     console.log("img ",img.files[0])
     model=document.getElementById("model");
@@ -623,6 +682,7 @@ product_form.addEventListener("submit",async function(e){
     formData.append("item_name",item_name.value);
     formData.append("category",category.value);
     formData.append("organization",organization.value);
+    formData.append("branch", branch ? branch.value : "");
     formData.append("img",img.files[0]);
     formData.append("is_service",is_service.value);
     formData.append("model",model.value);
@@ -675,76 +735,6 @@ document.getElementById("purchased_price").addEventListener("change",(e)=>{
         }
         document.getElementById("model").value=item_name.split(" ")[0];
     })
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const organizationSelect = document.getElementById('organization');
-    const branchSelect = document.getElementById('branch');
-
-    if (!organizationSelect || !branchSelect) {
-        console.log("Organization or Branch select not found");
-        return;
-    }
-
-    async function loadBranches(organizationId) {
-
-        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
-
-        if (!organizationId) return;
-
-        try {
-
-            const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.log("API Error:", errorData);
-                return;
-            }
-
-            const data = await response.json();
-
-            if (data.branches.length > 0) {
-
-                data.branches.forEach(branch => {
-                    const option = document.createElement('option');
-                    option.value = branch.id;
-                    option.textContent = branch.name;
-                    branchSelect.appendChild(option);
-                });
-
-            } else {
-
-                const option = document.createElement('option');
-                option.textContent = 'No branches available';
-                option.disabled = true;
-                branchSelect.appendChild(option);
-            }
-
-        } catch (error) {
-            console.error("Branch load error:", error);
-        }
-    }
-
-    organizationSelect.addEventListener('change', function () {
-        console.log("Organization changed:", this.value);
-        loadBranches(this.value);
-    });
-
-    // Load branches automatically in edit mode
-    if (organizationSelect.value) {
-        loadBranches(organizationSelect.value);
-    }
-
-});
 </script>
 
 <script>

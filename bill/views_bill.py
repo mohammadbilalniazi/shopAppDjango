@@ -237,7 +237,6 @@ def bill_form_sell_purchase(request):
         branches = Branch.objects.filter(organization=self_organization, is_active=True)
     else:
         branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
-    
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
