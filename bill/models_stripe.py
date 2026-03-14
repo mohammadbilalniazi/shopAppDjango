@@ -202,3 +202,97 @@ class StripeWebhookEvent(models.Model):
     
     def __str__(self):
         return f"{self.event_type} - {self.event_id}"
+
+
+class TransactionLog(models.Model):
+    """
+    Unified transaction log for manual and Stripe payment events.
+    """
+    SOURCE_CHOICES = (
+        ('manual', 'Manual'),
+        ('stripe', 'Stripe'),
+    )
+
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    )
+
+    bill = models.ForeignKey(
+        Bill,
+        on_delete=models.CASCADE,
+        related_name='transaction_logs',
+        help_text="Bill associated with this transaction event"
+    )
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.PROTECT,
+        help_text="Organization related to this transaction"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="User who triggered this transaction event"
+    )
+
+    source = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
+        help_text="Where the transaction originated"
+    )
+    event_type = models.CharField(
+        max_length=100,
+        help_text="Event name (e.g., payment_intent_created, payment_succeeded)"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        help_text="Transaction event outcome"
+    )
+    amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        help_text="Amount related to this event"
+    )
+    currency = models.CharField(
+        max_length=3,
+        default='USD',
+        help_text="Currency code"
+    )
+    reference_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="External reference (payment intent, charge, etc.)"
+    )
+    message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Human-readable log message"
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional context for this log entry"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Transaction Log'
+        verbose_name_plural = 'Transaction Logs'
+        indexes = [
+            models.Index(fields=['bill', 'created_at']),
+            models.Index(fields=['organization', 'created_at']),
+            models.Index(fields=['source', 'status']),
+            models.Index(fields=['reference_id']),
+        ]
+
+    def __str__(self):
+        return f"{self.source}:{self.event_type} bill={self.bill_id} status={self.status}"

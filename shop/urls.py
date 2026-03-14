@@ -74,7 +74,9 @@ urlpatterns = [
     path('bill/payment/<int:bill_id>/', views_stripe.payment_page, name='stripe_payment_page'),
     path('bill/payment/create-intent/', views_stripe.create_payment_intent, name='stripe_create_intent'),
     path('bill/payment/status/<int:payment_id>/', views_stripe.get_payment_status, name='stripe_payment_status'),
+    path('bill/payment/refund/<int:payment_id>/', views_stripe.refund_payment, name='stripe_refund_payment'),
     path('bill/payment/history/<int:bill_id>/', views_stripe.get_bill_payments, name='stripe_bill_payments'),
+    path('bill/payment/transaction-logs/', views_stripe.get_transaction_logs, name='transaction_logs'),
     path('stripe/webhook/', views_stripe.stripe_webhook, name='stripe_webhook'),
 
     # Products

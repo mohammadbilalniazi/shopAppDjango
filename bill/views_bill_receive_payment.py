@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.db import transaction
+from decimal import Decimal
 from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
@@ -15,7 +16,38 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q
+from .models_stripe import TransactionLog
 # from .views_bill import get_opposit_bill
+
+
+def _log_manual_transaction(
+    bill,
+    user,
+    payment_amount,
+    event_type,
+    status_value,
+    message,
+    metadata=None,
+):
+    """
+    Best-effort transaction logging for manual receive/payment operations.
+    """
+    try:
+        TransactionLog.objects.create(
+            bill=bill,
+            organization=bill.organization,
+            user=user,
+            source='manual',
+            event_type=event_type,
+            status=status_value,
+            amount=Decimal(str(payment_amount or 0)),
+            currency=(bill.currency or 'USD').upper(),
+            reference_id=f'bill-{bill.id}',
+            message=message,
+            metadata=metadata or {},
+        )
+    except Exception as exc:
+        print(f"Error creating manual transaction log: {exc}")
 
 @login_required(login_url='/admin')
 def bill_form(request):
@@ -182,6 +214,23 @@ def bill_insert(request):
             else:
                 bill_receiver2=Bill_Receiver2(bill=bill_obj,bill_rcvr_org=bill_rcvr_org,is_approved=is_approved,approval_date=approval_date,approval_user=approval_user)
                 bill_receiver2.save()  
+
+        manual_status = 'succeeded' if int(status) == 1 else 'pending'
+        _log_manual_transaction(
+            bill=bill_obj,
+            user=request.user,
+            payment_amount=payment,
+            event_type='manual_bill_saved',
+            status_value=manual_status,
+            message=f'Manual {bill_type} bill saved',
+            metadata={
+                'bill_no': bill_obj.bill_no,
+                'bill_type': bill_type,
+                'is_approved': is_approved,
+                'receiver_org_id': bill_rcvr_org.id if bill_rcvr_org else None,
+            },
+        )
+
         ok=True
         message="bill No {} Successfully Insert".format(bill_no)
     except Exception as e:

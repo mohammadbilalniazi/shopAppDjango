@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Bill, Bill_Receiver2
-from .models_stripe import StripePayment, StripeWebhookEvent
+from .models_stripe import StripePayment, StripeWebhookEvent, TransactionLog
 
 
 @admin.register(StripePayment)
@@ -139,4 +139,35 @@ class StripeWebhookEventAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Allow deletion only if not processed or older than 30 days
         return super().has_delete_permission(request, obj)
+
+
+@admin.register(TransactionLog)
+class TransactionLogAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'created_at',
+        'source',
+        'event_type',
+        'status',
+        'bill_display',
+        'organization',
+        'amount',
+        'currency',
+        'reference_id',
+        'user'
+    ]
+    list_filter = ['source', 'status', 'currency', 'created_at']
+    search_fields = [
+        'event_type',
+        'reference_id',
+        'message',
+        'bill__bill_no',
+        'organization__name',
+        'user__username'
+    ]
+    readonly_fields = ['created_at']
+
+    def bill_display(self, obj):
+        return f"Bill #{obj.bill.bill_no} ({obj.bill.bill_type})"
+    bill_display.short_description = 'Bill'
 
