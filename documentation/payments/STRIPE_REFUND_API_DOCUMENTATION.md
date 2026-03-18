@@ -1,6 +1,6 @@
-# Stripe Refund API Documentation
+Stripe Refund API Documentation
 
-## Overview
+Overview
 This document explains how to use the Stripe refund endpoint implemented in this project.
 
 The refund flow supports:
@@ -10,14 +10,14 @@ The refund flow supports:
 - Transaction logging for audit
 - Idempotent local balance updates when webhooks are retried
 
-## Endpoint
+Endpoint
 - Method: POST
 - URL: /bill/payment/refund/<payment_id>/
 - Route name: stripe_refund_payment
 - View function: refund_payment in bill/views_stripe.py
 - URL registration: shop/urls.py
 
-## Authentication and Authorization
+Authentication and Authorization
 The endpoint requires an authenticated user.
 
 Access rules:
@@ -25,10 +25,10 @@ Access rules:
 - Non-superuser: allowed only if the payment organization is accessible to the user
 - Unauthorized access returns HTTP 403 with message: Access denied
 
-## Path Parameter
+Path Parameter
 - payment_id: integer ID of the StripePayment record to refund
 
-## Request Body
+Request Body
 All fields are optional.
 
 - amount
@@ -48,7 +48,7 @@ Example body for partial refund:
 Example body for full refund:
 {}
 
-## Validation Rules
+Validation Rules
 The API rejects the request if any of the following is true:
 - Payment status is not succeeded
 - Payment has no stripe_charge_id yet
@@ -57,7 +57,7 @@ The API rejects the request if any of the following is true:
 - Provided amount is less than or equal to zero
 - Provided amount is greater than the refundable balance
 
-## Refund Processing Logic
+Refund Processing Logic
 1. Load StripePayment by payment_id.
 2. Verify user authorization for organization access.
 3. Compute refundable balance as:
@@ -68,7 +68,7 @@ The API rejects the request if any of the following is true:
 7. Optionally store user-provided reason in refund_reason.
 8. Write transaction log entry for refund request.
 
-## Idempotency and Webhook Safety
+Idempotency and Webhook Safety
 The project uses delta-based refund sync in handle_payment_refund:
 - new_refund_amount = charge.amount_refunded / 100
 - refund_delta = new_refund_amount - previous_refund_amount
@@ -76,7 +76,7 @@ The project uses delta-based refund sync in handle_payment_refund:
 
 This prevents double subtraction if Stripe sends duplicate charge.refunded webhook events.
 
-## Success Response
+Success Response
 HTTP 200
 
 {
@@ -88,7 +88,7 @@ HTTP 200
   "currency": "USD"
 }
 
-## Error Responses
+Error Responses
 HTTP 400 examples:
 - Only successful payments can be refunded
 - No Stripe charge found for this payment yet
@@ -104,14 +104,14 @@ HTTP 403:
 HTTP 500:
 - Error processing refund: ...
 
-## Related Endpoints
+Related Endpoints
 - Create payment intent: POST /bill/payment/create-intent/
 - Payment status: GET /bill/payment/status/<payment_id>/
 - Bill payment history: GET /bill/payment/history/<bill_id>/
 - Transaction logs: GET /bill/payment/transaction-logs/
 - Stripe webhook: POST /stripe/webhook/
 
-## cURL Examples
+cURL Examples
 Refund full amount:
 curl -X POST "http://localhost:8000/bill/payment/refund/123/" \
   -H "Content-Type: application/json" \
@@ -126,7 +126,7 @@ curl -X POST "http://localhost:8000/bill/payment/refund/123/" \
   -b "csrftoken=<csrftoken>; sessionid=<sessionid>" \
   -d "{\"amount\": \"25.50\", \"reason\": \"Customer return\"}"
 
-## Notes
+Notes
 - Stripe reason sent to Stripe API is requested_by_customer.
 - Custom reason text is stored in local metadata and refund_reason.
 - Payment status and history responses include refund fields:
