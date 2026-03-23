@@ -20,6 +20,8 @@ organizationUserForm.addEventListener("submit", async (e) => {
   const username = $("username");
   const password = $("password");
   const role = $("role");
+  const isActive = $("is_active");
+  const groupsSelect = $("groups");
 
   if (!id.value) id.value = null;
 
@@ -31,6 +33,15 @@ organizationUserForm.addEventListener("submit", async (e) => {
   formData.append("role", role.value);
   formData.append("username", username.value);
   formData.append("password", password.value);
+  formData.append("is_active", isActive.checked ? "on" : "off");
+
+  // Add selected groups
+  if (groupsSelect) {
+    const selectedGroups = Array.from(groupsSelect.selectedOptions).map(opt => opt.value);
+    selectedGroups.forEach(groupId => {
+      formData.append("groups", groupId);
+    });
+  }
 
   if (img.files[0]) {
     formData.append("img", img.files[0]);
@@ -62,25 +73,30 @@ organizationUserForm.addEventListener("submit", async (e) => {
 // === Search & Pagination ===
 async function search(url = "/user/organization_user/search/") {
   const data = { is_paginate: 1 };
-  const organization = $("organization").value;
-  const firstName = $("first_name").value;
-  const lastName = $("last_name").value;
-  const username = $("username").value;
+
+  // Get search input
   const searchInput = $("search_user_input");
   const searchTerm = searchInput ? searchInput.value : "";
 
-  if (organization) data.organization = organization;
-  
+  // Get organization filter from search section
+  const searchOrgFilter = $("search_organization_filter");
+  const selectedOrg = searchOrgFilter ? searchOrgFilter.value : "";
+
+  // Use search organization filter if available, otherwise fall back to form organization
+  if (selectedOrg) {
+    data.organization = selectedOrg;
+  } else {
+    const organization = $("organization");
+    if (organization && organization.value) {
+      data.organization = organization.value;
+    }
+  }
+
   // If search input has value, use it for all search fields
   if (searchTerm) {
     data.first_name = searchTerm;
     data.last_name = searchTerm;
     data.username = searchTerm;
-  } else {
-    // Otherwise use individual field values
-    if (firstName) data.first_name = firstName;
-    if (lastName) data.last_name = lastName;
-    if (username) data.username = username;
   }
 
   const response = await call_shirkat(url, "POST", data, csrfHeaders());
@@ -133,6 +149,11 @@ async function search(url = "/user/organization_user/search/") {
             </span>
           </td>
           <td>
+            <span class="badge ${user.is_active ? 'bg-success' : 'bg-danger'}">
+              ${user.is_active ? '<i class="bi bi-check"></i> Active' : '<i class="bi bi-x"></i> Inactive'}
+            </span>
+          </td>
+          <td>
             <img src="${user.img || "/static/default.png"}" class="user-avatar" alt="${user.username}"/>
           </td>
           <td>
@@ -166,6 +187,17 @@ function handlePaginationClick(event) {
   event.preventDefault();
   const url = event.currentTarget.dataset.url;
   search(url);
+}
+
+// === Clear/Reset Search ===
+function clearSearch() {
+  const searchInput = $("search_user_input");
+  const searchOrgFilter = $("search_organization_filter");
+
+  if (searchInput) searchInput.value = "";
+  if (searchOrgFilter) searchOrgFilter.value = "";
+
+  search();
 }
 
 // === Delete User ===

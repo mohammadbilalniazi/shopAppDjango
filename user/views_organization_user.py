@@ -16,18 +16,21 @@ from django.contrib.auth.decorators import login_required
 def form(request,id=None):
     self_organization,user_orgs = find_userorganization(request)
     context={}
-    
+
     # Get branches for the organization(s)
     from configuration.models import Branch
+    from django.contrib.auth.models import Group
+
     if self_organization is not None:
         branches = Branch.objects.filter(organization=self_organization, is_active=True)
     else:
         branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
-    
+
     context['branches'] = branches
-    
+    context['groups'] = Group.objects.all()  # Get all available groups
+
     if request.user.is_superuser:
-        context['organizations']=Organization.objects.all() 
+        context['organizations']=Organization.objects.all()
     else:
         # Handle case when self_organization is None (user has multiple organizations)
         if self_organization is not None:
@@ -50,6 +53,8 @@ def insert(request):
     role = request.data.get("role")
     organization = request.data.get("organization")
     branch_id = request.data.get("branch")  # Get branch from form
+    is_active = request.data.get("is_active", "on") == "on"  # Handle checkbox value
+    groups = request.data.getlist("groups", [])  # Get list of group IDs
 
     with transaction.atomic():
         try:
@@ -59,22 +64,33 @@ def insert(request):
                 try:
                     from configuration.models import Branch
                     branch = Branch.objects.get(
-                        id=int(branch_id), 
+                        id=int(branch_id),
                         organization_id=organization,
                         is_active=True
                     )
                 except Branch.DoesNotExist:
                     return Response({"error": "Invalid branch selected."}, status=400)
-            
+
             if id:  # 🔹 UPDATE
                 instance = OrganizationUser.objects.get(id=int(id))
                 user = instance.user
                 user.username = username
                 user.first_name = first_name
                 user.last_name = last_name
+                user.is_active = is_active
                 if password:
                     user.set_password(password)
                 user.save()
+
+                # Update groups
+                user.groups.clear()
+                for group_id in groups:
+                    try:
+                        from django.contrib.auth.models import Group
+                        group = Group.objects.get(id=int(group_id))
+                        user.groups.add(group)
+                    except Group.DoesNotExist:
+                        pass
 
                 # shallow dict (safe, avoids deepcopy of files)
                 update_data = request.data.dict()
@@ -82,6 +98,7 @@ def insert(request):
                 update_data["organization"] = organization
                 update_data["role"] = role
                 update_data["branch"] = branch.id if branch else None
+                update_data["is_active"] = is_active
 
                 serializer = OrganizationUserCreateSerializer(
                     instance, data=update_data, partial=True
@@ -97,12 +114,21 @@ def insert(request):
                     username=username,
                     first_name=first_name,
                     last_name=last_name,
-                    is_active=True,
+                    is_active=is_active,
                     is_staff=True
                 )
                 if password:
                     user.set_password(password)
                 user.save()
+
+                # Add groups to user
+                for group_id in groups:
+                    try:
+                        from django.contrib.auth.models import Group
+                        group = Group.objects.get(id=int(group_id))
+                        user.groups.add(group)
+                    except Group.DoesNotExist:
+                        pass
 
                 # Check if user already belongs to ANY organization (one user, one organization rule)
                 # This shouldn't happen due to OneToOneField, but added as extra safety
@@ -115,6 +141,7 @@ def insert(request):
                 create_data["organization"] = organization
                 create_data["role"] = role
                 create_data["branch"] = branch.id if branch else None
+                create_data["is_active"] = is_active
 
                 serializer = OrganizationUserCreateSerializer(data=create_data)
 
@@ -179,19 +206,22 @@ def search(request):
     # Check if the current user is a superuser
     is_superuser = False
     try:
-        current_org_user = OrganizationUser.objects.get(user=request.user)
-        is_superuser = (current_org_user.role == 'superuser' or request.user.is_superuser)
-    except OrganizationUser.DoesNotExist:
-        # If user is Django superuser but not in OrganizationUser table
+        current_org_user = OrganizationUser.objects.filter(user=request.user).first()
+        if current_org_user:
+            is_superuser = (current_org_user.role == 'superuser' or request.user.is_superuser)
+        else:
+            is_superuser = request.user.is_superuser
+    except Exception:
+        # If any error occurs, check if user is Django superuser
         is_superuser = request.user.is_superuser
 
     query=OrganizationUser.objects.all()
-    
+
     # Organization filter logic
     if organization:
         # Try to filter by selected organization first
         org_query = query.filter(organization__id=int(organization))
-        
+
         # If no results found and user is superuser, show all users from all organizations
         if not org_query.exists() and is_superuser:
             # Don't filter by organization - show all
@@ -200,14 +230,15 @@ def search(request):
             # Apply organization filter
             query = org_query
     elif not is_superuser:
-        # If no organization selected and user is NOT superuser, 
+        # If no organization selected and user is NOT superuser,
         # restrict to their organization only
         try:
-            current_org_user = OrganizationUser.objects.get(user=request.user)
-            query = query.filter(organization=current_org_user.organization)
-        except OrganizationUser.DoesNotExist:
+            current_org_user = OrganizationUser.objects.filter(user=request.user).first()
+            if current_org_user:
+                query = query.filter(organization=current_org_user.organization)
+        except Exception:
             pass
-    
+
     # Apply other filters
     if username:
         query=query.filter(user__username__icontains=username)
@@ -215,10 +246,11 @@ def search(request):
         query=query.filter(user__first_name__icontains=first_name)
     if last_name:
         query=query.filter(user__last_name__icontains=last_name)
-    
+
     is_paginate=int(request.data.get("is_paginate",0))
-    if  is_paginate==1:
-        paginator=PageNumberPagination() 
+    if is_paginate==1:
+        from rest_framework.pagination import PageNumberPagination
+        paginator=PageNumberPagination()
         paginator.page_size=5
         query_set=paginator.paginate_queryset(query.order_by('-pk'),request)
         serializer=OrganizationUserSerializer(query_set,many=True,context={'request':request})
