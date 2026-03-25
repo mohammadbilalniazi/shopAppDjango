@@ -137,6 +137,7 @@ def bill_show(request,bill_id=None):
     context['organization'] =organization
     context['branches'] = branches
     context['rcvr_orgs']=rcvr_orgs
+    context['currencies'] = Currency.objects.all()
     return HttpResponse(template.render(context,request))
 
 
@@ -269,10 +270,11 @@ def bill_form_sell_purchase(request):
         'form':form,
         'organization':self_organization,
         'organizations':organizations,
-        'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
-        'branches': branches,  # Add branch context
+        'rcvr_orgs':rcvr_orgs,
+        'branches': branches,
         'date':date,
         'categories':Category.objects.all(),
+        'currencies': Currency.objects.all(),
     } 
     # print("EEEEEEEEEEEEEEEEEEEE")
     # print("context=",context)
@@ -314,6 +316,7 @@ def bill_form_loss_degrade_product(request):
         'organization':self_organization,
         'organizations':organizations,
         'date':date,
+        'currencies': Currency.objects.all(),
     } 
     # print("context=",context)
     return HttpResponse(template.render(context,request))
@@ -435,6 +438,8 @@ def bill_insert(request):
             bill.payment = payment
             bill.bill_type = bill_type
             bill.branch = branch
+            if data.get('currency'):
+                bill.currency = data.get('currency')
 
         else:
             if Bill.objects.filter(
@@ -455,7 +460,8 @@ def bill_insert(request):
                 creator=user,
                 total=total,
                 payment=payment,
-                branch=branch
+                branch=branch,
+                currency=data.get('currency', 'afg') or 'afg',
             )
 
         bill.save()
@@ -679,7 +685,12 @@ def search(request, page=None):
             query = query.filter(bill_receiver2__bill_rcvr_org__id=int(bill_rcvr_org))
         except (ValueError, TypeError):
             pass  # Invalid bill_rcvr_org, skip filtering
-    
+
+    # Filter by currency
+    currency_filter = request.data.get("currency", None)
+    if currency_filter and currency_filter not in [None, "", "null", "all"]:
+        query = query.filter(currency__iexact=currency_filter)
+
     # Pagination
     paginator = PageNumberPagination()
     paginator.page_size = 8

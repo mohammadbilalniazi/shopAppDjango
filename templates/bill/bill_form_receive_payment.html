@@ -144,6 +144,17 @@ input[name="date"]:focus {
                         <label class="form-label form-label-bold">System Bill ID</label>
                         <input type="number" value="{{ bill.id }}" disabled name="bill_id" id="bill_id" class="form-control">
                     </div>
+                    <!-- Currency -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">Currency <span class="text-danger">*</span></label>
+                        <select name="currency" id="currency" class="form-select" required>
+                            {% for cur in currencies %}
+                            <option value="{{ cur.currency }}" {% if bill.currency == cur.currency %}selected{% elif not bill and cur.is_domestic %}selected{% endif %}>{{ cur.currency }}{% if cur.is_domestic %} (Domestic){% endif %}</option>
+                            {% empty %}
+                            <option value="afg" {% if not bill or bill.currency == 'afg' %}selected{% endif %}>AFG (Domestic)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
 
                 <hr class="my-3">

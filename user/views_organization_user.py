@@ -14,6 +14,15 @@ from common.organization import *
 from django.contrib.auth.decorators import login_required
 
 
+def _get_requester_context(request):
+    """Returns (is_superuser, own_org_user) for the logged-in user."""
+    own_org_user = OrganizationUser.objects.filter(user=request.user).first()
+    is_su = request.user.is_superuser or (
+        own_org_user is not None and own_org_user.role in ('superuser', 'owner')
+    )
+    return is_su, own_org_user
+
+
 @login_required(login_url='/')
 def form(request,id=None):
     self_organization,user_orgs = find_userorganization(request)
@@ -41,19 +50,51 @@ def form(request,id=None):
             # User has multiple organizations, use all of them
             context['organizations'] = user_orgs
     if id!="null" and id:
-        context['organization_user']=OrganizationUser.objects.select_related('branch').get(id=int(id))
+        try:
+            org_user_obj = OrganizationUser.objects.select_related('branch', 'organization').get(id=int(id))
+        except OrganizationUser.DoesNotExist:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden("User not found.")
+        # Non-superusers may only open users from their own org
+        is_su, own_org_user = _get_requester_context(request)
+        if not is_su and own_org_user and org_user_obj.organization_id != own_org_user.organization_id:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden("You do not have permission to edit this user.")
+        context['organization_user'] = org_user_obj
     return render(request,"user/organization_user.html",context)
 
 
 @api_view(['POST'])
 def insert(request):
     id = request.data.get("id")
+    is_su, own_org_user = _get_requester_context(request)
+
+    # Non-superusers must belong to an organization
+    if not is_su and own_org_user is None:
+        return Response({"error": "You do not belong to any organization."}, status=status.HTTP_403_FORBIDDEN)
+
     first_name = request.data.get("first_name")
     last_name = request.data.get("last_name")
     username = request.data.get("username")
     password = request.data.get("password")
     role = request.data.get("role")
     organization = request.data.get("organization")
+    # Enforce non-superusers can only operate within their own organization
+    if not is_su:
+        if organization and str(own_org_user.organization_id) != str(organization):
+            return Response({"error": "You can only manage users in your own organization."}, status=status.HTTP_403_FORBIDDEN)
+        # For updates, verify the target org user belongs to the same org
+        if id:
+            try:
+                target_ou = OrganizationUser.objects.get(id=int(id))
+                if target_ou.organization_id != own_org_user.organization_id:
+                    return Response({"error": "You can only edit users in your own organization."}, status=status.HTTP_403_FORBIDDEN)
+            except OrganizationUser.DoesNotExist:
+                return Response({"error": "OrganizationUser not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Auto-assign org for non-superuser if not sent
+        if not organization:
+            organization = str(own_org_user.organization_id)
+
     branch_id = request.data.get("branch")  # Get branch from form
     existing_user_id = request.data.get("existing_user_id")
     is_active = request.data.get("is_active", "on") == "on"  # Handle checkbox value
@@ -190,7 +231,16 @@ def insert(request):
         
 @api_view(['DELETE'])
 def delete(request,id=None):
-    organization_user=OrganizationUser.objects.get(id=int(id))
+    try:
+        organization_user = OrganizationUser.objects.get(id=int(id))
+    except OrganizationUser.DoesNotExist:
+        return Response({"error": "OrganizationUser not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    is_su, own_org_user = _get_requester_context(request)
+    if not is_su:
+        if own_org_user is None or organization_user.organization_id != own_org_user.organization_id:
+            return Response({"error": "You can only delete users in your own organization."}, status=status.HTTP_403_FORBIDDEN)
+
     try:
         organization_user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -231,20 +281,8 @@ def search(request):
     first_name=request.data.get("first_name",None)
     last_name=request.data.get("last_name",None)
 
-    # Check if the current user is a superuser
-    is_superuser = False
-    try:
-        current_org_user = OrganizationUser.objects.filter(user=request.user).first()
-        if current_org_user:
-            is_superuser = (current_org_user.role == 'superuser' or request.user.is_superuser)
-        else:
-            is_superuser = request.user.is_superuser
-    except Exception:
-        # If any error occurs, check if user is Django superuser
-        is_superuser = request.user.is_superuser
-
-    query=OrganizationUser.objects.select_related('user', 'organization').all()
-    current_org_user = OrganizationUser.objects.filter(user=request.user).first()
+    is_superuser, current_org_user = _get_requester_context(request)
+    query = OrganizationUser.objects.select_related('user', 'organization').all()
     selected_organization_id = int(organization) if organization else None
 
     # Organization filter logic
@@ -252,25 +290,16 @@ def search(request):
         if not is_superuser and current_org_user and selected_organization_id != current_org_user.organization_id:
             query = query.none()
         else:
-        # Try to filter by selected organization first
             org_query = query.filter(organization__id=selected_organization_id)
-
-        # If no results found and user is superuser, show all users from all organizations
             if not org_query.exists() and is_superuser:
-            # Don't filter by organization - show all
                 pass
             else:
-            # Apply organization filter
                 query = org_query
     elif not is_superuser:
-        # If no organization selected and user is NOT superuser,
-        # restrict to their organization only
-        try:
-            current_org_user = OrganizationUser.objects.filter(user=request.user).first()
-            if current_org_user:
-                query = query.filter(organization=current_org_user.organization)
-        except Exception:
-            pass
+        if current_org_user:
+            query = query.filter(organization=current_org_user.organization)
+        else:
+            query = query.none()
 
     # Apply other filters
     if username:
@@ -295,6 +324,8 @@ def search(request):
         if current_org_user:
             if selected_organization_id and selected_organization_id != current_org_user.organization_id:
                 unassigned_users = User.objects.none()
+            # Without an explicit org filter, non-superusers see unassigned users
+            # only so they can assign them to THEIR OWN org (enforced on insert)
         else:
             unassigned_users = User.objects.none()
 

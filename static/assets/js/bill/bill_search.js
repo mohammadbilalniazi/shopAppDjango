@@ -189,6 +189,7 @@ async function make_table(response_data)
                 <td class="text-end text-success fw-semibold">${payment.toLocaleString()}</td>
                 <td class="text-end ${balanceClass}">${balance.toLocaleString()}</td>
                 <td class="text-center"><small>${bills[key]['date']}</small></td>
+                <td class="text-center"><small>${bills[key]['currency'] || 'N/A'}</small></td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm" role="group">
                         <a href="${update_href}" class="btn btn-outline-primary" title="View/Edit">
@@ -235,7 +236,8 @@ async function search_bills(url=null)
     if(url==null){
     url=`/bill/search/`;  
     }
-    const data={bill_type:bill_type,organization:organization,bill_no:bill_no,bill_rcvr_org:bill_rcvr_org,start_date:start_date,end_date:end_date}
+    var currency_filter=document.getElementById("currency_filter")?.value || "";
+    const data={bill_type:bill_type,organization:organization,bill_no:bill_no,bill_rcvr_org:bill_rcvr_org,start_date:start_date,end_date:end_date,currency:currency_filter}
     let response=await call_shirkat(url,"POST",data);
     console.log("search resutls",response.data)
     make_table(response.data);

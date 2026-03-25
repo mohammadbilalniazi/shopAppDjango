@@ -85,9 +85,10 @@ def bill_form(request):
     context={
         'form':form,
         'organization':self_organization,
-        'organizations':organizations,  # ← ADD THIS
-        'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
+        'organizations':organizations,
+        'rcvr_orgs':rcvr_orgs,
         'date':date,
+        'currencies': Currency.objects.all(),
     } 
     # Add branches for the selected organization(s)
     from configuration.models import Branch
@@ -191,6 +192,8 @@ def bill_insert(request):
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
         bill_obj.profit=0
+        if request.data.get('currency'):
+            bill_obj.currency=request.data.get('currency')
         if previous_bill_type!="EXPENSE":
             if hasattr(bill_obj,'bill_receiver2'):
                 bill_receiver2=bill_obj.bill_receiver2
@@ -204,7 +207,7 @@ def bill_insert(request):
             ok=False
             message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
             return Response({"message":message,"ok":ok})
-        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
+        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment,currency=request.data.get('currency','afg') or 'afg')
     try:
         bill_obj.save()
         if bill_type!="EXPENSE":  # in expense we do not need  and bill_receiver2

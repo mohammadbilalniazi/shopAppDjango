@@ -459,7 +459,7 @@
                     <option value="EXPENSE">💸 EXPENSE</option>
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="bill_rcvr_org" class="form-label-custom">
                     <i class="bi bi-shop text-success"></i> Receiver Organization
                 </label>
@@ -467,6 +467,19 @@
                     <option value="">🏪 All Organizations</option>
                     {% for row in rcvr_orgs %}
                         <option value="{{ row.id }}">{{ row }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label for="currency_filter" class="form-label-custom">
+                    <i class="bi bi-currency-exchange text-primary"></i> Currency
+                </label>
+                <select class="form-select-custom" name="currency_filter" id="currency_filter">
+                    <option value="">All</option>
+                    {% for cur in currencies %}
+                        <option value="{{ cur.currency }}">{{ cur.currency }}</option>
+                    {% empty %}
+                        <option value="afg">AFG</option>
                     {% endfor %}
                 </select>
             </div>
@@ -549,8 +562,11 @@
                         <th style="width: 12%;" class="text-end">
                             <i class="bi bi-exclamation-circle"></i> Balance
                         </th>
-                        <th style="width: 10%;" class="text-center">
+                        <th style="width: 8%;" class="text-center">
                             <i class="bi bi-calendar-event"></i> Date
+                        </th>
+                        <th style="width: 7%;" class="text-center">
+                            <i class="bi bi-currency-exchange"></i> Currency
                         </th>
                         <th style="width: 9%;" class="text-center">
                             <i class="bi bi-gear"></i> Actions
