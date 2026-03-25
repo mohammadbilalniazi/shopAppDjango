@@ -49,13 +49,29 @@ High-level accounting state object.
 ```python
 class OrganizationAsset(models.Model):
     organization = models.OneToOneField(Organization, on_delete=models.PROTECT, related_name="asset_summary")
+    # Solid assets
     inventory_value = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    # Liquid assets
     cash_on_hand = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    # Receivables
     accounts_receivable = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    # Payables
     accounts_payable = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    # Loans
+    loans_receivable = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    loans_payable = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    # Aggregates
     total_assets = models.DecimalField(max_digits=20, decimal_places=5, default=0)
     total_liabilities = models.DecimalField(max_digits=20, decimal_places=5, default=0)
     equity = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    # Profit and loss
+    total_revenue = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    total_cost_of_goods_sold = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    total_expenses = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    total_losses = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    net_profit = models.DecimalField(max_digits=20, decimal_places=5, default=0)
+    currency = models.CharField(max_length=7, default="afg")
+    last_updated = models.DateTimeField(auto_now=True)
 ```
 
 Auto-calculation:
@@ -63,10 +79,19 @@ Auto-calculation:
 ```python
 def calculate_totals(self):
     self.total_assets = (
-        self.inventory_value + self.cash_on_hand + self.accounts_receivable + self.loans_receivable
+        self.inventory_value + self.cash_on_hand +
+        self.accounts_receivable + self.loans_receivable
     )
     self.total_liabilities = (self.accounts_payable + self.loans_payable)
     self.equity = self.total_assets - self.total_liabilities
+    self.net_profit = (
+        self.total_revenue - self.total_cost_of_goods_sold -
+        self.total_expenses - self.total_losses
+    )
+
+def save(self, *args, **kwargs):
+    self.calculate_totals()
+    super().save(*args, **kwargs)
 ```
 
 3. Loan Tracking
@@ -74,6 +99,18 @@ def calculate_totals(self):
 Loan table supports payable and receivable categories:
 
 ```python
+LOAN_TYPE = (
+    ('PAYABLE', 'Loan Payable'),    # money we borrowed
+    ('RECEIVABLE', 'Loan Receivable'),  # money we lent
+)
+
+LOAN_STATUS = (
+    ('ACTIVE', 'Active'),
+    ('PAID', 'Fully Paid'),
+    ('PARTIAL', 'Partially Paid'),
+    ('DEFAULTED', 'Defaulted'),
+)
+
 class Loan(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name="loans")
     counterparty = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name="loan_counterparties")
@@ -81,6 +118,10 @@ class Loan(models.Model):
     principal_amount = models.DecimalField(max_digits=20, decimal_places=5)
     amount_paid = models.DecimalField(max_digits=20, decimal_places=5, default=0)
     amount_remaining = models.DecimalField(max_digits=20, decimal_places=5)
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    loan_date = models.CharField(max_length=10, default=current_shamsi_date)
+    due_date = models.CharField(max_length=10, blank=True, null=True)
+    status = models.CharField(max_length=15, choices=LOAN_STATUS, default='ACTIVE')
 ```
 
 4. Expenditure Integration
@@ -89,22 +130,50 @@ Expense operations in expenditure/views.py create or update Bill plus Expense ty
 
 ```python
 @login_required(login_url='/admin')
-@api_view(['POST','PUT'])
+@api_view(['POST', 'PUT'])
 def expense_insert(request):
-    bill_no=int(request.data.get("bill_no",None))
-    organization_id=request.data.get("organization")
-    bill_type=request.data.get("bill_type",None)
-    expense_type=request.data.get("expense_type")
+    bill_no = int(request.data.get("bill_no", None))
+    id = request.data.get("id")
+    date = request.data.get("date")
+    year = date.split("-")[0]
+    organization_id = request.data.get("organization")
+    organization = Organization.objects.get(id=int(organization_id))
+    bill_type = request.data.get("bill_type", None)
+    expense_type = request.data.get("expense_type")
+    creator = request.user
+    total = request.data.get("total", 0) or 0
+    payment = request.data.get("total_payment", 0)
 
-    bill_obj=Bill(...)
+    if id not in ("", None):
+        # Update existing bill
+        bill_obj = Bill.objects.get(id=int(id))
+        bill_obj.total = total
+        bill_obj.payment = payment
+        bill_obj.bill_type = bill_type
+    else:
+        # Prevent duplicate bill entry
+        bill_query = Bill.objects.filter(
+            bill_no=int(bill_no), year=int(year),
+            bill_type=bill_type, organization=organization
+        )
+        if bill_query.count() > 0:
+            return Response({"message": "Bill already exists", "ok": False})
+        bill_obj = Bill(
+            bill_type=bill_type, date=date, year=year,
+            bill_no=bill_no, organization=organization,
+            creator=creator, total=total, payment=payment
+        )
+
     bill_obj.save()
 
-    expense_query=Expense.objects.filter(bill=bill_obj)
-    if expense_query.count()>0:
-        expense_query.update(bill=bill_obj,expense_type=int(expense_type))
+    expense_query = Expense.objects.filter(bill=bill_obj)
+    if expense_query.count() > 0:
+        expense_query.update(bill=bill_obj, expense_type=int(expense_type))
     else:
-        expense=Expense(bill=bill_obj,expense_type=int(expense_type))
+        expense = Expense(bill=bill_obj, expense_type=int(expense_type))
         expense.save()
+
+    return Response({"message": "Success", "ok": True, "bill_id": bill_obj.id})
 ```
 
 5. Financial Dashboard Routes

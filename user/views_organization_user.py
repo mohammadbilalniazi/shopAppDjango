@@ -8,6 +8,8 @@ from rest_framework.pagination import PageNumberPagination
 from .serializer import *
 from django.db import transaction
 from django.shortcuts import render
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage
 from common.organization import *
 from django.contrib.auth.decorators import login_required
 
@@ -53,6 +55,7 @@ def insert(request):
     role = request.data.get("role")
     organization = request.data.get("organization")
     branch_id = request.data.get("branch")  # Get branch from form
+    existing_user_id = request.data.get("existing_user_id")
     is_active = request.data.get("is_active", "on") == "on"  # Handle checkbox value
     groups = request.data.getlist("groups", [])  # Get list of group IDs
 
@@ -105,23 +108,50 @@ def insert(request):
                 )
 
             else:  # 🔹 CREATE
-                # Check username availability first
-                if User.objects.filter(username=username).exists():
-                    return Response({"error": "Username already taken."}, status=400)
+                created_new_user = False
 
-                # Create the user
-                user = User(
-                    username=username,
-                    first_name=first_name,
-                    last_name=last_name,
-                    is_active=is_active,
-                    is_staff=True
-                )
-                if password:
-                    user.set_password(password)
-                user.save()
+                # Reuse an existing Django user when assigning organization from the user list
+                if existing_user_id:
+                    try:
+                        user = User.objects.get(id=int(existing_user_id))
+                    except User.DoesNotExist:
+                        return Response({"error": "Selected user not found."}, status=404)
+
+                    if OrganizationUser.objects.filter(user=user).exists():
+                        return Response({"error": "User already belongs to an organization. One user can only belong to one organization."}, status=400)
+
+                    user.username = username
+                    user.first_name = first_name
+                    user.last_name = last_name
+                    user.is_active = is_active
+                    user.is_staff = True
+                    if password:
+                        user.set_password(password)
+                    user.save()
+                else:
+                    # Check username availability first for brand new users
+                    if User.objects.filter(username=username).exists():
+                        return Response({"error": "Username already taken."}, status=400)
+
+                    user = User(
+                        username=username,
+                        first_name=first_name,
+                        last_name=last_name,
+                        is_active=is_active,
+                        is_staff=True
+                    )
+                    if password:
+                        user.set_password(password)
+                    user.save()
+                    created_new_user = True
+
+                    # Safety check for one user, one organization rule
+                    if OrganizationUser.objects.filter(user=user).exists():
+                        user.delete()
+                        return Response({"error": "User already belongs to an organization. One user can only belong to one organization."}, status=400)
 
                 # Add groups to user
+                user.groups.clear()
                 for group_id in groups:
                     try:
                         from django.contrib.auth.models import Group
@@ -129,12 +159,6 @@ def insert(request):
                         user.groups.add(group)
                     except Group.DoesNotExist:
                         pass
-
-                # Check if user already belongs to ANY organization (one user, one organization rule)
-                # This shouldn't happen due to OneToOneField, but added as extra safety
-                if OrganizationUser.objects.filter(user=user).exists():
-                    user.delete()  # Clean up the created user
-                    return Response({"error": "User already belongs to an organization. One user can only belong to one organization."}, status=400)
 
                 create_data = request.data.dict()
                 create_data["user"] = user.id
@@ -148,6 +172,10 @@ def insert(request):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            # Revert just-created user on serializer failure
+            if not id and not existing_user_id and 'created_new_user' in locals() and created_new_user:
+                user.delete()
 
             transaction.set_rollback(True)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -215,20 +243,25 @@ def search(request):
         # If any error occurs, check if user is Django superuser
         is_superuser = request.user.is_superuser
 
-    query=OrganizationUser.objects.all()
+    query=OrganizationUser.objects.select_related('user', 'organization').all()
+    current_org_user = OrganizationUser.objects.filter(user=request.user).first()
+    selected_organization_id = int(organization) if organization else None
 
     # Organization filter logic
     if organization:
+        if not is_superuser and current_org_user and selected_organization_id != current_org_user.organization_id:
+            query = query.none()
+        else:
         # Try to filter by selected organization first
-        org_query = query.filter(organization__id=int(organization))
+            org_query = query.filter(organization__id=selected_organization_id)
 
         # If no results found and user is superuser, show all users from all organizations
-        if not org_query.exists() and is_superuser:
+            if not org_query.exists() and is_superuser:
             # Don't filter by organization - show all
-            pass
-        else:
+                pass
+            else:
             # Apply organization filter
-            query = org_query
+                query = org_query
     elif not is_superuser:
         # If no organization selected and user is NOT superuser,
         # restrict to their organization only
@@ -247,15 +280,83 @@ def search(request):
     if last_name:
         query=query.filter(user__last_name__icontains=last_name)
 
+    # Build response rows for assigned users
+    assigned_rows = []
+    for row in OrganizationUserSerializer(query.order_by('-pk'), many=True, context={'request': request}).data:
+        row['org_user_id'] = row['id']
+        row['is_assigned'] = True
+        assigned_rows.append(row)
+
+    # Also return Django users that do not have OrganizationUser yet
+    assigned_user_ids = OrganizationUser.objects.values_list('user_id', flat=True)
+    unassigned_users = User.objects.exclude(id__in=assigned_user_ids)
+
+    if not is_superuser:
+        if current_org_user:
+            if selected_organization_id and selected_organization_id != current_org_user.organization_id:
+                unassigned_users = User.objects.none()
+        else:
+            unassigned_users = User.objects.none()
+
+    if username:
+        unassigned_users = unassigned_users.filter(username__icontains=username)
+    if first_name:
+        unassigned_users = unassigned_users.filter(first_name__icontains=first_name)
+    if last_name:
+        unassigned_users = unassigned_users.filter(last_name__icontains=last_name)
+
+    # If single search box fills all fields, match any of them for unassigned users
+    if username and username == first_name and first_name == last_name:
+        term = username
+        unassigned_users = unassigned_users.filter(
+            Q(username__icontains=term) |
+            Q(first_name__icontains=term) |
+            Q(last_name__icontains=term)
+        )
+
+    unassigned_rows = []
+    for u in unassigned_users.order_by('-id'):
+        unassigned_rows.append({
+            'id': None,
+            'org_user_id': None,
+            'user': u.id,
+            'user_id': u.id,
+            'organization': 'Not Assigned',
+            'username': u.username,
+            'first_name': u.first_name,
+            'last_name': u.last_name,
+            'role': '-',
+            'is_active': u.is_active,
+            'img': None,
+            'is_assigned': False
+        })
+
+    combined_rows = assigned_rows + unassigned_rows
+
     is_paginate=int(request.data.get("is_paginate",0))
     if is_paginate==1:
-        from rest_framework.pagination import PageNumberPagination
-        paginator=PageNumberPagination()
-        paginator.page_size=5
-        query_set=paginator.paginate_queryset(query.order_by('-pk'),request)
-        serializer=OrganizationUserSerializer(query_set,many=True,context={'request':request})
-        return paginator.get_paginated_response({'ok':True,'serializer_data':serializer.data})
-    serializer=OrganizationUserSerializer(query,many=True,context={'request':request})
-    return Response(serializer.data,status=status.HTTP_200_OK)
+        page_size = 5
+        requested_page = request.data.get("page", request.query_params.get("page", 1))
+        try:
+            requested_page = int(requested_page)
+        except (TypeError, ValueError):
+            requested_page = 1
+
+        paginator = Paginator(combined_rows, page_size)
+        try:
+            page_obj = paginator.page(requested_page)
+        except EmptyPage:
+            page_obj = paginator.page(1)
+
+        return Response({
+            'count': paginator.count,
+            'next': page_obj.next_page_number() if page_obj.has_next() else None,
+            'previous': page_obj.previous_page_number() if page_obj.has_previous() else None,
+            'results': {
+                'ok': True,
+                'serializer_data': list(page_obj.object_list)
+            }
+        }, status=status.HTTP_200_OK)
+    return Response(combined_rows,status=status.HTTP_200_OK)
 
 

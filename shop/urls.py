@@ -105,6 +105,7 @@ urlpatterns = [
     path('user/organization_user/get/', views_organization_user.get, name='organization_user_get'),
     path('user/organization_user/get/<id>', views_organization_user.get, name='organization_user_get_by_id'),
     path('user/organization_user/delete/<id>', views_organization_user.delete, name='organization_user_delete'),
+    path('user/organization_user/search', views_organization_user.search, name='organization_user_search_no_slash'),
     path('user/organization_user/search/', views_organization_user.search, name='organization_user_search'),
 
     # User Session Management

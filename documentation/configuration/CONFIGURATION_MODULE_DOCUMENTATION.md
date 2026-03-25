@@ -137,16 +137,48 @@ def get_countries(request):
     if request.method == 'POST':
         name = data.get('name')
         shortcut = data.get('shortcut')
+        currency = data.get('currency', 'Afg')
+
+        if not name or not shortcut:
+            return Response({"error": "Country name and shortcut are required"}, status=400)
         if Country.objects.filter(name=name).exists():
             return Response({"error": f"Country '{name}' already exists"}, status=400)
+        if Country.objects.filter(shortcut=shortcut).exists():
+            return Response({"error": f"Shortcut '{shortcut}' already exists"}, status=400)
+
+        country = Country.objects.create(name=name, shortcut=shortcut, currency=currency)
+        return Response({"message": "Country created successfully", "data": {"id": country.id, "name": country.name}}, status=201)
+
+    # GET: return all countries ordered by name
+    countries = Country.objects.all().order_by('name')
+    data = [{"id": c.id, "name": c.name, "shortcut": c.shortcut} for c in countries]
+    return Response(data)
 ```
 
 ```python
-@api_view(('GET','POST'))
-def show(request,id="all"):
+@api_view(('GET', 'POST'))
+def show(request, id="all"):
     if request.method == 'POST':
+        country_id = data.get('country')
+        state = data.get('state')
+        city = data.get('city')
+
+        if not country_id or not state or not city:
+            return Response({"error": "Country, State, and City are required"}, status=400)
         if Location.objects.filter(country_id=country_id, state=state, city=city).exists():
             return Response({"error": f"Location '{state}, {city}' already exists"}, status=400)
+
+        location = Location.objects.create(country_id=country_id, state=state, city=city)
+        serializer = LocationSerializer(location)
+        return Response({"message": "Location created successfully", "data": serializer.data}, status=201)
+
+    # GET: return all or single location
+    if id == "all":
+        query_set = Location.objects.all().order_by('-pk')
+    else:
+        query_set = Location.objects.filter(id=int(id))
+    serializer = LocationSerializer(query_set, many=True)
+    return Response(serializer.data)
 ```
 
 6. Main Routes
@@ -162,9 +194,13 @@ path('configuration/countries/', views_location.get_countries, name='get_countri
 path('configuration/location/', views_location.show, name='location_show')
 
 path('configuration/branch/', views_branch.branch_select_organization, name='branch_select_organization')
+path('configuration/branch/organization/<int:org_id>/', views_branch.branch_management, name='branch_management')
 path('configuration/branch/create/', views_branch.branch_create, name='branch_create')
 path('configuration/branch/<int:branch_id>/update/', views_branch.branch_update, name='branch_update')
 path('configuration/branch/<int:branch_id>/delete/', views_branch.branch_delete, name='branch_delete')
+path('configuration/branch/<int:branch_id>/detail/', views_branch.branch_detail, name='branch_detail')
+path('configuration/branch/<int:branch_id>/toggle-status/', views_branch.branch_toggle_status, name='branch_toggle_status')
+path('configuration/organization/<int:org_id>/users/', views_branch.get_organization_users, name='get_organization_users')
 
 path('api/branches/by-organization/<int:organization_id>/', views_branch_api.get_branches_by_organization, name='get_branches_by_organization')
 path('api/branches/user-accessible/', views_branch_api.get_all_user_branches, name='get_all_user_branches')

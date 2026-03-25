@@ -31,6 +31,7 @@ Payments
 - payments/STRIPE_QUICK_SETUP.md: deployment and setup steps for Stripe
 - payments/STRIPE_ACTIVATION_CHECKLIST.md: activation and verification checklist
 - payments/STRIPE_README.md: quick operational reference for payment features
+- payments/TRANSACTION_LOG_DOCUMENTATION.md: TransactionLog model, event types, query API, and audit design
 
 User Management
 - usermanagment/USERS_MODULE_DOCUMENTATION.md: user, organization-user, session, and authentication behavior

@@ -4,6 +4,7 @@
 {% block title %}Add Product {% endblock %}
 
 {% block head_extra %}
+<link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
 <style>
     /* Force visible text in all form inputs - CRITICAL FIX */
     .form-table input[type="text"],
@@ -50,7 +51,7 @@
     
     /* Modern Card Design for Product Form */
     .product-form-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #417690 0%, #2c5d7a 100%);
         color: white;
         padding: 2rem;
         border-radius: 10px;
@@ -161,7 +162,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; margin: 20px auto; padding: 20px;">
+<div class="container unified-ui" style="max-width: 1200px; margin: 20px auto; padding: 20px;">
     
     {% if messages %}
         {% for message in messages %}

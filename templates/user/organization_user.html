@@ -369,6 +369,7 @@
                 <span class="system-id-badge">New User</span>
               {% endif %}
               <input type="hidden" class="form-control-custom" name="id" id="id" value="{{organization_user.id}}">
+              <input type="hidden" name="existing_user_id" id="existing_user_id" value="">
             </td>
           </tr>
 
@@ -554,10 +555,41 @@
     if (orgSelect) {
       console.log('🔍 Organization dropdown found with', orgSelect.options.length, 'options');
 
+      function refreshBranchSelect2() {
+        if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined' || !branchSelect) {
+          return;
+        }
+
+        const $branchSelect = jQuery(branchSelect);
+        const wasInitialized = $branchSelect.hasClass('select2-hidden-accessible');
+
+        if (wasInitialized) {
+          $branchSelect.select2('destroy');
+        }
+
+        $branchSelect.select2({
+          placeholder: 'Select Branch (Optional)',
+          allowClear: true,
+          width: '100%',
+          theme: 'default',
+          minimumResultsForSearch: 0,
+          dropdownAutoWidth: true,
+          dropdownParent: jQuery('body')
+        });
+      }
+
       // Function to load branches for selected organization
       async function loadBranchesForOrganization(organizationId) {
+        if (!branchSelect) {
+          return;
+        }
+
         if (!organizationId) {
           branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+          if (typeof jQuery !== 'undefined') {
+            jQuery(branchSelect).val('').trigger('change');
+            refreshBranchSelect2();
+          }
           return;
         }
 
@@ -588,10 +620,72 @@
               option.disabled = true;
               branchSelect.appendChild(option);
             }
+
+            // Keep Select2 in sync after replacing options dynamically
+            if (typeof jQuery !== 'undefined') {
+              jQuery(branchSelect).val('').trigger('change');
+              refreshBranchSelect2();
+            }
+          } else {
+            // Fallback: try user-accessible branches endpoint and filter by organization
+            let fallbackBranches = [];
+            try {
+              const fallbackResponse = await fetch('/api/branches/user-accessible/', {
+                method: 'GET',
+                headers: {
+                  'X-CSRFToken': getCookie('csrftoken'),
+                  'Accept': 'application/json'
+                }
+              });
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                fallbackBranches = (fallbackData.branches || []).filter(
+                  branch => String(branch.organization?.id) === String(organizationId)
+                );
+              }
+            } catch (fallbackError) {
+              console.error('Fallback branch loading failed:', fallbackError);
+            }
+
+            if (fallbackBranches.length > 0) {
+              branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+              fallbackBranches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.id;
+                option.textContent = branch.name;
+                branchSelect.appendChild(option);
+              });
+
+              if (typeof jQuery !== 'undefined') {
+                jQuery(branchSelect).val('').trigger('change');
+                refreshBranchSelect2();
+              }
+              return;
+            }
+
+            let errorMessage = 'Unable to load branches';
+            try {
+              const errorData = await response.json();
+              if (errorData && errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch (e) {
+              // Keep default message if response is not JSON
+            }
+
+            branchSelect.innerHTML = `<option value="">${errorMessage}</option>`;
+            if (typeof jQuery !== 'undefined') {
+              jQuery(branchSelect).val('').trigger('change');
+              refreshBranchSelect2();
+            }
           }
         } catch (error) {
           console.error('Error loading branches:', error);
           branchSelect.innerHTML = '<option value="">Error loading branches</option>';
+          if (typeof jQuery !== 'undefined') {
+            jQuery(branchSelect).val('').trigger('change');
+            refreshBranchSelect2();
+          }
         }
       }
 
@@ -599,6 +693,12 @@
       orgSelect.addEventListener('change', function() {
         loadBranchesForOrganization(this.value);
       });
+
+      if (typeof jQuery !== 'undefined') {
+        jQuery(orgSelect).on('select2:select change', function() {
+          loadBranchesForOrganization(this.value);
+        });
+      }
 
       // Load branches on page load if organization is already selected
       if (orgSelect.value) {

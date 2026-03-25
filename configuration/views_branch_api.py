@@ -29,8 +29,8 @@ def get_branches_by_organization(request, organization_id):
                 organization=org, 
                 is_active=True
             ).order_by('name')
-        elif request.user.is_superuser:
-            # Superuser can access any organization
+        elif request.user.is_superuser or request.user.is_staff:
+            # Superuser/staff can access any organization available in the UI selector
             branches = Branch.objects.filter(
                 organization_id=int(organization_id), 
                 is_active=True
