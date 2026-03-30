@@ -3,230 +3,584 @@
 
 {% block title %}Organization Ledger Summary{% endblock %}
 
-{% block extra_css %}
+{% block head_extra %}
 <style>
-    .ledger-container {
-        padding: 20px;
-    }
-    
-    .ledger-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 12px;
-        margin-bottom: 30px;
-    }
-    
-    .ledger-header h1 {
-        margin: 0 0 15px 0;
-        font-size: 2rem;
-    }
-    
-    .org-selector {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .org-selector select {
-        width: 100%;
-        max-width: 400px;
-        padding: 10px;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-    }
-    
-    .ledger-table-container {
-        background: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .ledger-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .ledger-table th {
-        background: #f8f9fa;
-        padding: 12px;
-        text-align: left;
-        font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
-    }
-    
-    .ledger-table td {
-        padding: 12px;
-        border-bottom: 1px solid #dee2e6;
-    }
-    
-    .ledger-table tr:hover {
-        background: #f8f9fa;
-    }
-    
-    .amount-positive {
-        color: #28a745;
-        font-weight: bold;
-    }
-    
-    .amount-negative {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    
-    .amount-neutral {
-        color: #6c757d;
-    }
-    
-    .ledger-summary-card {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-    
-    .summary-item {
-        padding: 15px;
-        border-radius: 8px;
-        text-align: center;
-    }
-    
-    .summary-item.receivable {
-        background: #d4edda;
-        border: 2px solid #28a745;
-    }
-    
-    .summary-item.payable {
-        background: #f8d7da;
-        border: 2px solid #dc3545;
-    }
-    
-    .summary-item.balanced {
-        background: #d1ecf1;
-        border: 2px solid #17a2b8;
-    }
-    
-    .summary-label {
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 5px;
-    }
-    
-    .summary-value {
-        font-size: 1.8rem;
-        font-weight: bold;
-    }
+/* ── Layout ──────────────────────────────────────────── */
+.ledger-page { padding: 20px; }
+
+.ledger-page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 24px 30px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+.ledger-page-header h1 { margin: 0 0 6px; font-size: 1.7rem; }
+.ledger-page-header p  { margin: 0; opacity: .85; }
+
+/* ── Filter card ─────────────────────────────────────── */
+.filter-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    margin-bottom: 24px;
+}
+.filter-card label { font-weight: 600; font-size: .85rem; margin-bottom: 4px; display: block; }
+
+/* ── Balance badge ───────────────────────────────────── */
+.balance-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.balance-badge.positive { background: #d4edda; color: #155724; }
+.balance-badge.negative { background: #f8d7da; color: #721c24; }
+.balance-badge.neutral  { background: #d1ecf1; color: #0c5460; }
+
+/* ── Ledger table ────────────────────────────────────── */
+.ledger-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 22px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.tbl-ledger { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.tbl-ledger th {
+    background: #f3f4f6;
+    padding: 10px 12px;
+    text-align: right;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+.tbl-ledger td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: right;
+    white-space: nowrap;
+}
+.tbl-ledger tbody tr:hover { background: #fafafa; }
+.tbl-ledger .col-desc { text-align: left; }
+
+/* bill-type pills */
+.pill { display:inline-block; padding:2px 9px; border-radius:50px; font-size:.78rem; font-weight:600; }
+.pill-purchase    { background:#fff3cd; color:#856404; }
+.pill-selling     { background:#d4edda; color:#155724; }
+.pill-payment     { background:#d1ecf1; color:#0c5460; }
+.pill-receivement { background:#cce5ff; color:#004085; }
+.pill-adjustment  { background:#e2d9f3; color:#432874; }
+
+/* impact colouring */
+.impact-pos { color: #155724; font-weight:700; }
+.impact-neg { color: #721c24; font-weight:700; }
+.impact-zer { color: #6c757d; }
+
+/* running balance */
+.bal-pos { color: #155724; font-weight:700; }
+.bal-neg { color: #721c24; font-weight:700; }
+.bal-zer { color: #6c757d; }
+
+/* ── Summary table ───────────────────────────────────── */
+.tbl-summary { width:100%; border-collapse:collapse; font-size:.9rem; }
+.tbl-summary th {
+    background:#f3f4f6; padding:10px 12px;
+    text-align:right; font-weight:600;
+    border-bottom:2px solid #dee2e6;
+}
+.tbl-summary td { padding:9px 12px; border-bottom:1px solid #eee; text-align:right; }
+.tbl-summary tbody tr:hover { background:#fafafa; }
+.tbl-summary .col-org { text-align:left; }
+
+/* ── Action bar ──────────────────────────────────────── */
+.action-bar {
+    display:flex; gap:10px; flex-wrap:wrap;
+    margin-bottom:18px; align-items:center;
+}
+
+/* ── Modal overrides ─────────────────────────────────── */
+.modal-header { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+.modal-header .btn-close { filter:invert(1); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="ledger-container">
-    <div class="ledger-header">
-        <h1>📊 Organization Ledger Summary</h1>
-        <p>View account balances between organizations - Who owes whom</p>
-    </div>
-    
-    <!-- Organization Selector -->
-    <div class="org-selector">
-        <label for="organization-select"><strong>Select Your Organization:</strong></label>
-        <form method="GET">
-            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization-select' organizations_list=user_organizations selected_org=selected_organization %}
-        </form>
-    </div>
-    
-    {% if selected_organization %}
-    <div class="ledger-table-container">
-        <h2>Ledger for: {{ selected_organization.name }}</h2>
-        <p style="color: #6c757d; margin-bottom: 20px;">
-            Shows balances with other organizations based on all transactions
+<div class="ledger-page">
+
+  <!-- ── Page header ─────────────────────────────────── -->
+  <div class="ledger-page-header">
+    <h1><i class="bi bi-journal-text me-2"></i>Organization Ledger Summary</h1>
+    <p>Running account between organizations — who owes whom, bill by bill.</p>
+  </div>
+
+  <!-- ── Filter form ─────────────────────────────────── -->
+  <div class="filter-card">
+    <form method="GET" id="ledger-filter-form">
+      <div class="row g-3 align-items-end">
+
+        <div class="col-12 col-md-5">
+          <label for="org-select">
+            {% if is_admin %}All Organizations{% else %}Your Organization{% endif %}
+          </label>
+          <select name="organization" id="org-select" class="form-select select2-enable">
+            <option value="">— Select organization —</option>
+            {% for org in own_orgs %}
+              <option value="{{ org.id }}"
+                {% if selected_org and selected_org.id == org.id %}selected{% endif %}>
+                {{ org.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-5">
+          <label for="opp-select">Opposite Organization (optional)</label>
+          <select name="opposite_org" id="opp-select" class="form-select select2-enable">
+            <option value="">— All counterparts —</option>
+            {% for org in opposite_orgs %}
+              {% if not selected_org or org.id != selected_org.id %}
+              <option value="{{ org.id }}"
+                {% if opposite_org and opposite_org.id == org.id %}selected{% endif %}>
+                {{ org.name }}
+              </option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-filter me-1"></i>Apply
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       DETAIL LEDGER  (both org + opposite selected)
+       ════════════════════════════════════════════════════ -->
+  {% if selected_org and opposite_org %}
+
+  <div class="ledger-card">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+      <div>
+        <h5 class="mb-1">
+          <strong>{{ selected_org.name }}</strong>
+          <i class="bi bi-arrow-left-right mx-2 text-muted"></i>
+          <strong>{{ opposite_org.name }}</strong>
+        </h5>
+        <p class="text-muted mb-0" style="font-size:.85rem;">
+          Bill-by-bill running ledger from <strong>{{ selected_org.name }}</strong>'s perspective.
         </p>
-        
-        {% if ledger_data %}
-        <!-- Summary Cards -->
-        <div class="ledger-summary-card">
-            {% with total_receivable=0 total_payable=0 %}
-                {% for item in ledger_data %}
-                    {% if item.net_position > 0 %}
-                        {% widthratio item.net_position 1 1 as temp_receivable %}
-                    {% elif item.net_position < 0 %}
-                        {% widthratio item.net_position -1 1 as temp_payable %}
-                    {% endif %}
-                {% endfor %}
-            {% endwith %}
-        </div>
-        
-        <!-- Detailed Ledger Table -->
-        <table class="ledger-table">
-            <thead>
-                <tr>
-                    <th>Organization</th>
-                    <th>Total Sold To Them</th>
-                    <th>Payment Received</th>
-                    <th>They Owe Us</th>
-                    <th>Total Purchased From Them</th>
-                    <th>Payment Made</th>
-                    <th>We Owe Them</th>
-                    <th>Net Position</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in ledger_data %}
-                <tr>
-                    <td><strong>{{ item.organization.name }}</strong></td>
-                    <td>{{ item.total_sold|floatformat:2 }}</td>
-                    <td>{{ item.payment_received|floatformat:2 }}</td>
-                    <td class="{% if item.receivable > 0 %}amount-positive{% else %}amount-neutral{% endif %}">
-                        {{ item.receivable|floatformat:2 }}
-                    </td>
-                    <td>{{ item.total_purchased|floatformat:2 }}</td>
-                    <td>{{ item.payment_made|floatformat:2 }}</td>
-                    <td class="{% if item.payable > 0 %}amount-negative{% else %}amount-neutral{% endif %}">
-                        {{ item.payable|floatformat:2 }}
-                    </td>
-                    <td>
-                        {% if item.net_position > 0 %}
-                            <span class="amount-positive">
-                                +{{ item.net_position|floatformat:2 }}
-                                <small>(They owe us)</small>
-                            </span>
-                        {% elif item.net_position < 0 %}
-                            <span class="amount-negative">
-                                {{ item.net_position|floatformat:2 }}
-                                <small>(We owe them)</small>
-                            </span>
-                        {% else %}
-                            <span class="amount-neutral">
-                                {{ item.net_position|floatformat:2 }}
-                                <small>(Balanced)</small>
-                            </span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
-        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-            <p><strong>Legend:</strong></p>
-            <ul>
-                <li><span class="amount-positive">Positive Net Position:</span> They owe us money (Receivable)</li>
-                <li><span class="amount-negative">Negative Net Position:</span> We owe them money (Payable)</li>
-                <li>Example: If ABC has 10,000 upon XYZ, ABC's net position with XYZ will be <span class="amount-positive">+10,000</span></li>
-            </ul>
-        </div>
+      </div>
+      <div>
+        {% if final_balance > 0 %}
+          <span class="balance-badge positive">
+            <i class="bi bi-arrow-down-circle"></i>
+            {{ opposite_org.name }} owes {{ selected_org.name }}: {{ final_balance|floatformat:2 }}
+          </span>
+        {% elif final_balance < 0 %}
+          <span class="balance-badge negative">
+            <i class="bi bi-arrow-up-circle"></i>
+            {{ selected_org.name }} owes {{ opposite_org.name }}: {{ final_balance|floatformat:2|slice:"1:" }}
+          </span>
         {% else %}
-        <div style="text-align: center; padding: 40px; color: #6c757d;">
-            <p>No transactions found with other organizations</p>
-        </div>
+          <span class="balance-badge neutral">
+            <i class="bi bi-check-circle"></i>Balanced (0)
+          </span>
         {% endif %}
+      </div>
+    </div>
+
+    <!-- action buttons -->
+    <div class="action-bar">
+      <button class="btn btn-warning btn-sm"
+              onclick="openFinalizeModal()"
+              {% if not final_balance %}disabled title="Balance is already 0"{% endif %}>
+        <i class="bi bi-check2-all me-1"></i>Finalize Ledger
+      </button>
+      <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#adjModal">
+        <i class="bi bi-pencil-square me-1"></i>Manual Adjustment
+      </button>
+    </div>
+
+    <!-- ledger table -->
+    {% if detail_entries %}
+    <div class="table-responsive">
+    <table class="tbl-ledger">
+      <thead>
+        <tr>
+          <th class="col-desc" style="text-align:left">Date</th>
+          <th class="col-desc" style="text-align:left">Bill No</th>
+          <th class="col-desc" style="text-align:left">Type</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Impact</th>
+          <th>Running Balance</th>
+          <th class="col-desc" style="text-align:left">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in detail_entries %}
+        <tr>
+          <td class="col-desc">{{ entry.date }}</td>
+          <td class="col-desc">
+            {% if entry.kind == 'bill' %}
+              <a href="/bill/detail/{{ entry.obj_id }}/" target="_blank">
+                #{{ entry.bill_no }}
+              </a>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="col-desc">
+            {% if entry.bill_type == 'PURCHASE' %}
+              <span class="pill pill-purchase">Purchase</span>
+            {% elif entry.bill_type == 'SELLING' %}
+              <span class="pill pill-selling">Selling</span>
+            {% elif entry.bill_type == 'PAYMENT' %}
+              <span class="pill pill-payment">Payment</span>
+            {% elif entry.bill_type == 'RECEIVEMENT' %}
+              <span class="pill pill-receivement">Receivement</span>
+            {% elif entry.bill_type == 'ADJUSTMENT' %}
+              <span class="pill pill-adjustment">Adjustment</span>
+            {% endif %}
+          </td>
+          <td>{% if entry.total %}{{ entry.total|floatformat:2 }}{% else %}—{% endif %}</td>
+          <td>{% if entry.payment %}{{ entry.payment|floatformat:2 }}{% else %}—{% endif %}</td>
+          <td>
+            {% if entry.impact > 0 %}
+              <span class="impact-pos">+{{ entry.impact|floatformat:2 }}</span>
+            {% elif entry.impact < 0 %}
+              <span class="impact-neg">{{ entry.impact|floatformat:2 }}</span>
+            {% else %}
+              <span class="impact-zer">0</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if entry.running_balance > 0 %}
+              <span class="bal-pos">{{ entry.running_balance|floatformat:2 }}</span>
+            {% elif entry.running_balance < 0 %}
+              <span class="bal-neg">{{ entry.running_balance|floatformat:2 }}</span>
+            {% else %}
+              <span class="bal-zer">0</span>
+            {% endif %}
+          </td>
+          <td class="col-desc" style="color:#6c757d;font-size:.82rem;">{{ entry.note }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background:#f3f4f6;font-weight:700;">
+          <td colspan="6" style="text-align:right;padding:10px 12px;">Final Balance:</td>
+          <td>
+            {% if final_balance > 0 %}
+              <span class="bal-pos">{{ final_balance|floatformat:2 }}</span>
+            {% elif final_balance < 0 %}
+              <span class="bal-neg">{{ final_balance|floatformat:2 }}</span>
+            {% else %}
+              <span class="bal-zer">0</span>
+            {% endif %}
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
     </div>
     {% else %}
-    <div style="text-align: center; padding: 40px;">
-        <p>No organization selected or you don't have access to any organization</p>
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-inbox fs-1"></i>
+      <p class="mt-2">No transactions found between these two organizations.</p>
     </div>
     {% endif %}
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       SUMMARY LEDGER  (only own org selected)
+       ════════════════════════════════════════════════════ -->
+  {% elif selected_org %}
+
+  <div class="ledger-card">
+    <h5 class="mb-3">
+      Summary — <strong>{{ selected_org.name }}</strong> with all counterparts
+    </h5>
+    {% if summary_data %}
+    <div class="table-responsive">
+    <table class="tbl-summary">
+      <thead>
+        <tr>
+          <th class="col-org" style="text-align:left">#</th>
+          <th class="col-org" style="text-align:left">Organization</th>
+          <th>Total Sold</th>
+          <th>Total Purchased</th>
+          <th>Payments Made</th>
+          <th>Payments Received</th>
+          <th>Net Balance</th>
+          <th style="text-align:left">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summary_data %}
+        <tr>
+          <td class="col-org" style="color:#6c757d">{{ forloop.counter }}</td>
+          <td class="col-org">
+            <a href="?organization={{ selected_org.id }}&opposite_org={{ row.organization.id }}"
+               style="font-weight:600;text-decoration:none;">
+              {{ row.organization.name }}
+            </a>
+          </td>
+          <td>{{ row.total_sold|floatformat:2 }}</td>
+          <td>{{ row.total_purchased|floatformat:2 }}</td>
+          <td>{{ row.payment_made|floatformat:2 }}</td>
+          <td>{{ row.payment_received|floatformat:2 }}</td>
+          <td>
+            {% if row.net_position > 0 %}
+              <span class="bal-pos">+{{ row.net_position|floatformat:2 }}</span>
+            {% elif row.net_position < 0 %}
+              <span class="bal-neg">{{ row.net_position|floatformat:2 }}</span>
+            {% else %}
+              <span class="bal-zer">0</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if row.net_position > 0 %}
+              <span class="badge bg-success">They owe us</span>
+            {% elif row.net_position < 0 %}
+              <span class="badge bg-danger">We owe them</span>
+            {% else %}
+              <span class="badge bg-secondary">Balanced</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <p class="text-muted mt-3" style="font-size:.82rem;">
+      <i class="bi bi-info-circle me-1"></i>
+      Click an organization name to view the bill-by-bill running ledger.
+    </p>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-inbox fs-1"></i>
+      <p class="mt-2">No transactions found for {{ selected_org.name }}.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div class="ledger-card text-center py-5 text-muted">
+    <i class="bi bi-building fs-1"></i>
+    <p class="mt-2">Please select an organization to view the ledger.</p>
+  </div>
+  {% endif %}
+
+</div><!-- /.ledger-page -->
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL — Manual Adjustment
+     ══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="adjModal" tabindex="-1" aria-labelledby="adjModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adjModalLabel">
+          <i class="bi bi-pencil-square me-2"></i>Manual Ledger Adjustment
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted" style="font-size:.85rem;">
+          Enter a <strong>positive</strong> amount if <strong>{{ opposite_org.name }}</strong>
+          owes <strong>{{ selected_org.name }}</strong> more.<br>
+          Enter a <strong>negative</strong> amount (e.g. <kbd>-500</kbd>) if
+          <strong>{{ selected_org.name }}</strong> owes <strong>{{ opposite_org.name }}</strong> more.
+        </p>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Amount *</label>
+          <input type="number" id="adj-amount" class="form-control" step="0.01"
+                 placeholder="e.g. 500 or -500">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Note / Reason</label>
+          <textarea id="adj-note" class="form-control" rows="3"
+                    placeholder="Describe why this adjustment is needed…"></textarea>
+        </div>
+        <div id="adj-error" class="alert alert-danger d-none"></div>
+        <div id="adj-success" class="alert alert-success d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAdjustment()">
+          <i class="bi bi-save me-1"></i>Save Adjustment
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL — Finalize Ledger
+     ══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="finalizeModal" tabindex="-1" aria-labelledby="finalizeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="finalizeModalLabel">
+          <i class="bi bi-check2-all me-2"></i>Finalize Ledger
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Current balance:
+          <strong id="finalize-balance-display"></strong>
+        </p>
+        <p class="text-muted" style="font-size:.85rem;">
+          This will create a
+          <strong id="finalize-bill-type-display"></strong>
+          bill to settle the remaining balance of
+          <strong id="finalize-amount-display"></strong>
+          between <strong>{{ selected_org.name }}</strong> and
+          <strong>{{ opposite_org.name }}</strong>.
+        </p>
+        <div id="finalize-error" class="alert alert-danger d-none"></div>
+        <div id="finalize-success" class="alert alert-success d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-warning" onclick="confirmFinalize()">
+          <i class="bi bi-check2-all me-1"></i>Confirm &amp; Finalize
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── constants injected from Django ─────────────────── */
+const ORG_ID     = "{{ selected_org.id|default:'' }}";
+const OPP_ORG_ID = "{{ opposite_org.id|default:'' }}";
+const FINAL_BAL  = parseFloat("{{ final_balance|default:0 }}") || 0;
+
+/* ── Select2 ─────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $('.select2-enable').select2({ theme: 'bootstrap-5', width: '100%' });
+    }
+
+    // Auto-submit when org dropdown changes so opp dropdown refreshes
+    document.getElementById('org-select').addEventListener('change', function () {
+        document.getElementById('opp-select').value = '';
+        document.getElementById('ledger-filter-form').submit();
+    });
+});
+
+/* ── Manual Adjustment ───────────────────────────────── */
+function saveAdjustment() {
+    const amount = document.getElementById('adj-amount').value.trim();
+    const note   = document.getElementById('adj-note').value.trim();
+    const errEl  = document.getElementById('adj-error');
+    const okEl   = document.getElementById('adj-success');
+
+    errEl.classList.add('d-none');
+    okEl.classList.add('d-none');
+
+    if (!amount) {
+        errEl.textContent = 'Please enter an amount.';
+        errEl.classList.remove('d-none');
+        return;
+    }
+    if (!ORG_ID || !OPP_ORG_ID) {
+        errEl.textContent = 'Both organizations must be selected.';
+        errEl.classList.remove('d-none');
+        return;
+    }
+
+    const csrfToken = document.cookie.split('; ')
+        .find(r => r.startsWith('csrftoken='))?.split('=')[1] || '';
+
+    const body = new URLSearchParams({
+        organization: ORG_ID,
+        opposite_org: OPP_ORG_ID,
+        amount: amount,
+        note: note,
+        csrfmiddlewaretoken: csrfToken,
+    });
+
+    fetch('/asset/ledger/adjustment/save/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            okEl.textContent = data.message + '  Reloading…';
+            okEl.classList.remove('d-none');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            errEl.textContent = data.message || 'Error saving adjustment.';
+            errEl.classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        errEl.textContent = 'Network error. Please try again.';
+        errEl.classList.remove('d-none');
+    });
+}
+
+/* ── Finalize Ledger ─────────────────────────────────── */
+function openFinalizeModal() {
+    const billType = FINAL_BAL < 0 ? 'PAYMENT' : 'RECEIVEMENT';
+    const amount   = Math.abs(FINAL_BAL).toFixed(2);
+
+    document.getElementById('finalize-balance-display').textContent = FINAL_BAL.toFixed(2);
+    document.getElementById('finalize-bill-type-display').textContent = billType;
+    document.getElementById('finalize-amount-display').textContent = amount;
+    document.getElementById('finalize-error').classList.add('d-none');
+    document.getElementById('finalize-success').classList.add('d-none');
+
+    new bootstrap.Modal(document.getElementById('finalizeModal')).show();
+}
+
+function confirmFinalize() {
+    const errEl = document.getElementById('finalize-error');
+    const okEl  = document.getElementById('finalize-success');
+    errEl.classList.add('d-none');
+    okEl.classList.add('d-none');
+
+    const csrfToken = document.cookie.split('; ')
+        .find(r => r.startsWith('csrftoken='))?.split('=')[1] || '';
+
+    fetch('/organizations/finalize-ledger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ organization: ORG_ID, bill_rcvr_org: OPP_ORG_ID }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            okEl.textContent = data.message + '  Reloading…';
+            okEl.classList.remove('d-none');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            errEl.textContent = data.message || 'Error finalizing ledger.';
+            errEl.classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        errEl.textContent = 'Network error. Please try again.';
+        errEl.classList.remove('d-none');
+    });
+}
+</script>
 {% endblock %}

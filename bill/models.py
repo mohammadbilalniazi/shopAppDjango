@@ -480,3 +480,36 @@ def update_stock_and_price(sender, instance, created, **kwargs):
             stock.loss_amount += amount  # Track total losses
     
     stock.save()
+
+
+# ---------------------------------------------------
+# LedgerAdjustment: Manual ledger correction record
+# ---------------------------------------------------
+class LedgerAdjustment(models.Model):
+    """
+    Manual adjustment to the running ledger between two organizations.
+    Positive amount  => the opposite_org owes the organization more.
+    Negative amount  => the organization owes the opposite_org more.
+    Created by the organization owner/admin directly from the Ledger Summary page.
+    """
+    organization = models.ForeignKey(
+        Organization, on_delete=models.PROTECT,
+        related_name='ledger_adjustments_as_org'
+    )
+    opposite_org = models.ForeignKey(
+        Organization, on_delete=models.PROTECT,
+        related_name='ledger_adjustments_as_opposite'
+    )
+    amount = models.DecimalField(max_digits=20, decimal_places=5)
+    note = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT
+    )
+    date = models.CharField(max_length=10, default=get_date)
+    year = models.SmallIntegerField(default=get_year)
+
+    class Meta:
+        ordering = ['date', 'id']
+
+    def __str__(self):
+        return f"Adj {self.organization} ↔ {self.opposite_org}: {self.amount}"

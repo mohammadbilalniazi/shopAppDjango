@@ -50,6 +50,7 @@ def select_bill_no(request,organization_id,bill_rcvr_org_id,bill_type=None):
 def bill_show(request,bill_id=None):
     print("bill_id =",bill_id)
     context={}
+    context['is_loss_degrade'] = False
     form=Bill_Form()
     form.set_start_date()
     print(f"############ start_date {form.fields["start_date"].initial}")
@@ -111,9 +112,11 @@ def bill_show(request,bill_id=None):
         if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
         elif bill.bill_type in ("LOSSDEGRADE"):
-            template=loader.get_template('bill/expenditure/bill_form_loss.html')
+            template=loader.get_template('bill/bill_form_sell_purchase.html')
             context['products']=Product.objects.all()
             context['units']=Unit.objects.all()
+            context['categories']=Category.objects.all()
+            context['is_loss_degrade'] = True
         else:
             template=loader.get_template('bill/bill_form_sell_purchase.html')
             # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
@@ -275,6 +278,7 @@ def bill_form_sell_purchase(request):
         'date':date,
         'categories':Category.objects.all(),
         'currencies': Currency.objects.all(),
+        'is_loss_degrade': False,
     } 
     # print("EEEEEEEEEEEEEEEEEEEE")
     # print("context=",context)
@@ -282,41 +286,59 @@ def bill_form_sell_purchase(request):
 
 @login_required(login_url='/admin')
 def bill_form_loss_degrade_product(request):
-    template=loader.get_template('bill/expenditure/bill_form_loss.html')
+    template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
     self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
+
+    # Get branches for the organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        branches = Branch.objects.filter(organization=self_organization, is_active=True)
+    else:
+        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
     
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
             organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
             self_organization = None  # Superuser can work without specific org
         else:
             # Regular user with multiple orgs - use first org as fallback
             if user_orgs and user_orgs.count() > 0:
                 self_organization = user_orgs.first()
                 organizations = user_orgs
+                rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
             else:
                 # No organizations assigned
                 from django.contrib import messages
                 messages.error(request, "No organizations assigned to your account. Please contact administrator.")
                 organizations = Organization.objects.none()
+                rcvr_orgs = Organization.objects.none()
     else:
         # Normal case - self_organization exists
         if request.user.is_superuser:
             organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
         else:
             organizations = Organization.objects.filter(id=self_organization.id)
+            rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
     
     context={
         'form':form,
         'organization':self_organization,
         'organizations':organizations,
+        'rcvr_orgs':rcvr_orgs,
+        'branches': branches,
+        'products': Product.objects.all(),
+        'units': Unit.objects.all(),
+        'categories': Category.objects.all(),
         'date':date,
         'currencies': Currency.objects.all(),
+        'is_loss_degrade': True,
     } 
     # print("context=",context)
     return HttpResponse(template.render(context,request))

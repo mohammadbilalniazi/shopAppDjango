@@ -65,6 +65,28 @@ input[name="date"]:focus {
 .submit-actions { background: #f8f9fa; padding: 20px; border-top: 1px solid #e9ecef; border-radius: 0 0 12px 12px; }
 .btn-save { background: linear-gradient(135deg, #28a745, #20863a); border: 0; padding: 10px 32px; font-weight: 600; border-radius: 8px; }
 .btn-add-item { background: linear-gradient(135deg, #417690, #2c5d7a); border: 0; padding: 10px 24px; font-weight: 600; border-radius: 8px; }
+
+/* Receiver organization dropdown + popup button sizing */
+.receiver-org-group {
+    display: flex;
+    width: 100%;
+}
+.receiver-org-group .form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.receiver-org-group .receiver-org-add-btn {
+    flex: 0 0 52px;
+    width: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: 0;
+}
 </style>
 {% endblock %}
 
@@ -117,9 +139,13 @@ input[name="date"]:focus {
                     <div class="col-md-4">
                         <label class="form-label form-label-bold">Bill Type <span class="text-danger">*</span></label>
                         <select name="bill_type" id="bill_type" class="form-select" required>
+                            {% if is_loss_degrade %}
+                            <option value="LOSSDEGRADE" selected>LOSSDEGRADE</option>
+                            {% else %}
                             <option {% if bill.bill_type == 'PURCHASE' %}selected{% endif %} value="PURCHASE">PURCHASE</option>
                             <option {% if bill.bill_type == 'SELLING' %}selected{% endif %} value="SELLING">SELLING</option>
                             <option {% if bill.bill_type == 'LOSSDEGRADE' %}selected{% endif %} value="LOSSDEGRADE">LOSSDEGRADE</option>
+                            {% endif %}
                         </select>
                     </div>
                     <!-- Bill No -->
@@ -197,6 +223,7 @@ input[name="date"]:focus {
             </div>
         </div>
 
+        {% if not is_loss_degrade %}
         <!-- ── Bill Receiver Section ── -->
         <div class="card bill-section-card bill-acceptor-card mb-4">
             <div class="bill-section-header">
@@ -207,14 +234,14 @@ input[name="date"]:focus {
                     <!-- Receiver Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">Receiver Organization <span class="text-danger">*</span></label>
-                        <div class="input-group" id="rcvr_org_span">
+                        <div class="input-group receiver-org-group" id="rcvr_org_span">
                             <select name="bill_rcvr_org" id="bill_rcvr_org" class="form-select" required>
                                 {% for row in rcvr_orgs %}
                                 <option {% if bill.bill_receiver2.bill_rcvr_org == row %}selected{% endif %} value="{{ row.id }}">{{ row }}</option>
                                 {% endfor %}
                             </select>
                             <button type="button" id="add_org_modal_btn" onclick="openOrganizationModal()"
-                                    class="btn btn-success px-3" title="Add New Organization">
+                                    class="btn btn-success receiver-org-add-btn" title="Add New Organization">
                                 <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
@@ -239,6 +266,7 @@ input[name="date"]:focus {
                 </div>
             </div>
         </div>
+        {% endif %}
         
         <!-- ── Bill Items Section ── -->
         <div class="card bill-section-card mb-4" id="content-main">
@@ -533,7 +561,11 @@ input[name="date"]:focus {
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
 <script src="{% static 'assets/js/common_entities/generate_ihsaya.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_location_modal.js' %}"></script>
+{% if is_loss_degrade %}
+<script src="{% static 'assets/js/bill/bill_loss_degrade_product.js' %}"></script>
+{% else %}
 <script src="{% static 'assets/js/bill/bill.js' %}"></script>
+{% endif %}
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <!-- Searchable Selects Module -->
 <script src="{% static 'assets/js/bill/searchable_selects.js' %}"></script>
@@ -562,8 +594,9 @@ input[name="date"]:focus {
             const button = document.createElement('button');
             button.id = 'add_org_modal_btn'; // Unique ID to identify our button
             button.type = 'button';
+            button.className = 'btn btn-success receiver-org-add-btn';
             button.onclick = function() { openOrganizationModal(); };
-            button.style.cssText = 'background-color: #28a745; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 16px; min-width: 40px;';
+            button.style.cssText = 'background-color: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 16px;';
             button.title = 'Add New Organization';
             button.textContent = '+';
             

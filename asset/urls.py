@@ -18,6 +18,7 @@ urlpatterns = [
     
     # NEW: Organization Ledger Summary (uses cached data)
     path('ledger/', views_financial.organization_ledger_summary, name='organization_ledger'),
+    path('ledger/adjustment/save/', views_financial.ledger_adjustment_save, name='ledger_adjustment_save'),
     
     # NEW: Financial Dashboard (uses AssetWholeBillSummary for performance)
     path('financial/', views_financial.financial_summary_dashboard, name='financial_dashboard'),
