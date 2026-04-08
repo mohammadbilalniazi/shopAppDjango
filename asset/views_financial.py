@@ -164,7 +164,7 @@ def organization_ledger_summary(request):
     user = request.user
 
     # ── Dropdown 1: own organisations ─────────────────────────────────────
-    if user.is_superuser or user.is_staff:
+    if user.is_superuser:
         own_orgs = Organization.objects.all().order_by('name')
     else:
         own_orgs = Organization.objects.filter(

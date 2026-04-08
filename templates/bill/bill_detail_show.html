@@ -11,20 +11,27 @@
     
     /* Stat Box Styling */
     .stat-box {
-        transition: all 0.3s ease;
-        background: linear-gradient(135deg, var(--bs-body-bg) 0%, rgba(255,255,255,0.5) 100%);
+        transition: all 0.25s ease;
+        background: #ffffff;
+        border: 1px solid rgba(222, 226, 230, 0.95);
+        border-radius: 1rem;
+        padding: 1rem;
+        min-height: 105px;
     }
     
     .stat-box:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
     }
     
     .stat-box input {
-        font-size: 1.5rem !important;
+        font-size: 1.1rem !important;
         font-weight: 700 !important;
         text-align: right;
-        padding: 0.5rem 0;
+        padding: 0.35rem 0;
+        background: transparent !important;
+        border: none !important;
+        color: #212529 !important;
     }
     
     .stat-box input:focus {
@@ -32,9 +39,43 @@
         box-shadow: none !important;
     }
     
-    /* Background Gradient for Header */
+    .gradient-card {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.9rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 1px 15px rgba(0,0,0,0.05);
+    }
+    
+    .gradient-card h1 {
+        color: #1f2937;
+    }
+    
+    .gradient-card p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .card-custom {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 0.9rem;
+        box-shadow: 0 1px 15px rgba(0,0,0,0.04);
+    }
+    
+    .card-custom-header {
+        padding: 1rem 1.25rem;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 0.9rem 0.9rem 0 0;
+    }
+    
+    .card-custom .card-body {
+        padding: 1.25rem;
+    }
+    
     .bg-gradient-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        background: #3b6cb4 !important;
     }
     
     /* Enhanced Table Styling */
@@ -58,16 +99,16 @@
     .form-select-custom,
     select.form-select,
     select {
-        border: 2px solid var(--border-color) !important;
-        border-radius: var(--radius-md) !important;
-        padding: var(--space-3) var(--space-4) !important;
-        font-size: var(--font-size-base) !important;
-        font-weight: var(--font-weight-medium) !important;
-        background-color: var(--white) !important;
-        color: var(--text-primary) !important;
-        min-height: 45px !important;
-        transition: var(--transition-base) !important;
-        box-shadow: var(--shadow-sm) !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.65rem !important;
+        padding: 0.55rem 0.9rem !important;
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+        background-color: #ffffff !important;
+        color: #212529 !important;
+        min-height: 42px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: none !important;
     }
 
     .form-select-custom:hover,
@@ -218,9 +259,13 @@
     
     /* Button Enhancements */
     .btn-lg {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
+        padding: 0.65rem 1rem;
+        font-size: 0.95rem;
         font-weight: 600;
+    }
+    .btn-sm {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.9rem;
     }
     
     /* Ensure dropdowns are visible over tables */
@@ -506,9 +551,11 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <button class="btn btn-warning-gradient w-100 btn-lg shadow-sm" id="finalize_ledger" onclick="finalize_ledger()">
-                    <i class="bi bi-arrow-counterclockwise"></i> کهاته صفر کول (Reset Ledger)
+                <button type="button" class="btn btn-warning w-100 btn-sm shadow-sm" id="finalize_ledger" onclick="finalize_ledger()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> کهاته صفر کول (Finalize Ledger)
                 </button>
+                <p class="small text-muted mt-2 mb-0">Finalize the current balance with the selected counterpart organization.</p>
+                <div id="finalize_status" class="alert alert-info d-none mt-3 py-2"></div>
             </div>
             <div class="col-md-3 text-end">
                 <div class="d-flex align-items-center justify-content-end gap-2">
