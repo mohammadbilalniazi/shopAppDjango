@@ -9,10 +9,47 @@
 <link rel="stylesheet" href="{% static 'admin/css/nav_sidebar.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
 <link rel="stylesheet" href="{% static 'admin/css/responsive.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
+<style>
+    .organization-form-wrap table {
+        width: 100%;
+        border-spacing: 0 10px;
+    }
+
+    .organization-form-wrap td {
+        padding: 6px 8px;
+        vertical-align: middle;
+    }
+
+    .organization-form-wrap td:first-child {
+        width: 220px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .organization-form-wrap input[type="submit"] {
+        background: linear-gradient(135deg, #2f7ca8 0%, #255f82 100%);
+        border: none;
+        color: #fff;
+        min-width: 132px;
+    }
+
+    .organization-form-wrap input[type="submit"][value="Update"] {
+        background: linear-gradient(135deg, #d04c41 0%, #ae3f36 100%);
+    }
+
+    .organization-form-wrap button[type="button"] {
+        min-height: 34px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.85rem;
+        border-radius: 8px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
+<div class="container universal-compact-ui organization-form-wrap" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
     
     {% if messages %}
         {% for message in messages %}

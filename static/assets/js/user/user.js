@@ -20,6 +20,9 @@ async function submit_login()
     username=document.getElementById("username").value;
     password=document.getElementById("password").value;
 
+    // Clear previous error
+    document.getElementById("error").innerHTML = "";
+
     form={
         "username":username,
         "password":password

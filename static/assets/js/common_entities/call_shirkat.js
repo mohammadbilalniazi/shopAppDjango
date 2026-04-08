@@ -5,7 +5,9 @@ async function call_shirkat(url,method,data,headers=null)
     // let headers=headers;
     if(headers==null){
     // console.log(" headers ",headers)
-     headers={"Accept": "application/json","Content-Type":"application/json","X-CSRFToken":getCookie('csrftoken')}
+     let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+     let token = csrfToken ? csrfToken.value : getCookie('csrftoken');
+     headers={"Accept": "application/json","Content-Type":"application/json","X-CSRFToken": token}
     }
     let response='';
     // console.log("headers ",headers);

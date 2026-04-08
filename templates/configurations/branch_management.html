@@ -4,6 +4,7 @@
 {% block title %}Branch Management - {{ organization.name }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
 <style>
     /* Branch Management using Design System */
     .branch-card {
@@ -41,7 +42,7 @@
     }
     
     .btn-icon {
-        padding: var(--space-1) var(--space-2);
+        padding: 0.25rem 0.45rem;
     }
     
     .search-container {
@@ -82,11 +83,23 @@
         color: var(--text-secondary) !important;
         font-size: var(--font-size-sm);
     }
+
+    .search-container .btn {
+        min-height: 34px;
+        font-size: 0.84rem;
+    }
+
+    .search-container .form-control,
+    #branchModal .form-control,
+    #branchModal select {
+        min-height: 34px;
+        font-size: 0.88rem;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 universal-compact-ui">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">

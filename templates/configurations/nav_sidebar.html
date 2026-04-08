@@ -17,19 +17,19 @@
         <div class="nav-section-title">Products</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="{% url 'product_show_html' %}" class="nav-link {% if '/product/product/' in request.path %}active{% endif %}">
+                <a href="{% url 'product_show_html' %}" class="nav-link {% if request.resolver_match.url_name == 'product_show_html' %}active{% endif %}">
                     <i class="nav-icon bi bi-box"></i>
                     <span>All Products</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'product_form' %}" class="nav-link">
+                <a href="{% url 'product_form' %}" class="nav-link {% if request.resolver_match.url_name == 'product_form' %}active{% endif %}">
                     <i class="nav-icon bi bi-plus-circle"></i>
                     <span>Add Product</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'stock_list' %}" class="nav-link {% if '/stock/' in request.path %}active{% endif %}">
+                <a href="{% url 'stock_list' %}" class="nav-link {% if request.resolver_match.url_name == 'stock_list' %}active{% endif %}">
                     <i class="nav-icon bi bi-boxes"></i>
                     <span>Stock Management</span>
                 </a>
@@ -105,13 +105,13 @@
         <div class="nav-section-title">Configuration</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="{% url 'organization_show' %}" class="nav-link {% if '/organization/' in request.path %}active{% endif %}">
+                <a href="{% url 'organization_show' %}" class="nav-link {% if request.resolver_match.url_name == 'organization_show' or request.resolver_match.url_name == 'organization_form' %}active{% endif %}">
                     <i class="nav-icon bi bi-building"></i>
                     <span>Organizations</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'branch_select_organization' %}" class="nav-link {% if '/branch/' in request.path %}active{% endif %}">
+                <a href="{% url 'branch_select_organization' %}" class="nav-link {% if request.resolver_match.url_name == 'branch_select_organization' or request.resolver_match.url_name == 'branch_management' %}active{% endif %}">
                     <i class="nav-icon bi bi-diagram-3"></i>
                     <span>Branches</span>
                 </a>

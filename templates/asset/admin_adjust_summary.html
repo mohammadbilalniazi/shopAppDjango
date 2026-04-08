@@ -308,5 +308,18 @@ function saveSummary(summaryId) {
         });
     });
 }
+
+// Submit the organization form when organization changes
+document.addEventListener('DOMContentLoaded', function() {
+    const orgSelect = document.querySelector('select[name="organization"]');
+    if (orgSelect) {
+        orgSelect.addEventListener('change', function() {
+            const form = orgSelect.closest('form');
+            if (form) {
+                form.submit();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

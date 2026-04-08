@@ -5,6 +5,7 @@
 
 {% block head_extra %}
 <link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
 <style>
     /* Force visible text in all form inputs - CRITICAL FIX */
     .form-table input[type="text"],
@@ -98,10 +99,10 @@
     .form-table select,
     .form-table textarea {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.5rem 0.65rem;
         border: 2px solid #e0e0e0;
         border-radius: 8px;
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 500;
         transition: all 0.3s;
     }
@@ -162,7 +163,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container unified-ui" style="max-width: 1200px; margin: 20px auto; padding: 20px;">
+<div class="container universal-compact-ui" style="max-width: 1200px; margin: 20px auto; padding: 20px;">
     
     {% if messages %}
         {% for message in messages %}
@@ -220,7 +221,7 @@
                                     <option {% if product and product.category and product.category.id == category.id %} selected {% endif %} value='{{category.id}}'>{{category}}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" id="addCategoryBtn" class="btn btn-primary" style="min-width: 40px; height: 48px; padding: 0; display: flex; align-items: center; justify-content: center; background: #667eea; border: none; border-radius: 8px; cursor: pointer;" title="Add new category">
+                            <button type="button" id="addCategoryBtn" class="btn btn-primary" style="min-width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: #667eea; border: none; border-radius: 8px; cursor: pointer;" title="Add new category">
                                 <strong style="font-size: 18px; color: white;">+</strong>
                             </button>
                         </div>
@@ -291,7 +292,7 @@
                 <tr>
                     <td></td>
                     <td colspan="2" style="text-align: right; padding-top: 2rem;">
-                        <input type="submit" id='form_submit_btn' {% if product %} value="✓ Update Product" {% else %} value="➕ Add Product" {% endif %} class="btn-success-gradient" name="save" style="min-width: 200px; cursor: pointer;">
+                        <input type="submit" id='form_submit_btn' {% if product %} value="✓ Update Product" {% else %} value="➕ Add Product" {% endif %} class="btn-success-gradient" name="save" style="min-width: 170px; cursor: pointer;">
                     </td>
                 </tr>
             </table>

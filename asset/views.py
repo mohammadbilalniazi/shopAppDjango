@@ -68,8 +68,8 @@ def balance_sheet_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, user_orgs = find_userorganization(request, org_id)
-    
+    self_organization, _ = find_userorganization(request, org_id)
+    _, user_orgs = find_userorganization(request)
     context = {}
     
     # Organizations list for dropdown
@@ -103,8 +103,8 @@ def profit_loss_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, user_orgs = find_userorganization(request, org_id)
-    
+    self_organization, _ = find_userorganization(request, org_id)
+    _, user_orgs = find_userorganization(request)
     context = {}
     
     # Organizations list for dropdown
@@ -133,13 +133,13 @@ def profit_loss_view(request):
 
 @login_required(login_url='/')
 def cash_flow_view(request):
-    """
+    """ 
     Cash flow statement view.
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, user_orgs = find_userorganization(request, org_id)
-    
+    self_organization, _ = find_userorganization(request, org_id)
+    _,user_orgs = find_userorganization(request)
     context = {}
     
     # Organizations list for dropdown
@@ -173,8 +173,8 @@ def loans_view(request):
     """
     # Get organization based on request parameter or user's organization
     org_id = request.GET.get('organization')
-    self_organization, user_orgs = find_userorganization(request, org_id)
-    
+    self_organization, _ = find_userorganization(request, org_id)
+    _, user_orgs = find_userorganization(request)
     context = {}
     
     # Organizations list for dropdown

@@ -98,6 +98,7 @@ desktop.ini
 *.sqlite
 *.sqlite3
 *.db
+*.docx
 *.sql
 *.dump
 
