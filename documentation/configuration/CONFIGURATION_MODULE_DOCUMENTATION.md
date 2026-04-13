@@ -46,6 +46,32 @@ class Branch(models.Model):
         unique_together = (("name", "organization"), ("code", "organization"))
 ```
 
+CustomUser and integrity constraints
+The configuration module also provides a `CustomUser` profile linked one-to-one with Django's built-in `User` model. It includes role validation, organization membership, and unique personal identifiers.
+
+```python
+class CustomUser(models.Model):
+    ROLE_CHOICES = [
+        ('EMPLOYEE', 'Employee'),
+        ('MANAGER', 'Manager'),
+        ('ADMIN', 'Admin'),
+    ]
+    role = models.CharField(max_length=15, choices=ROLE_CHOICES, default='EMPLOYEE')
+    user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
+    organization = models.ForeignKey(Organization, on_delete=models.DO_NOTHING, null=True)
+    id_card = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    mobile = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(max_length=50, blank=True, null=True)
+    uuid = models.UUIDField(default=get_uuid, unique=True, editable=False)
+    photo = models.ImageField(upload_to=upload_location, blank=True, null=True)
+```
+
+Key integrity rules:
+- `CheckConstraint(condition=models.Q(role__in=['EMPLOYEE', 'MANAGER', 'ADMIN']), name='valid_user_type')` enforces the allowed role values at the database level.
+- `UniqueConstraint(fields=['id_card'], name='unique_id_card')` ensures each ID card is unique.
+- `UniqueConstraint(fields=['mobile'], name='unique_mobile')` ensures mobile numbers are unique.
+- Using `condition=` for `CheckConstraint` is required for Django 4.2 compatibility.
+
 Auto-created main branch
 A post_save signal creates a default branch for new organizations:
 
@@ -212,3 +238,5 @@ path('api/branches/user-accessible/', views_branch_api.get_all_user_branches, na
 2. Branch lifecycle and permission rules for delegated admins.
 3. Auto-main-branch signal as an onboarding automation strategy.
 4. Location normalization with Country and Location tables.
+5. CustomUser profile validation and data integrity: role constraints, unique mobile, and unique ID card rules.
+6. Django 4.2 model compatibility for database-level constraints using `condition=` on `CheckConstraint`.

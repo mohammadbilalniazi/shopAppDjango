@@ -24,22 +24,23 @@ class Bill_Form(forms.Form):
             start_date_initial_value=year+"-"+"0"+str(int(month))+"-01"
         else:
             start_date_initial_value=year+"-"+str(int(month))+"-01"
-        self.fields["start_date"]=JalaliDateField(label="شروع",widget=AdminJalaliDateWidget)
+        self.fields["start_date"] = JalaliDateField(label="شروع", widget=AdminJalaliDateWidget)
+        self.fields["start_date"].widget.attrs.update({
+            'onchange': 'date_change()',
+            'onkeypress': 'mappTranslation()',
+            'id': 'start_date_input',
+            'class': 'form-control form-control-custom'
+        })
+        self.fields["start_date"].initial = start_date_initial_value
 
-        self.fields["start_date"].widget.attrs['onchange']='date_change()'
-        self.fields["start_date"].widget.attrs['onkeypress']='mappTranslation()'
-        self.fields["start_date"].widget.attrs['id']='start_date_input'
-        self.fields["start_date"].initial=start_date_initial_value
-
-
-        self.fields["end_date"]=JalaliDateField(label="ختم",widget=AdminJalaliDateWidget)
-        # self.fields["end_date"].widget.attrs['tabindex']="2"
-        self.fields["end_date"].widget.attrs['onchange']='date_change()'
-        
-        self.fields["end_date"].widget.attrs['onkeypress']='mappTranslation()'
-        
-        self.fields["end_date"].widget.attrs['id']="end_date_input"
-        self.fields["end_date"].initial=today
+        self.fields["end_date"] = JalaliDateField(label="ختم", widget=AdminJalaliDateWidget)
+        self.fields["end_date"].widget.attrs.update({
+            'onchange': 'date_change()',
+            'onkeypress': 'mappTranslation()',
+            'id': 'end_date_input',
+            'class': 'form-control form-control-custom'
+        })
+        self.fields["end_date"].initial = today
         
         self.fields["date"]=JalaliDateField(label="ختم",widget=AdminJalaliDateWidget)
         self.fields["date"].widget.attrs['id']="date"

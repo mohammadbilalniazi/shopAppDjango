@@ -447,19 +447,13 @@
                 <label class="form-label-custom">
                     <i class="bi bi-calendar-check text-success"></i> From Date
                 </label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="bi bi-calendar3"></i></span>
-                    {{ form.start_date }}
-                </div>
+                {{ form.start_date }}
             </div>
             <div class="col-md-3">
                 <label class="form-label-custom">
                     <i class="bi bi-calendar-x text-danger"></i> To Date
                 </label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="bi bi-calendar3"></i></span>
-                    {{ form.end_date }}
-                </div>
+                {{ form.end_date }}
             </div>
             <div class="col-md-4">
                 <button type="button" class="btn btn-warning w-100 btn-sm shadow-sm" id="finalize_ledger" onclick="finalize_ledger()">

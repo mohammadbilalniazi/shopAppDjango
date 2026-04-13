@@ -23,6 +23,15 @@ Inventory
 Expenditure and Asset
 - expenditure_asset/ASSET_EXPENDITURE_MODULE_DOCUMENTATION.md: financial summaries, expenditure flow, and asset models
 
+Asset
+- asset/ASSET_MODULE_DOCUMENTATION.md: asset summary, financial statements, loans, and ledger reporting
+
+Expenditure
+- expenditure/EXPENDITURE_MODULE_DOCUMENTATION.md: expense entry, expense accounting, and bill integration
+
+Financial Reports
+- financialreports/FINANCIAL_REPORTS_MODULE_DOCUMENTATION.md: balance sheet, profit-loss, cash flow, and ledger reporting
+
 Payments
 - payments/PAYMENTS_MODULE_DOCUMENTATION.md: complete payment subsystem overview for thesis use
 - payments/STRIPE_PAYMENT_INTEGRATION.md: Stripe payment architecture and processing flow

@@ -17,6 +17,12 @@ Primary implementation files:
 - bill/views_stripe.py
 - shop/urls.py
 
+Separate thesis documentation per bill type:
+- bills/SELLING_BILL_DOCUMENTATION.md: SELLING bill semantics, revenue, inventory, and profit handling
+- bills/PURCHASE_BILL_DOCUMENTATION.md: PURCHASE bill semantics, procurement, payables, and inventory impact
+- bills/RECEIVEMENT_BILL_DOCUMENTATION.md: RECEIVEMENT bill semantics, cash receipts, and ledger pairing
+- bills/PAYMENT_BILL_DOCUMENTATION.md: PAYMENT bill semantics, cash outflow, and liability settlement
+
 2. Core Data Models
 
 Bill
