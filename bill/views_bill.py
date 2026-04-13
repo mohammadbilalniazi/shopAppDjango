@@ -24,22 +24,34 @@ from rest_framework.pagination import PageNumberPagination
 from django.http import JsonResponse
 
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
-    date = date2jalali(datetime.now()) 
-    year=date.strftime('%Y')
-    self_organization,user_orgs = find_userorganization(request,organization_id)
-    # print("self_organization ",self_organization)
-    bill_rcvr_org,user_orgs = find_userorganization(request,bill_rcvr_org_id)
-    opposit_bill=get_opposit_bill(bill_type)
-    print("opposit_bill ",opposit_bill)
-    if bill_type=="EXPENSE":
-        bill_query=Bill.objects.filter(year=int(year),bill_type=bill_type,organization=self_organization)
-    else:    
-        bill_query=Bill.objects.filter(Q(year=int(year)),Q(Q(bill_type=bill_type),Q(organization=self_organization),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=self_organization),Q(organization=bill_rcvr_org)))
+    date = date2jalali(datetime.now())
+    year = int(date.strftime('%Y'))
 
-    if bill_query.count()>0:  
-        bill_no=bill_query.aggregate(Max('bill_no'))['bill_no__max']+1
+    organization = None
+    if organization_id not in (None, '', 'all'):
+        try:
+            organization = Organization.objects.get(id=int(organization_id))
+        except (ValueError, Organization.DoesNotExist):
+            organization = None
+
+    if organization is None:
+        organization, user_orgs = find_userorganization(request, organization_id)
+        if organization is None and user_orgs.exists():
+            organization = user_orgs.first()
+
+    if organization is None:
+        return 1
+
+    bill_query = Bill.objects.filter(
+        year=year,
+        bill_type=bill_type,
+        organization=organization
+    )
+
+    if bill_query.exists():
+        bill_no = bill_query.aggregate(Max('bill_no'))['bill_no__max'] + 1
     else:
-        bill_no=1
+        bill_no = 1
     return bill_no
 
 @api_view(("GET",))
@@ -50,6 +62,7 @@ def select_bill_no(request,organization_id,bill_rcvr_org_id,bill_type=None):
 def bill_show(request,bill_id=None):
     print("bill_id =",bill_id)
     context={}
+    context['is_loss_degrade'] = False
     form=Bill_Form()
     form.set_start_date()
     print(f"############ start_date {form.fields["start_date"].initial}")
@@ -111,9 +124,11 @@ def bill_show(request,bill_id=None):
         if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
         elif bill.bill_type in ("LOSSDEGRADE"):
-            template=loader.get_template('bill/expenditure/bill_form_loss.html')
+            template=loader.get_template('bill/bill_form_sell_purchase.html')
             context['products']=Product.objects.all()
             context['units']=Unit.objects.all()
+            context['categories']=Category.objects.all()
+            context['is_loss_degrade'] = True
         else:
             template=loader.get_template('bill/bill_form_sell_purchase.html')
             # context['products']=Product.objects.filter(product_detail__organization=bill.organization)
@@ -137,6 +152,7 @@ def bill_show(request,bill_id=None):
     context['organization'] =organization
     context['branches'] = branches
     context['rcvr_orgs']=rcvr_orgs
+    context['currencies'] = Currency.objects.all()
     return HttpResponse(template.render(context,request))
 
 
@@ -269,10 +285,12 @@ def bill_form_sell_purchase(request):
         'form':form,
         'organization':self_organization,
         'organizations':organizations,
-        'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
-        'branches': branches,  # Add branch context
+        'rcvr_orgs':rcvr_orgs,
+        'branches': branches,
         'date':date,
         'categories':Category.objects.all(),
+        'currencies': Currency.objects.all(),
+        'is_loss_degrade': False,
     } 
     # print("EEEEEEEEEEEEEEEEEEEE")
     # print("context=",context)
@@ -280,40 +298,59 @@ def bill_form_sell_purchase(request):
 
 @login_required(login_url='/admin')
 def bill_form_loss_degrade_product(request):
-    template=loader.get_template('bill/expenditure/bill_form_loss.html')
+    template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
     self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     context={}
     form.fields['date'].initial=date
+
+    # Get branches for the organization(s)
+    from configuration.models import Branch
+    if self_organization is not None:
+        branches = Branch.objects.filter(organization=self_organization, is_active=True)
+    else:
+        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
     
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
             organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
             self_organization = None  # Superuser can work without specific org
         else:
             # Regular user with multiple orgs - use first org as fallback
             if user_orgs and user_orgs.count() > 0:
                 self_organization = user_orgs.first()
                 organizations = user_orgs
+                rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
             else:
                 # No organizations assigned
                 from django.contrib import messages
                 messages.error(request, "No organizations assigned to your account. Please contact administrator.")
                 organizations = Organization.objects.none()
+                rcvr_orgs = Organization.objects.none()
     else:
         # Normal case - self_organization exists
         if request.user.is_superuser:
             organizations = Organization.objects.all()
+            rcvr_orgs = Organization.objects.all()
         else:
             organizations = Organization.objects.filter(id=self_organization.id)
+            rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
     
     context={
         'form':form,
         'organization':self_organization,
         'organizations':organizations,
+        'rcvr_orgs':rcvr_orgs,
+        'branches': branches,
+        'products': Product.objects.all(),
+        'units': Unit.objects.all(),
+        'categories': Category.objects.all(),
         'date':date,
+        'currencies': Currency.objects.all(),
+        'is_loss_degrade': True,
     } 
     # print("context=",context)
     return HttpResponse(template.render(context,request))
@@ -355,7 +392,7 @@ def bill_insert(request):
     # Basic fields
     # -----------------------------
     bill_id = data.get("id")
-    bill_no = int(data.get("bill_no"))
+    bill_no_raw = data.get("bill_no")
     date = data.get("date")
     year = date.split("-")[0]
     status = int(data.get("status", 0))
@@ -365,6 +402,20 @@ def bill_insert(request):
 
     organization = Organization.objects.get(id=int(data.get("organization")))
     self_org, _ = find_userorganization(request, organization.id)
+
+    if bill_id:
+        try:
+            bill_no = int(bill_no_raw)
+        except (TypeError, ValueError):
+            bill_no = None
+    else:
+        try:
+            bill_no = int(bill_no_raw) if bill_no_raw not in (None, '', '0') else None
+        except (TypeError, ValueError):
+            bill_no = None
+
+    if bill_no is None:
+        bill_no = getBillNo(request, organization.id, None, bill_type)
 
     # -----------------------------
     # Branch (optional)
@@ -435,6 +486,8 @@ def bill_insert(request):
             bill.payment = payment
             bill.bill_type = bill_type
             bill.branch = branch
+            if data.get('currency'):
+                bill.currency = data.get('currency')
 
         else:
             if Bill.objects.filter(
@@ -455,7 +508,8 @@ def bill_insert(request):
                 creator=user,
                 total=total,
                 payment=payment,
-                branch=branch
+                branch=branch,
+                currency=data.get('currency', 'afg') or 'afg',
             )
 
         bill.save()
@@ -679,7 +733,12 @@ def search(request, page=None):
             query = query.filter(bill_receiver2__bill_rcvr_org__id=int(bill_rcvr_org))
         except (ValueError, TypeError):
             pass  # Invalid bill_rcvr_org, skip filtering
-    
+
+    # Filter by currency
+    currency_filter = request.data.get("currency", None)
+    if currency_filter and currency_filter not in [None, "", "null", "all"]:
+        query = query.filter(currency__iexact=currency_filter)
+
     # Pagination
     paginator = PageNumberPagination()
     paginator.page_size = 8

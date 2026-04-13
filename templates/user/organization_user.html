@@ -1,7 +1,7 @@
 {% extends "master.html" %}
 {% load static %}
 
-{% block title %}Manage Organization Users{% endblock %}
+{% block title %}Manage Organization Users & User{% endblock %}
 
 {% block head_extra %}
 <style>
@@ -119,12 +119,6 @@
     display: flex;
     gap: var(--space-2);
   }
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-weight: 600;
-    text-align: center;
-    font-size: 15px;
-  }
 
   .alert-success-custom {
     background: var(--success-light);
@@ -138,16 +132,6 @@
     border-left: 4px solid var(--danger-solid);
   }
 
-  .search-input-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .search-input-wrapper input[type="text"] {
-    flex: 1;
-    padding: 10px 15px;
-    border: 2px solid var(--info-solid);
   .alert-custom {
     padding: var(--space-4) var(--space-5);
     border-radius: var(--radius-md);
@@ -155,11 +139,66 @@
     font-weight: var(--font-weight-medium);
   }
 
+  .search-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .search-input-wrapper input[type="text"] {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid var(--info-solid);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    transition: var(--transition-base);
+  }
+
+  .search-input-wrapper input[type="text"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
+  }
+
   .pagination-wrapper {
     display: flex;
     justify-content: center;
     gap: var(--space-2);
     margin-top: var(--space-5);
+  }
+
+  .form-section-divider {
+    border-bottom: 2px solid var(--border-light);
+    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+
+  .section-title {
+    color: var(--dark);
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .search-section {
+    margin-bottom: var(--space-8);
+    padding: var(--space-5);
+    background: var(--surface-light);
+    border-radius: var(--radius-md);
+  }
+
+  .results-section {
+    margin-top: var(--space-8);
+  }
+
+  .no-results-message {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
   }
 
   .system-id-badge {
@@ -170,6 +209,48 @@
     border-radius: var(--radius-full);
     font-weight: var(--font-weight-semibold);
     font-size: var(--font-size-sm);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+  }
+
+  .bg-success {
+    background-color: var(--success-light);
+    color: var(--success-text);
+  }
+
+  .bg-danger {
+    background-color: var(--danger-light);
+    color: var(--danger-text);
+  }
+
+  .bg-info {
+    background-color: var(--color-info-lighter);
+    color: var(--color-info-darker);
+  }
+
+  .bg-warning {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  select[multiple] {
+    padding: var(--space-2);
+  }
+
+  select[multiple] option {
+    padding: var(--space-2);
+    transition: var(--transition-base);
+  }
+
+  select[multiple] option:checked {
+    background: linear-gradient(var(--color-primary), var(--color-primary));
+    color: white;
   }
 
   /* Select2 dropdown styling for design system */
@@ -264,106 +345,164 @@
 
   <!-- Page Header -->
   <div class="page-header">
-    <h1><i class="bi bi-people-fill"></i> Manage Organization Users</h1>
+    <h1><i class="bi bi-people-fill"></i> Manage Organization Users & User</h1>
   </div>
 
   <!-- Main Content Card -->
   <div class="content-card">
-    <form id="organization_user_form" method="post" action="{{request.META.HTTP_NAME}}/user/organization_user/insert/" enctype="multipart/form-data">
-      {% csrf_token %}
+    <!-- Insert/Create User Form Section -->
+    <div class="form-section-divider">
+      <h3 class="section-title">
+        <i class="bi bi-person-plus"></i> {% if organization_user %}Update User{% else %}Create New User{% endif %}
+      </h3>
 
-      <table class="form-table">
-        <tr>
-          <td>System ID</td>
-          <td colspan="5">
-            {% if organization_user.id %}
-              <span class="system-id-badge">#{{organization_user.id}}</span>
-            {% else %}
-              <span class="system-id-badge">New User</span>
-            {% endif %}
-            <input type="hidden" class="form-control-custom" name="id" id="id" value="{{organization_user.id}}">
-          </td>
-        </tr>
+      <form id="organization_user_form" method="post" action="{{request.META.HTTP_NAME}}/user/organization_user/insert/" enctype="multipart/form-data">
+        {% csrf_token %}
 
-        <tr>
-          <td>First Name</td>
-          <td colspan="2">
-            <input type="text" class="form-control-custom" oninput="search()" name="first_name" id="first_name" value="{{organization_user.user.first_name|default:''}}" placeholder="Enter first name">
-          </td>
-          <td>Last Name</td>
-          <td colspan="2">
-            <input type="text" class="form-control-custom" oninput="search()" name="last_name" id="last_name" value="{{organization_user.user.last_name|default:''}}" placeholder="Enter last name">
-          </td>
-        </tr>
-
-        <tr>
-          <td>Username</td>
-          <td colspan="2">
-            <input type="text" class="form-control-custom" oninput="search()" name="username" id="username" value="{{organization_user.user.username|default:''}}" placeholder="Enter username">
-          </td>
-          <td>Password</td>
-          <td colspan="2">
-            <input type="password" class="form-control-custom" name="password" id="password" placeholder="{% if organization_user.id %}Leave blank to keep current{% else %}Enter password{% endif %}">
-          </td>
-        </tr>
-
-        <tr>
-          <td>Profile Image</td>
-          <td colspan="2">
-            <input type="file" class="form-control-custom" name="img" id="img" accept="image/*">
-          </td>
-          <td>Organization</td>
-          <td colspan="2">
-            {% if organization_user %}
-              {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization_user.organization %}
-            {% endif %}
-          </td>
-        </tr>
-
-        <tr>
-          <td>Branch</td>
-          <td colspan="2">
-            <select name="branch" class="form-control-custom branch-select" id="branch">
-              <option value="">Select Branch (Optional)</option>
-              {% if branches %}
-                {% for branch in branches %}
-                  <option value="{{branch.id}}" {% if organization_user.branch == branch %}selected{% endif %}>
-                    {{branch.name}}
-                  </option>
-                {% endfor %}
+        <table class="form-table">
+          <tr>
+            <td>System ID</td>
+            <td colspan="5">
+              {% if organization_user.id %}
+                <span class="system-id-badge">#{{organization_user.id}}</span>
+              {% else %}
+                <span class="system-id-badge">New User</span>
               {% endif %}
-            </select>
-          </td>
-          <td>Role</td>
-          <td colspan="2">
-            <select name="role" class="form-control-custom" id="role">
-              <option value="employee" {% if organization_user.role == "employee" %}selected{% endif %}>Employee</option>
-              <option value="admin" {% if organization_user.role == "admin" %}selected{% endif %}>Admin</option>
-              <option value="superuser" {% if organization_user.role == "superuser" %}selected{% endif %}>Super User</option>
-              <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
-            </select>
-          </td>
-        </tr>
-          <td colspan="3">
-            <div class="search-input-wrapper">
-              <input type="text" 
-                     placeholder="🔍 Quick search by name or username..." 
-                     class="form-control-custom" 
-                     id="search_user_input" 
-                     oninput="search()">
+              <input type="hidden" class="form-control-custom" name="id" id="id" value="{{organization_user.id}}">
+              <input type="hidden" name="existing_user_id" id="existing_user_id" value="">
+            </td>
+          </tr>
+
+          <tr>
+            <td>First Name</td>
+            <td colspan="2">
+              <input type="text" class="form-control-custom" name="first_name" id="first_name" value="{{organization_user.user.first_name|default:''}}" placeholder="Enter first name">
+            </td>
+            <td>Last Name</td>
+            <td colspan="2">
+              <input type="text" class="form-control-custom" name="last_name" id="last_name" value="{{organization_user.user.last_name|default:''}}" placeholder="Enter last name">
+            </td>
+          </tr>
+
+          <tr>
+            <td>Username</td>
+            <td colspan="2">
+              <input type="text" class="form-control-custom" name="username" id="username" value="{{organization_user.user.username|default:''}}" placeholder="Enter username">
+            </td>
+            <td>Password</td>
+            <td colspan="2">
+              <input type="password" class="form-control-custom" name="password" id="password" placeholder="{% if organization_user.id %}Leave blank to keep current{% else %}Enter password{% endif %}">
+            </td>
+          </tr>
+
+          <tr>
+            <td>Profile Image</td>
+            <td colspan="2">
+              <input type="file" class="form-control-custom" name="img" id="img" accept="image/*">
+            </td>
+            <td>Organization</td>
+            <td colspan="2">
+              {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization_user.organization %}
+            </td>
+          </tr>
+
+          <tr>
+            <td>Branch</td>
+            <td colspan="2">
+              <select name="branch" class="form-control-custom branch-select" id="branch">
+                <option value="">Select Branch (Optional)</option>
+                {% if branches %}
+                  {% for branch in branches %}
+                    <option value="{{branch.id}}" {% if organization_user.branch == branch %}selected{% endif %}>
+                      {{branch.name}}
+                    </option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+            </td>
+          <tr>
+            <td>Role</td>
+            <td colspan="2">
+              <select name="role" class="form-control-custom" id="role">
+                <option value="employee" {% if organization_user.role == "employee" %}selected{% endif %}>Employee</option>
+                <option value="admin" {% if organization_user.role == "admin" %}selected{% endif %}>Admin</option>
+                <option value="superuser" {% if organization_user.role == "superuser" %}selected{% endif %}>Super User</option>
+                <option value="owner" {% if organization_user.role == "owner" %}selected{% endif %}>Organization Owner</option>
+              </select>
+            </td>
+            <td>Is Active</td>
+            <td colspan="2">
+              <input type="checkbox" name="is_active" id="is_active" {% if organization_user.is_active or not organization_user %}checked{% endif %} style="width: 20px; height: 20px; cursor: pointer;">
+            </td>
+          </tr>
+
+          <tr>
+            <td>Groups</td>
+            <td colspan="5">
+              <select name="groups" class="form-control-custom" id="groups" multiple style="min-height: 100px;">
+                {% if groups %}
+                  {% for group in groups %}
+                    <option value="{{ group.id }}" {% if organization_user and group in organization_user.user.groups.all %}selected{% endif %}>
+                      {{ group.name }}
+                    </option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+              <small style="color: var(--text-secondary); display: block; margin-top: 5px;">Hold Ctrl (or Cmd on Mac) to select multiple groups</small>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan="6" style="text-align: right;">
               <button type="submit" class="btn-gradient" id="create_user">
                 <i class="bi bi-{% if organization_user %}arrow-repeat{% else %}person-plus{% endif %}"></i>
                 {% if organization_user %}Update User{% else %}Create User{% endif %}
               </button>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </form>
+            </td>
+          </tr>
+        </table>
+      </form>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+      <h3 class="section-title">
+        <i class="bi bi-search"></i> Search & Filter Users
+      </h3>
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 250px;">
+          <label style="display: block; margin-bottom: var(--space-2); color: var(--text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);">
+            Search by name or username
+          </label>
+          <input type="text"
+                 placeholder="🔍 Enter name or username..."
+                 class="form-control-custom"
+                 id="search_user_input"
+                 oninput="search()"
+                 style="margin: 0;">
+        </div>
+        <div style="flex: 0 1 250px;">
+          <label style="display: block; margin-bottom: var(--space-2); color: var(--text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);">
+            Filter by Organization
+          </label>
+          <select id="search_organization_filter" class="form-control-custom" onchange="search()" style="margin: 0;">
+            <option value="">All Organizations</option>
+            {% if organizations %}
+              {% for org in organizations %}
+                <option value="{{ org.id }}">{{ org.name }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+        <button type="button" class="btn-gradient" onclick="clearSearch()" style="white-space: nowrap;">
+          <i class="bi bi-arrow-clockwise"></i> Reset
+        </button>
+      </div>
+    </div>
 
     <!-- Results Section -->
     <div class="results-section">
-      <h3 style="color: var(--dark); font-weight: 600; margin-bottom: 15px;">
+      <h3 class="section-title">
         <i class="bi bi-table"></i> User List
       </h3>
       <table class="results-table" id="result_list">
@@ -374,6 +513,7 @@
             <th><i class="bi bi-card-text"></i> First Name</th>
             <th><i class="bi bi-card-text"></i> Last Name</th>
             <th><i class="bi bi-shield-check"></i> Role</th>
+            <th><i class="bi bi-check-circle"></i> Active</th>
             <th><i class="bi bi-image"></i> Profile</th>
             <th><i class="bi bi-gear"></i> Actions</th>
           </tr>
@@ -397,31 +537,63 @@
 
 <script>
   // Select2 is initialized globally for organization dropdowns
-  // Debug function to check if organization options are loaded
   document.addEventListener('DOMContentLoaded', function() {
-    // Debug: Check if organizations are loaded
+    // Clear search when form is submitted
+    const organizationUserForm = document.getElementById('organization_user_form');
+    if (organizationUserForm) {
+      organizationUserForm.addEventListener('submit', function() {
+        const searchInput = document.getElementById('search_user_input');
+        const searchOrgFilter = document.getElementById('search_organization_filter');
+        if (searchInput) searchInput.value = '';
+        if (searchOrgFilter) searchOrgFilter.value = '';
+      });
+    }
+
     const orgSelect = document.getElementById('organization');
     const branchSelect = document.getElementById('branch');
-    
+
     if (orgSelect) {
       console.log('🔍 Organization dropdown found with', orgSelect.options.length, 'options');
-      for (let i = 0; i < orgSelect.options.length; i++) {
-        console.log('   Option', i, ':', orgSelect.options[i].text, '(value:', orgSelect.options[i].value, ')');
-      }
-      
-      // Add organization change event listener for branch loading
-      orgSelect.addEventListener('change', async function() {
-        const organizationId = this.value;
-        
-        // Clear current branches
-        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
-        
-        if (!organizationId) {
+
+      function refreshBranchSelect2() {
+        if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined' || !branchSelect) {
           return;
         }
-        
+
+        const $branchSelect = jQuery(branchSelect);
+        const wasInitialized = $branchSelect.hasClass('select2-hidden-accessible');
+
+        if (wasInitialized) {
+          $branchSelect.select2('destroy');
+        }
+
+        $branchSelect.select2({
+          placeholder: 'Select Branch (Optional)',
+          allowClear: true,
+          width: '100%',
+          theme: 'default',
+          minimumResultsForSearch: 0,
+          dropdownAutoWidth: true,
+          dropdownParent: jQuery('body')
+        });
+      }
+
+      // Function to load branches for selected organization
+      async function loadBranchesForOrganization(organizationId) {
+        if (!branchSelect) {
+          return;
+        }
+
+        if (!organizationId) {
+          branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+          if (typeof jQuery !== 'undefined') {
+            jQuery(branchSelect).val('').trigger('change');
+            refreshBranchSelect2();
+          }
+          return;
+        }
+
         try {
-          // Fetch branches for the selected organization
           const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
             method: 'GET',
             headers: {
@@ -429,10 +601,11 @@
               'Accept': 'application/json'
             }
           });
-          
+
           if (response.ok) {
             const data = await response.json();
-            
+            branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+
             if (data.branches && data.branches.length > 0) {
               data.branches.forEach(branch => {
                 const option = document.createElement('option');
@@ -441,30 +614,106 @@
                 branchSelect.appendChild(option);
               });
             } else {
-              // No branches available
               const option = document.createElement('option');
               option.value = '';
               option.textContent = 'No branches available';
               option.disabled = true;
               branchSelect.appendChild(option);
             }
+
+            // Keep Select2 in sync after replacing options dynamically
+            if (typeof jQuery !== 'undefined') {
+              jQuery(branchSelect).val('').trigger('change');
+              refreshBranchSelect2();
+            }
+          } else {
+            // Fallback: try user-accessible branches endpoint and filter by organization
+            let fallbackBranches = [];
+            try {
+              const fallbackResponse = await fetch('/api/branches/user-accessible/', {
+                method: 'GET',
+                headers: {
+                  'X-CSRFToken': getCookie('csrftoken'),
+                  'Accept': 'application/json'
+                }
+              });
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                fallbackBranches = (fallbackData.branches || []).filter(
+                  branch => String(branch.organization?.id) === String(organizationId)
+                );
+              }
+            } catch (fallbackError) {
+              console.error('Fallback branch loading failed:', fallbackError);
+            }
+
+            if (fallbackBranches.length > 0) {
+              branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+              fallbackBranches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.id;
+                option.textContent = branch.name;
+                branchSelect.appendChild(option);
+              });
+
+              if (typeof jQuery !== 'undefined') {
+                jQuery(branchSelect).val('').trigger('change');
+                refreshBranchSelect2();
+              }
+              return;
+            }
+
+            let errorMessage = 'Unable to load branches';
+            try {
+              const errorData = await response.json();
+              if (errorData && errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch (e) {
+              // Keep default message if response is not JSON
+            }
+
+            branchSelect.innerHTML = `<option value="">${errorMessage}</option>`;
+            if (typeof jQuery !== 'undefined') {
+              jQuery(branchSelect).val('').trigger('change');
+              refreshBranchSelect2();
+            }
           }
         } catch (error) {
           console.error('Error loading branches:', error);
+          branchSelect.innerHTML = '<option value="">Error loading branches</option>';
+          if (typeof jQuery !== 'undefined') {
+            jQuery(branchSelect).val('').trigger('change');
+            refreshBranchSelect2();
+          }
         }
+      }
+
+      // Add organization change event listener
+      orgSelect.addEventListener('change', function() {
+        loadBranchesForOrganization(this.value);
       });
-      
+
+      if (typeof jQuery !== 'undefined') {
+        jQuery(orgSelect).on('select2:select change', function() {
+          loadBranchesForOrganization(this.value);
+        });
+      }
+
+      // Load branches on page load if organization is already selected
+      if (orgSelect.value) {
+        loadBranchesForOrganization(orgSelect.value);
+      }
     } else {
-      console.warn('⚠️  Organization dropdown not found');
+      console.warn('⚠️ Organization dropdown not found');
     }
-    
+
     // Ensure Select2 is working after a delay
     setTimeout(function() {
       if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
-        // Force reinitialize if needed
         const $orgSelect = jQuery('#organization');
         const $branchSelect = jQuery('#branch');
-        
+
         if ($orgSelect.length && !$orgSelect.hasClass('select2-hidden-accessible')) {
           console.log('⚡ Manually initializing organization Select2...');
           $orgSelect.select2({
@@ -479,7 +728,7 @@
             dropdownCssClass: 'select2-organization-dropdown'
           });
         }
-        
+
         // Initialize branch Select2
         if ($branchSelect.length && !$branchSelect.hasClass('select2-hidden-accessible')) {
           $branchSelect.select2({
@@ -495,80 +744,6 @@
       }
     }, 500);
   });
-
-  // Clear search when form is submitted
-  document.getElementById('organization_user_form').addEventListener('submit', function() {
-    const searchInput = document.getElementById('search_user_input');
-    if (searchInput) {
-      searchInput.value = '';
-    }
-  });
-
-  // Organization-Branch filtering functionality
-  const organizationSelect = document.getElementById('organization');
-  const branchSelect = document.getElementById('branch');
-  
-  if (organizationSelect && branchSelect) {
-    async function loadBranchesForOrganization(organizationId) {
-      branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
-      
-      if (!organizationId) {
-        return;
-      }
-      
-      try {
-        branchSelect.disabled = true;
-        branchSelect.innerHTML = '<option value="">Loading branches...</option>';
-        
-        const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
-          method: 'GET',
-          headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          console.error("Failed to load branches");
-          branchSelect.innerHTML = '<option value="">Error loading branches</option>';
-          return;
-        }
-        
-        const data = await response.json();
-        branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
-        
-        if (data.branches && data.branches.length > 0) {
-          data.branches.forEach(branch => {
-            const option = document.createElement('option');
-            option.value = branch.id;
-            option.textContent = branch.name;
-            branchSelect.appendChild(option);
-          });
-        } else {
-          const option = document.createElement('option');
-          option.value = '';
-          option.textContent = 'No branches available';
-          option.disabled = true;
-          branchSelect.appendChild(option);
-        }
-      } catch (error) {
-        console.error("Error loading branches:", error);
-        branchSelect.innerHTML = '<option value="">Error loading branches</option>';
-      } finally {
-        branchSelect.disabled = false;
-      }
-    }
-    
-    // Load branches when organization changes
-    organizationSelect.addEventListener('change', function() {
-      loadBranchesForOrganization(this.value);
-    });
-    
-    // Load branches on page load if editing existing user
-    if (organizationSelect.value) {
-      loadBranchesForOrganization(organizationSelect.value);
-    }
-  }
 </script>
 {% endblock %}
 

@@ -20,8 +20,20 @@ Configuration
 Inventory
 - inventory/INVENTORY_MODULE_DOCUMENTATION.md: stock tracking, branch filtering, and inventory update flow
 
+Database
+- database/DATABASE_ARCHITECTURE_DOCUMENTATION.md: database schema, summary tables, import commands, constraints, and persistence patterns
+
 Expenditure and Asset
 - expenditure_asset/ASSET_EXPENDITURE_MODULE_DOCUMENTATION.md: financial summaries, expenditure flow, and asset models
+
+Asset
+- asset/ASSET_MODULE_DOCUMENTATION.md: asset summary, financial statements, loans, and ledger reporting
+
+Expenditure
+- expenditure/EXPENDITURE_MODULE_DOCUMENTATION.md: expense entry, expense accounting, and bill integration
+
+Financial Reports
+- financialreports/FINANCIAL_REPORTS_MODULE_DOCUMENTATION.md: balance sheet, profit-loss, cash flow, and ledger reporting
 
 Payments
 - payments/PAYMENTS_MODULE_DOCUMENTATION.md: complete payment subsystem overview for thesis use
@@ -31,6 +43,7 @@ Payments
 - payments/STRIPE_QUICK_SETUP.md: deployment and setup steps for Stripe
 - payments/STRIPE_ACTIVATION_CHECKLIST.md: activation and verification checklist
 - payments/STRIPE_README.md: quick operational reference for payment features
+- payments/TRANSACTION_LOG_DOCUMENTATION.md: TransactionLog model, event types, query API, and audit design
 
 User Management
 - usermanagment/USERS_MODULE_DOCUMENTATION.md: user, organization-user, session, and authentication behavior

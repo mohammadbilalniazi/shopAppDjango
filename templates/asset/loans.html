@@ -214,20 +214,12 @@
 
 <div class="container">
     <!-- Organization Selector -->
-    <div class="row mb-4 no-print">
-        <div class="col-md-6">
-            <label for="orgSelect" class="form-label fw-bold">Select Organization:</label>
-            <select id="orgSelect" class="form-select" onchange="location.href='?organization=' + this.value">
-                {% for org in organizations %}
-                <option value="{{ org.id }}" {% if org.id == selected_organization.id %}selected{% endif %}>
-                    {{ org.name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-6 text-end">
-            <button onclick="window.print()" class="btn btn-primary mt-4">
-                <i class="fas fa-print"></i> Print Loans
+    <div class="org-selector" style="margin-bottom: 30px; font-weight: 800;">
+        <label><strong>Select Organization:</strong></label>
+        <form method="GET">
+            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=selected_organization %}
+        </form>
+    </div>
             </button>
         </div>
     </div>
@@ -409,4 +401,22 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    // Submit the organization form when organization changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const orgSelect = document.querySelector('select[name="organization"]');
+        if (orgSelect) {
+            orgSelect.addEventListener('change', function() {
+                const form = orgSelect.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -10,123 +10,261 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Sum, Q, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from decimal import Decimal
+from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal, InvalidOperation
 
 from asset.models import (
-    AssetBillSummary, AssetWholeBillSummary, 
+    AssetBillSummary, AssetWholeBillSummary,
     OrganizationAsset, Loan, ProfitLossStatement
 )
+from bill.models import Bill, LedgerAdjustment
 from configuration.models import Organization
 from user.models import OrganizationUser
+
+
+def _get_bill_impact(bill):
+    """
+    Returns the signed impact of a bill on the running balance
+    from the bill creator (organization) perspective vs the receiver.
+    Positive  = opposite_org owes org more.
+    Negative  = org owes opposite_org more.
+    """
+    total = Decimal(bill.total or 0)
+    payment = Decimal(bill.payment or 0)
+    if bill.bill_type == 'SELLING':
+        return total - payment      # they owe us (total) minus what they already paid
+    elif bill.bill_type == 'PURCHASE':
+        return payment - total      # we paid (payment) minus total we owe
+    elif bill.bill_type == 'PAYMENT':
+        return payment              # we paid them → reduces our debt
+    elif bill.bill_type == 'RECEIVEMENT':
+        return -payment             # they paid us → reduces their debt
+    return Decimal(0)
+
+
+def _build_summary_ledger(selected_org):
+    """
+    Returns a list of dicts — one per counterpart org — summarising the
+    net balance between selected_org and every org it has dealt with.
+    """
+    from bill.views_bill import get_statistics_bill
+
+    # All orgs that selected_org has bills with (as creator)
+    counterpart_ids = set(
+        Bill.objects.filter(
+            organization=selected_org,
+            bill_receiver2__bill_rcvr_org__isnull=False
+        ).values_list('bill_receiver2__bill_rcvr_org', flat=True).distinct()
+    )
+
+    rows = []
+    for cp_id in counterpart_ids:
+        cp_org = Organization.objects.filter(id=cp_id).first()
+        if not cp_org:
+            continue
+        query = Bill.objects.filter(
+            organization=selected_org,
+            bill_receiver2__bill_rcvr_org=cp_org,
+        )
+        stats = get_statistics_bill(query)
+        # Add manual adjustments
+        adj_total = LedgerAdjustment.objects.filter(
+            organization=selected_org,
+            opposite_org=cp_org,
+        ).aggregate(s=Sum('amount'))['s'] or Decimal(0)
+        net = Decimal(stats['total_summary'] or 0) + adj_total
+        rows.append({
+            'organization': cp_org,
+            'net_position': net,
+            'total_sold': stats['total_sum_selling'],
+            'total_purchased': stats['total_sum_purchase'],
+            'payment_made': stats['payment_sum_payment'],
+            'payment_received': stats['payment_sum_receivement'],
+        })
+    rows.sort(key=lambda x: abs(x['net_position']), reverse=True)
+    return rows
+
+
+def _build_detail_ledger(org, opposite_org):
+    """
+    Returns (entries, final_balance) where entries is a chronological list of
+    dicts combining bills + manual adjustments with a running_balance column.
+    Positive balance  = opposite_org owes org.
+    Negative balance  = org owes opposite_org.
+    """
+    # Bills created by org directed at opposite_org
+    bills = list(
+        Bill.objects.filter(
+            organization=org,
+            bill_receiver2__bill_rcvr_org=opposite_org,
+            bill_type__in=['PURCHASE', 'SELLING', 'PAYMENT', 'RECEIVEMENT'],
+        ).select_related('bill_receiver2').order_by('date', 'bill_no', 'id')
+    )
+
+    # Manual adjustments
+    adjustments = list(
+        LedgerAdjustment.objects.filter(
+            organization=org,
+            opposite_org=opposite_org,
+        ).order_by('date', 'id')
+    )
+
+    # Merge by date
+    entries = []
+    for bill in bills:
+        entries.append({
+            'kind': 'bill',
+            'date': bill.date,
+            'bill_no': bill.bill_no,
+            'bill_type': bill.bill_type,
+            'total': Decimal(bill.total or 0),
+            'payment': Decimal(bill.payment or 0),
+            'impact': _get_bill_impact(bill),
+            'note': '',
+            'obj_id': bill.id,
+        })
+    for adj in adjustments:
+        entries.append({
+            'kind': 'adjustment',
+            'date': adj.date,
+            'bill_no': '-',
+            'bill_type': 'ADJUSTMENT',
+            'total': Decimal(0),
+            'payment': Decimal(0),
+            'impact': Decimal(adj.amount),
+            'note': adj.note,
+            'obj_id': adj.id,
+        })
+
+    # Sort all entries together by date then bill_no (bills first within same date)
+    entries.sort(key=lambda e: (e['date'], 0 if e['kind'] == 'bill' else 1, e.get('bill_no') or 0))
+
+    # Build running balance
+    running = Decimal(0)
+    for entry in entries:
+        running += Decimal(entry['impact'])
+        entry['running_balance'] = running
+
+    return entries, running
 
 
 @login_required
 def organization_ledger_summary(request):
     """
-    Show ledger summary between organizations
-    Example: ABC org has 10000 upon XYZ org
-    Uses cached AssetBillSummary data for performance
+    Organization Ledger Summary page.
+
+    Two dropdowns:
+      • First  (organization)    : logged-in user's org(s); for superuser — all orgs.
+      • Second (opposite_org)    : all orgs except the first; for superuser — all orgs.
+
+    Behaviour:
+      • Both selected  → bill-by-bill running ledger between the two orgs.
+      • Only first     → summary table of that org vs every counterpart.
     """
-    # Get user's organizations
     user = request.user
-    
-    if user.is_superuser or user.is_staff:
-        # Admin can see all organizations
-        user_orgs = Organization.objects.all()
+
+    # ── Dropdown 1: own organisations ─────────────────────────────────────
+    if user.is_superuser:
+        own_orgs = Organization.objects.all().order_by('name')
     else:
-        # Regular user sees only their organizations
-        user_orgs = Organization.objects.filter(
+        own_orgs = Organization.objects.filter(
             organizationuser__user=user
-        ).distinct()
-    
-    # Selected organization (from dropdown or first org)
+        ).distinct().order_by('name')
+
     selected_org_id = request.GET.get('organization')
+    opposite_org_id = request.GET.get('opposite_org')
+
+    selected_org = None
     if selected_org_id:
-        selected_org = get_object_or_404(Organization, id=selected_org_id)
-    elif user_orgs.exists():
-        selected_org = user_orgs.first()
+        selected_org = Organization.objects.filter(id=selected_org_id).first()
+    elif own_orgs.exists():
+        selected_org = own_orgs.first()
+
+    # ── Dropdown 2: opposite organisations ────────────────────────────────
+    if user.is_superuser or user.is_staff:
+        opposite_orgs = Organization.objects.all().order_by('name')
     else:
-        selected_org = None
-    
-    ledger_data = []
-    
-    if selected_org:
-        # Get all organizations this org has transactions with
-        # Using AssetBillSummary for performance (cached data)
-        
-        # Organizations we sold to / they owe us (SELLING)
-        receivables = AssetBillSummary.objects.filter(
-            organization=selected_org,
-            bill_type='SELLING'
-        ).values('bill_rcvr_org').annotate(
-            total_sold=Sum('total'),
-            total_received=Sum('payment')
-        )
-        
-        # Organizations we purchased from / we owe them (PURCHASE)
-        payables = AssetBillSummary.objects.filter(
-            organization=selected_org,
-            bill_type='PURCHASE'
-        ).values('bill_rcvr_org').annotate(
-            total_purchased=Sum('total'),
-            total_paid=Sum('payment')
-        )
-        
-        # Combine into ledger
-        org_ledgers = {}
-        
-        # Process receivables (they owe us)
-        for item in receivables:
-            if item['bill_rcvr_org']:
-                org = Organization.objects.get(id=item['bill_rcvr_org'])
-                org_ledgers[org.id] = {
-                    'organization': org,
-                    'total_sold': item['total_sold'] or 0,
-                    'payment_received': item['total_received'] or 0,
-                    'receivable': (item['total_sold'] or 0) - (item['total_received'] or 0),
-                    'total_purchased': 0,
-                    'payment_made': 0,
-                    'payable': 0,
-                }
-        
-        # Process payables (we owe them)
-        for item in payables:
-            if item['bill_rcvr_org']:
-                org_id = item['bill_rcvr_org']
-                org = Organization.objects.get(id=org_id)
-                
-                if org_id in org_ledgers:
-                    org_ledgers[org_id]['total_purchased'] = item['total_purchased'] or 0
-                    org_ledgers[org_id]['payment_made'] = item['total_paid'] or 0
-                    org_ledgers[org_id]['payable'] = (item['total_purchased'] or 0) - (item['total_paid'] or 0)
-                else:
-                    org_ledgers[org_id] = {
-                        'organization': org,
-                        'total_sold': 0,
-                        'payment_received': 0,
-                        'receivable': 0,
-                        'total_purchased': item['total_purchased'] or 0,
-                        'payment_made': item['total_paid'] or 0,
-                        'payable': (item['total_purchased'] or 0) - (item['total_paid'] or 0),
-                    }
-        
-        # Calculate net position for each organization
-        for org_id, ledger in org_ledgers.items():
-            # Net position: positive = they owe us, negative = we owe them
-            ledger['net_position'] = ledger['receivable'] - ledger['payable']
-            ledger_data.append(ledger)
-        
-        # Sort by absolute net position (largest debts first)
-        ledger_data.sort(key=lambda x: abs(x['net_position']), reverse=True)
-    
+        if selected_org:
+            opposite_orgs = Organization.objects.exclude(
+                id=selected_org.id
+            ).order_by('name')
+        else:
+            opposite_orgs = Organization.objects.all().order_by('name')
+
+    opposite_org = None
+    if opposite_org_id:
+        opposite_org = Organization.objects.filter(id=opposite_org_id).first()
+
+    # ── Build ledger data ──────────────────────────────────────────────────
+    detail_entries = []
+    final_balance = Decimal(0)
+    summary_data = []
+
+    if selected_org and opposite_org:
+        detail_entries, final_balance = _build_detail_ledger(selected_org, opposite_org)
+    elif selected_org:
+        summary_data = _build_summary_ledger(selected_org)
+
     context = {
-        'user_organizations': user_orgs,
-        'selected_organization': selected_org,
-        'ledger_data': ledger_data,
+        'own_orgs': own_orgs,
+        'opposite_orgs': opposite_orgs,
+        'selected_org': selected_org,
+        'opposite_org': opposite_org,
+        'detail_entries': detail_entries,
+        'final_balance': final_balance,
+        'summary_data': summary_data,
         'is_admin': user.is_superuser or user.is_staff,
     }
-    
     return render(request, 'asset/organization_ledger.html', context)
+
+
+@login_required
+@require_http_methods(['POST'])
+def ledger_adjustment_save(request):
+    """
+    AJAX endpoint — save a manual ledger adjustment.
+    Expected POST fields: organization, opposite_org, amount, note
+    Returns JSON {success, message}.
+    """
+    org_id = request.POST.get('organization')
+    opp_id = request.POST.get('opposite_org')
+    amount_raw = request.POST.get('amount', '').strip()
+    note = request.POST.get('note', '').strip()
+
+    if not org_id or not opp_id or not amount_raw:
+        return JsonResponse({'success': False, 'message': 'All fields are required.'}, status=400)
+
+    try:
+        amount = Decimal(amount_raw)
+    except InvalidOperation:
+        return JsonResponse({'success': False, 'message': 'Invalid amount.'}, status=400)
+
+    org = get_object_or_404(Organization, id=org_id)
+    opp = get_object_or_404(Organization, id=opp_id)
+
+    # Security: non-superusers may only adjust their own org's ledger
+    if not (request.user.is_superuser or request.user.is_staff):
+        is_member = OrganizationUser.objects.filter(
+            user=request.user, organization=org, is_active=True
+        ).exists()
+        if not is_member:
+            return JsonResponse(
+                {'success': False, 'message': 'Permission denied.'}, status=403
+            )
+
+    adj = LedgerAdjustment.objects.create(
+        organization=org,
+        opposite_org=opp,
+        amount=amount,
+        note=note,
+        created_by=request.user,
+    )
+    return JsonResponse({
+        'success': True,
+        'message': f'Adjustment of {amount} saved.',
+        'adj_id': adj.id,
+        'date': adj.date,
+    })
 
 
 @login_required

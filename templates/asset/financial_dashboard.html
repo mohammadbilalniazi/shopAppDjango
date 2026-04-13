@@ -111,7 +111,7 @@
     </div>
     
     <!-- Organization Selector -->
-    <div class="org-selector">
+    <div class="org-selector" style="margin-bottom: 30px; font-weight: 800;">
         <label><strong>Select Organization:</strong></label>
         <form method="GET">
             {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=user_organizations selected_org=selected_organization %}
@@ -238,4 +238,22 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    // Submit the organization form when organization changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const orgSelect = document.querySelector('select[name="organization"]');
+        if (orgSelect) {
+            orgSelect.addEventListener('change', function() {
+                const form = orgSelect.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

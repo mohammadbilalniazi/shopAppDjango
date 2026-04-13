@@ -397,6 +397,19 @@
     // Select2 initialization handled globally for organization dropdowns
     // No custom initialization needed
 
+    // Submit the organization form when organization changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const orgSelect = document.querySelector('select[name="organization"]');
+        if (orgSelect) {
+            orgSelect.addEventListener('change', function() {
+                const form = orgSelect.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            });
+        }
+    });
+
     // Refresh assets
     async function refreshAssets() {
         const orgId = {{ selected_organization.id|default:0 }};

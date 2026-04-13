@@ -30,7 +30,7 @@ class BillSearchSerializer(serializers.ModelSerializer):
     organization=serializers.SerializerMethodField()
     class Meta:
         model=Bill  
-        fields=["id","bill_receiver2","bill_type","bill_no","payment","date","organization","creator","total"] #month===> kaifyath_haziri
+        fields=["id","bill_receiver2","bill_type","bill_no","payment","date","organization","creator","total","currency"] #month===> kaifyath_haziri
     def get_organization(self,obj):
         return obj.organization.name    
 class Bill_Create_Serializer(serializers.ModelSerializer):

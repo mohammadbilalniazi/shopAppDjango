@@ -10,6 +10,7 @@
 {% endblock %}
 
 {% block head_extra %}
+<link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
 <style>
     /* Product-specific styles using design system */
     .products-header {
@@ -53,10 +54,10 @@
     .filter-group input,
     .filter-group select {
         width: 100%;
-        padding: var(--space-3);
+        padding: 0.45rem 0.65rem;
         border: 2px solid var(--border-color);
         border-radius: var(--radius-md);
-        font-size: var(--font-size-base);
+        font-size: 0.9rem;
         transition: var(--transition-base);
         background: var(--white);
     }
@@ -129,18 +130,18 @@
     }
     
     .products-table .btn {
-        padding: var(--space-2) var(--space-4);
-        font-size: var(--font-size-xs);
-        min-height: 38px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.8rem;
+        min-height: 34px;
         white-space: nowrap;
     }
     
     .products-table .form-control {
-        min-height: 38px;
+        min-height: 34px;
         padding: var(--space-2);
         border: 2px solid var(--border-color);
         border-radius: var(--radius-md);
-        font-size: var(--font-size-sm);
+        font-size: 0.85rem;
         transition: var(--transition-base);
     }
     
@@ -285,7 +286,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
+<div class="container universal-compact-ui" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
     
     {% if messages %}
         {% for message in messages %}
@@ -300,7 +301,7 @@
     {% endif %}
 
     <!-- Page Header -->
-    <div class="products-header">
+    <div class="products-header" style="background-color: white;color:black;">
         <h1>📦 Products Management</h1>
         <p style="margin: 0; opacity: 0.9;">Manage your inventory and product catalog</p>
     </div>
@@ -319,7 +320,7 @@
             </div>
             
             <div class="filter-group" style="display: flex; align-items: flex-end;">
-                <a href="/admin/product/product/add/" class="btn btn-primary">
+                <a href="{% url 'product_form' %}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add Product
                 </a>
             </div>

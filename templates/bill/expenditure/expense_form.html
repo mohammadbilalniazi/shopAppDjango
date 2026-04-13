@@ -4,344 +4,175 @@
 {% block title %}Add Bill | Shirkat{% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'admin/css/nav_sidebar.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'assets/css/common.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'assets/css/fontawesome.min.css' %}">
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/fontawesome.min.css">
-<link rel="stylesheet" type="text/css" href="{% static 'admin/css/responsive.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/toastr.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
 <style>
-
-        .danger-btn{
-            font-weight: 900; 
-            font-size: 16px; 
-            background-color: red; 
-            color: black; 
-            padding: 0px; 
-            margin: 0px;
-            padding:0.4%;
-        }
-        .bill_creator{
-            font-size:xx-large;
-            font-weight: 900;
-            color:black
-        }
-        .bill_acceptor{
-            font-size:xx-large;
-            font-weight: 900;
-            color:crimson
-        }
-
-        select{
-            font-weight: 900;
-            /* color:blue */
-        }
-        
-        input[type=number],input[type=text]{
-            font-weight: 900;
-            /* color:blue */
-        }
-    
+.bill-section-card {
+    border: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.bill-section-header {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: #417690;
+    font-size: 0.95rem;
+}
+.bill-section-header i { margin-right: 8px; }
+.bill-section-body { padding: 20px; }
+.form-label-bold { font-weight: 600; font-size: 0.875rem; color: #495057; margin-bottom: 4px; }
+.form-control, .form-select {
+    border-radius: 8px;
+    border-color: #dee2e6;
+    font-size: 0.95rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #417690;
+    box-shadow: 0 0 0 0.2rem rgba(65,118,144,0.2);
+}
+input[name="date"] {
+    display: block; width: 100%; padding: .375rem .75rem;
+    font-size: .95rem; border: 1px solid #dee2e6; border-radius: 8px;
+    line-height: 1.5; color: #212529; background-color: #fff;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+input[name="date"]:focus {
+    border-color: #417690;
+    box-shadow: 0 0 0 0.2rem rgba(65,118,144,0.2);
+    outline: none;
+}
+.submit-actions { background: #f8f9fa; padding: 20px; border-top: 1px solid #e9ecef; }
+.btn-save { background: linear-gradient(135deg, #28a745, #20863a); border: 0; padding: 10px 32px; font-weight: 600; border-radius: 8px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
-    
+<div class="container-fluid py-4 unified-ui" style="max-width: 900px;">
+
     {% if messages %}
         {% for message in messages %}
-            {% if message.tags == "error" %}
-                <div class='alert alert-danger' style="background-color:rgb(176, 122, 122);font-weight:bolder;text-align:center;padding:12px;font-size:15px">
-            {% else %}
-                <div class='alert alert-success' style="background-color:lightgreen;font-weight:bolder;text-align:center;padding:12px;font-size:15px">
-            {% endif %}
-                {{ message }}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         {% endfor %}
     {% endif %}
 
-<!-- Container -->
-<div id="container"> 
-    <!-- Header -->
+    <input type="hidden" id="detail_or_update" value="{% if bill %}1{% else %}0{% endif %}">
 
-    <div class="main shifted" id="main"> 
-        <!-- <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button> -->
-        <!--  -->
+    <form method="post" action="{{ request.META.HTTP_NAME }}/bill/insert/" id="bill">
+        {% csrf_token %}
 
-        <div class="content">
-                    <div class="colM">{% if messages %} {% for message in messages %} {% if message.tags == "error" %} <div class='alert alert-danger' style="background-color:red"> {%  else %} <div class='alert alert-danger' style="background-color:green"> {%endif%}  {{ message}} </div> {% endfor %} {% endif %}</div>
-
-            <!-- Content -->
-
-            <div id="content" class="colM">   
-                <input type="hidden" id="detail_or_update" {% if bill %}  value="1"  {% else %} value="0"  {% endif %} >
-
-                <form method="post" action='{{request.META.HTTP_NAME}}/bill/insert/'   id="bill" >                 
-                        {% csrf_token %}       
-                <table style="margin-left:auto; margin-right:auto">
-                <tr class="bill_creator">
-                     <td>
-                        Bill Creator Organization
-                    </td>
-                    <td>     
-                        <span style="display:inline;margin:3%">
-                                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization %}
-                            <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                var orgSelect = document.getElementById('organization');
-                                var branchSelect = document.getElementById('branch');
-                                if (!orgSelect || !branchSelect) return;
-
-                                // Store all branch options
-                                var allBranchOptions = Array.from(branchSelect.options);
-
-                                function filterBranches() {
-                                    var selectedOrgId = orgSelect.value;
-                                    // Remove all options except the first (placeholder)
-                                    branchSelect.options.length = 1;
-                                    allBranchOptions.forEach(function(option, idx) {
-                                        if (idx === 0) return; // skip placeholder
-                                        if (!selectedOrgId || option.getAttribute('data-organization-id') === selectedOrgId) {
-                                            branchSelect.appendChild(option.cloneNode(true));
-                                        }
-                                    });
-                                }
-
-                                orgSelect.addEventListener('change', filterBranches);
-                                // Initial filter on page load
-                                filterBranches();
-                            });
-                            </script>
-                            </span>  
-                    </td> 
-                    <td>
-                        Branch
-                    </td>
-                    <td>
-                        <span style="display:inline;margin:3%">
-                            <select name="branch" id="branch">
-                                <option value="">Select Branch (Optional)</option>
-                                {% if branches %}
-                                    {% for branch in branches %}
-                                    <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch == branch %}selected{% endif %}>{{ branch.name }} - {{ branch.organization.name }}</option>
-                                    {% endfor %}
-                                {% endif %}
-                            </select>
-                            <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% else %}{% endif %}">
-                        </span>
-                    </td>
-
-                    <td> 
-                        <span>System Bill ID 
-                        </span>
-                    </td>
-                    <td>
-                        <input type="number"  value="{{bill.id}}" disabled name="bill_id" id="bill_id" >
-                    </td>
-                </tr> 
-                <tr class="bill_creator">
-                    <td >
-                          <span  > 
-                           <input type="text" value="EXPENSE" disabled name="bill_type"  required="" id="bill_type"> 
-                        </span> 
-                    </td>
-                    <td>
-                        <span  > 
-                            <select  name="expense_type"  required="" id="expense_type">     
-                                 <option value="1"  {% if bill.expense.expense_type == 1 %} selected {% endif %}>دوکان کرایه</option>
-                                 <option value="2" {% if bill.expense.expense_type == 2 %} selected {% endif %} >خوراک</option>
-                                 <option value="3" {% if bill.expense.expense_type == 3 %} selected {% endif %}>دوکان برق  </option>
-                                 <option value="4" {% if bill.expense.expense_type == 4 %} selected {% endif %}>دوکان اضافی خرچه</option>
-                                 <option value="5"{% if bill.expense.expense_type == 5 %} selected {% endif %}>شخصی خرچه</option>
-                            </select>   
-                        </span>
-                    </td>
-                     <!-- </span>  -->
-
-                    <td>Bill Creator User</td>
-                    <td>     
-                        <span style="display:inline;margin:3%">                   
-                            <input type="text" disabled name="creator" {% if bill %} value="{{bill.creator}}" {% else %}  value="{{user.username}}" {% endif %} placeholder="creator"  class="" required="" id="creator">     
-                        </span>  
-                    </td>
-
-                </tr>
-
-                    <tr class="bill_creator">
-                         <td>
-                             bill No 
-                        </td>    
-                        <td>                                       
-                            <span > 
-                            <input type="number"  name="bill_no" id="bill_no"  {% if bill %} value="{{bill.bill_no}}" {% else %} value="{{bill_no}}" {% endif %} disabled placeholder="بل شمیره" class="" required="" >                      
-
-                            </span> 
-                        </td>
-                                               <td>
-                            Date
-                        </td>
-                        <td>
-                            <span style="display:inline;margin:1%">
-                                        {{form.date}}                              
-                            </span>
-                        </td>
-
-                    </tr>  
-                    <tr class="bill_creator">    
-
-                        <td>
-                            Bill Statuss
-                        </td>
-                        <td>
-                            <span style="display:inline;margin:3%">
-                            <select name="status" placeholder="status"  required id="status">     
-                                <option value="0" {% if bill.status == 0 %} selected {% endif %}>CREATED </option>    
-                                <option value="1" {% if bill.status == 1 %} selected {% endif %}>APPROVED</option>  
-                                <option value="2" {% if bill.status == 2 %} selected {% endif %}>REVERSED</option>
-                                <option value="3" {% if bill.status == 3 %} selected {% endif %}>REJECTED</option>
-                            </select>
-                            </span>
-                        </td>
-                         <!-- <td>
-                            Total Bill  {{bill.total}}
-                        </td> -->
-                        <!-- <td>
-                            <span style="display:inline;margin:3%">
-                                <input type="number" id="total" name="total"  value="{{bill.total}}" placeholder="مجموعه پیسی"   >                      
-                            </span>   
-                        </td>  -->
-
-                        <td>Expense</td>
-                        <td>
-                            <span style="display:inline;margin:3%">
-                                        <input type="number" name="total_payment" {% if bill %} value="{{bill.payment}}"  {% else %} value="0" {% endif %} placeholder="مجموعه ادا" required="" id="total_payment"  min="0"  step="0.0001">                      
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-
-                            {% if bill %}
-
-                            <input type="submit" value="Update" style="background-color:green; color:white" class="default" name="_save">
-
-                            {% else %}
-                            <input type="submit" value="Save" class="default" name="_save">
+        <div class="card bill-section-card mb-4">
+            <div class="bill-section-header">
+                <i class="bi bi-wallet2"></i>Expense Bill
+            </div>
+            <div class="bill-section-body">
+                <div class="row g-3">
+                    <!-- Organization -->
+                    <div class="col-md-6">
+                        <label class="form-label form-label-bold">Organization <span class="text-danger">*</span></label>
+                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization css_class='form-select' %}
+                        <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% endif %}">
+                    </div>
+                    <!-- Branch -->
+                    <div class="col-md-6">
+                        <label class="form-label form-label-bold">Branch</label>
+                        <select name="branch" id="branch" class="form-select">
+                            <option value="">— Select Branch (Optional) —</option>
+                            {% if branches %}
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}"
+                                        {% if bill.branch == branch %}selected{% endif %}>
+                                    {{ branch.name }} — {{ branch.organization.name }}
+                                </option>
+                                {% endfor %}
                             {% endif %}
-                            <!-- {% if bill %}
-                            <a href="/bill/delete/{{bill.id}}/" style="padding:10px" role="button" class="danger-btn" style="background-color:red; color:white" >delete</a>
-                            {% endif %}   -->
-                        </td>
-                    </tr>
+                        </select>
+                    </div>
+                    <!-- Expense Type -->
+                    <div class="col-md-6">
+                        <label class="form-label form-label-bold">Expense Type <span class="text-danger">*</span></label>
+                        <select name="expense_type" id="expense_type" class="form-select" required>
+                            <option value="1" {% if bill.expense.expense_type == 1 %}selected{% endif %}>دوکان کرایه</option>
+                            <option value="2" {% if bill.expense.expense_type == 2 %}selected{% endif %}>خوراک</option>
+                            <option value="3" {% if bill.expense.expense_type == 3 %}selected{% endif %}>دوکان برق</option>
+                            <option value="4" {% if bill.expense.expense_type == 4 %}selected{% endif %}>دوکان اضافی خرچه</option>
+                            <option value="5" {% if bill.expense.expense_type == 5 %}selected{% endif %}>شخصی خرچه</option>
+                        </select>
+                    </div>
+                    <!-- Bill Type (hidden, always EXPENSE) -->
+                    <div class="col-md-6">
+                        <label class="form-label form-label-bold">Bill Type</label>
+                        <input type="text" value="EXPENSE" disabled name="bill_type" id="bill_type" class="form-control">
+                    </div>
+                    <!-- Bill No -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">Bill No <span class="text-danger">*</span></label>
+                        <input type="number" name="bill_no" id="bill_no"
+                               value="{% if bill %}{{ bill.bill_no }}{% else %}{{ bill_no }}{% endif %}"
+                               placeholder="بل شمیره" class="form-control" disabled required>
+                    </div>
+                    <!-- Date -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">Date</label>
+                        {{ form.date }}
+                    </div>
+                    <!-- Bill Creator -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">Bill Creator</label>
+                        <input type="text" disabled name="creator"
+                               value="{% if bill %}{{ bill.creator }}{% else %}{{ user.username }}{% endif %}"
+                               class="form-control" id="creator">
+                    </div>
+                    <!-- Status -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">Status <span class="text-danger">*</span></label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="0" {% if bill.status == 0 %}selected{% endif %}>CREATED</option>
+                            <option value="1" {% if bill.status == 1 %}selected{% endif %}>APPROVED</option>
+                            <option value="2" {% if bill.status == 2 %}selected{% endif %}>REVERSED</option>
+                            <option value="3" {% if bill.status == 3 %}selected{% endif %}>REJECTED</option>
+                        </select>
+                    </div>
+                    <!-- Expense Amount -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">Expense Amount <span class="text-danger">*</span></label>
+                        <input type="number" name="total_payment"
+                               value="{% if bill %}{{ bill.payment }}{% else %}0{% endif %}"
+                               placeholder="0.00" class="form-control" id="total_payment" min="0" step="0.0001" required>
+                    </div>
+                    <!-- System Bill ID -->
+                    <div class="col-md-4">
+                        <label class="form-label form-label-bold">System Bill ID</label>
+                        <input type="number" value="{{ bill.id }}" disabled name="bill_id" id="bill_id" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="submit-actions">
+                {% if bill %}
+                <button type="submit" name="_save" class="btn btn-save text-white">
+                    <i class="bi bi-check-circle me-1"></i>Update Expense
+                </button>
+                {% else %}
+                <button type="submit" name="_save" class="btn btn-save text-white">
+                    <i class="bi bi-floppy me-1"></i>Save Expense
+                </button>
+                {% endif %}
+            </div>
+        </div>
 
-                    </table>
-                    <div id="content-main">
-                                <div>
-                                    <!-- <fieldset class="module aligned ">    
-
-                                        <table style="width:100%" id="table_form">
-                                                <caption>
-                                                    <a href="/admin/shopapp/" class="section" title="Models in the Shopapp application">Shopapp</a>
-                                                </caption>
-
-                                                <thead>
-                                                    <tr>
-                                                        <th>
-                                                            <label style="float:left"> Item name <a href="/admin/product/product/add/" class="addlink"></a></label>                      
-                                                        </th>
-                                                        <th>
-                                                            <label >  Unit <a href="/admin/products/unit/add/" class="addlink"></a></label>   
-                                                    </th>
-                                                        <th>
-                                                            <label > Item amount</label>   
-                                                        </th>
-                                                        <th>
-                                                            <label>Item price</label>           
-                                                        </th>
-                                                        <th>
-                                                            <label for="id_return_qty">Return qty</label>                     
-                                                        </th>
-
-                                                    </tr>
-                                                    {% if bill.bill_detail_set %}
-
-                                                    {% for detail in bill.bill_detail_set.all %}
-                                                    <tr>
-                                                        <td> 
-                                                            <div>
-                                                            <select class="item_name" name="item_name">
-                                                                {% for row in products %}
-                                                            <option value="{{row.id}}"  {% if detail.product.id == row.id %} selected {% endif %}>{{row.item_name}}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                            </div>
-                                                        </td>
-                                                        <td> 
-                                                            <div>
-                                                            <select class="unit" name="unit">
-                                                            {% for row in units %}
-                                                            <option value="{{row.id}}"  {% if detail.unit.id == row.id %} selected {% endif %}>{{row.name}}</option>
-                                                            {% endfor %}
-                                                            </select>
-                                                            </div>
-                                                        </td>
-                                                        <td><div><input type="number"  value="{{detail.item_amount}}" name="item_amount" class="item_amount"></div></td>
-
-                                                        <td><div><input type="number"  value="{{detail.item_price}}" name="item_price" class="item_price"></div></td>
-                                                        <td><div><input type="number"  value="{{detail.return_qty}}" name="return_qty"  class="return_qty"></div></td>
-                                                        <td><div><input disabled type="number"  value="{{detail.id}}" name="bill_detail_id"  class="bill_detail_id"></div></td>
-                                                        <td><input type="button" id="remove_btn" class="remove_btn" value="remove" onclick="remove_row(this,{{detail.id}})" style="font-weight: 900; font-size: 16px; background-color: red; color: black; padding: 0px; margin: 0px;"></td>
-
-                                                        </tr>
-                                                    {% endfor %}
-                                                    {% endif %}
-                                                </thead>
-                                                <tbody id="table_body">
-
-                                                </tbody>
-                                        </table>
-                                    </fieldset> -->  
-                                </div>
-                        </form>
-
-                </div>  <!--end of div content-main-->
-                    <br class="clear">
-            </div>     <!--end of div colM-->
-            <!-- END Content -->
-
-        </div><!-- end of div content-->
-    </div> <!--- end of div main shifted -->
-</div><!-- end of div container -->
-<!-- END Container -->
-
-<div class="calendarbox module" id="calendarbox0" style="display: none; position: absolute;">
-    <div>
-        <a href="#" class="calendarnav-previous">&lt;</a>
-        <a href="#" class="calendarnav-next">&gt;</a>
-    </div>
-    <div id="calendarin0" class="calendar">
-        <table>
-        <caption>June 2022</caption>
-        <tbody>
-        <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
-        <tr><td class="nonday"> </td><td class="nonday"> </td><td class="nonday"> </td><td class=""><a href="#">1</a></td><td class=""><a href="#">2</a></td><td class=""><a href="#">3</a></td><td class=""><a href="#">4</a></td></tr>
-        <tr><td class=""><a href="#">5</a></td><td class=""><a href="#">6</a></td><td class=""><a href="#">7</a></td><td class=""><a href="#">8</a></td><td class=""><a href="#">9</a></td><td class=""><a href="#">10</a></td><td class=""><a href="#">11</a></td></tr><tr><td class=""><a href="#">12</a></td><td class=""><a href="#">13</a></td><td class=""><a href="#">14</a></td><td class=""><a href="#">15</a></td><td class=""><a href="#">16</a></td><td class=""><a href="#">17</a></td><td class=""><a href="#">18</a></td></tr>
-        <tr><td class=""><a href="#">19</a></td><td class=""><a href="#">20</a></td><td class=""><a href="#">21</a></td><td class=""><a href="#">22</a></td><td class=""><a href="#">23</a></td><td class="today"><a href="#">24</a></td><td class=""><a href="#">25</a></td></tr><tr><td class=""><a href="#">26</a></td><td class=""><a href="#">27</a></td><td class=""><a href="#">28</a></td><td class=""><a href="#">29</a></td><td class=""><a href="#">30</a></td><td class="nonday"> </td><td class="nonday"> </td>
-        </tr>
-        </tbody>
-        </table>
-    </div>
-
-    <p class="calendar-cancel"><a href="#">Cancel</a></p>
-</div><!-- end of  calendarbox module div-->
+    </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ block.super }}
-<script src="{% static 'admin/js/nav_sidebar.js' %}"></script>
 <script src="{% static 'assets/js/toastr.min.js' %}"></script>
 <script src="{% static 'assets/js/axios.min.js' %}"></script>
 <script src="{% static 'assets/js/cookie.js' %}"></script>
@@ -351,7 +182,45 @@
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
 <script src="{% static 'assets/js/expenditure/expense.js' %}"></script>
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
+
 <script>
-add_event_to_total()
+// Organisation → Branch dynamic filtering
+document.addEventListener('DOMContentLoaded', function () {
+    var orgEl = document.getElementById('organization');
+    var branchEl = document.getElementById('branch');
+    var initialId = (document.getElementById('initial_branch_id') || {}).value || '';
+
+    if (!orgEl || !branchEl) return;
+
+    async function loadBranches(orgId) {
+        branchEl.innerHTML = '<option value="">— Select Branch (Optional) —</option>';
+        if (!orgId) return;
+        try {
+            branchEl.disabled = true;
+            var resp = await fetch('/api/branches/by-organization/' + orgId + '/', {
+                headers: { 'Accept': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (!resp.ok) return;
+            var data = await resp.json();
+            (data.branches || []).forEach(function (b) {
+                var opt = document.createElement('option');
+                opt.value = b.id;
+                opt.setAttribute('data-organization-id', orgId);
+                opt.textContent = b.name;
+                branchEl.appendChild(opt);
+            });
+            if (initialId) { branchEl.value = initialId; initialId = ''; }
+        } catch (e) {
+            console.warn('Branch load error:', e);
+        } finally {
+            branchEl.disabled = false;
+        }
+    }
+
+    orgEl.addEventListener('change', function () { loadBranches(this.value); });
+    if (orgEl.value) loadBranches(orgEl.value);
+});
+
+add_event_to_total();
 </script>
 {% endblock %}

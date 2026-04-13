@@ -17,12 +17,28 @@ Primary implementation files:
 - bill/views_stripe.py
 - shop/urls.py
 
+Separate thesis documentation per bill type:
+- bills/SELLING_BILL_DOCUMENTATION.md: SELLING bill semantics, revenue, inventory, and profit handling
+- bills/PURCHASE_BILL_DOCUMENTATION.md: PURCHASE bill semantics, procurement, payables, and inventory impact
+- bills/RECEIVEMENT_BILL_DOCUMENTATION.md: RECEIVEMENT bill semantics, cash receipts, and ledger pairing
+- bills/PAYMENT_BILL_DOCUMENTATION.md: PAYMENT bill semantics, cash outflow, and liability settlement
+
 2. Core Data Models
 
 Bill
 The Bill model stores header-level transaction data.
 
 ```python
+bill_types = (
+    ("PURCHASE", "PURCHASE"),
+    ("SELLING", "SELLING"),
+    ("PAYMENT", "PAYMENT"),
+    ("RECEIVEMENT", "RECEIVEMENT"),
+    ("LOSSDEGRADE", "LOSSDEGRADE"),
+    ("EXPENSE", "EXPENSE"),
+)
+STATUS = ((0, "CANCELLED"), (1, "CREATED"))
+
 class Bill(models.Model):
     bill_no=models.IntegerField()
     bill_type=models.CharField(max_length=11,default="PURCHASE",choices=bill_types)
@@ -38,13 +54,15 @@ class Bill(models.Model):
     date=models.CharField(max_length=10,default=get_date)
     profit=models.IntegerField(default=0)
     status=models.SmallIntegerField(choices=STATUS,default=0)
+    currency=models.CharField(max_length=7,default="afg")
+    shipment_location=models.ForeignKey(Location,on_delete=models.PROTECT,null=True,default=None)
 ```
 
-Bill_Receiver
+Bill_Receiver2
 Bill receiver relation for inter-organization documents and approval lifecycle.
 
 ```python
-class Bill_Receiver(models.Model):
+class Bill_Receiver2(models.Model):
     bill=models.OneToOneField(Bill,on_delete=models.CASCADE)
     bill_rcvr_org=models.ForeignKey(Organization,on_delete=models.PROTECT,null=True,blank=True)
     is_approved=models.BooleanField(default=False,null=True,blank=True)
@@ -91,14 +109,42 @@ TransactionLog
 Unified transaction event log for manual and Stripe flows.
 
 ```python
+SOURCE_CHOICES = (
+    ('manual', 'Manual'),
+    ('stripe', 'Stripe'),
+)
+
+STATUS_CHOICES = (
+    ('pending', 'Pending'),
+    ('succeeded', 'Succeeded'),
+    ('failed', 'Failed'),
+    ('refunded', 'Refunded'),
+)
+
 class TransactionLog(models.Model):
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='transaction_logs')
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
     event_type = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     amount = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default='USD')
     reference_id = models.CharField(max_length=255, blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
     metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['bill', 'created_at']),
+            models.Index(fields=['organization', 'created_at']),
+            models.Index(fields=['source', 'status']),
+            models.Index(fields=['reference_id']),
+        ]
 ```
 
 4. Main Routes
@@ -143,6 +189,27 @@ def refund_payment(request, payment_id):
 
     amount_raw = request.data.get('amount')
     refund_amount = Decimal(str(amount_raw)) if amount_raw not in (None, '') else max_refundable
+
+    if not amount_raw or amount_raw == '':
+        refund_amount = max_refundable
+        full_refund = True
+    else:
+        try:
+            refund_amount = Decimal(str(amount_raw))
+        except Exception:
+            return Response({'ok': False, 'message': 'Invalid refund amount'}, status=400)
+        if refund_amount <= 0:
+            return Response({'ok': False, 'message': 'Refund amount must be greater than zero'}, status=400)
+        if refund_amount > max_refundable:
+            return Response({'ok': False, 'message': f'Refund amount exceeds refundable balance ({max_refundable})'}, status=400)
+        full_refund = (refund_amount == max_refundable)
+
+    stripe_amount_cents = int(refund_amount * 100)
+    refund_kwargs = {
+        'charge': stripe_payment.stripe_charge_id,
+        'amount': stripe_amount_cents,
+        'reason': 'requested_by_customer',
+    }
 
     refund = stripe.Refund.create(**refund_kwargs)
     charge = stripe.Charge.retrieve(stripe_payment.stripe_charge_id)

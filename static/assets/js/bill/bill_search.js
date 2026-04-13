@@ -189,6 +189,7 @@ async function make_table(response_data)
                 <td class="text-end text-success fw-semibold">${payment.toLocaleString()}</td>
                 <td class="text-end ${balanceClass}">${balance.toLocaleString()}</td>
                 <td class="text-center"><small>${bills[key]['date']}</small></td>
+                <td class="text-center"><small>${bills[key]['currency'] || 'N/A'}</small></td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm" role="group">
                         <a href="${update_href}" class="btn btn-outline-primary" title="View/Edit">
@@ -235,7 +236,8 @@ async function search_bills(url=null)
     if(url==null){
     url=`/bill/search/`;  
     }
-    const data={bill_type:bill_type,organization:organization,bill_no:bill_no,bill_rcvr_org:bill_rcvr_org,start_date:start_date,end_date:end_date}
+    var currency_filter=document.getElementById("currency_filter")?.value || "";
+    const data={bill_type:bill_type,organization:organization,bill_no:bill_no,bill_rcvr_org:bill_rcvr_org,start_date:start_date,end_date:end_date,currency:currency_filter}
     let response=await call_shirkat(url,"POST",data);
     console.log("search resutls",response.data)
     make_table(response.data);
@@ -243,38 +245,90 @@ async function search_bills(url=null)
 
 
 async function finalize_ledger() {
+    const billRcvrOrgEl = document.getElementById("bill_rcvr_org");
+    const organizationEl = document.getElementById("organization");
+    const totalSummaryEl = document.getElementById("total_summary");
+    const finalizeStatus = document.getElementById("finalize_status");
+    const finalizeButton = document.getElementById("finalize_ledger");
 
-    var bill_rcvr_org=document.getElementById("bill_rcvr_org").value;
-    var organization=document.getElementById("organization").value;
-    if(organization==""){
-        organization="all";
+    let bill_rcvr_org = billRcvrOrgEl?.value || "all";
+    const organization = organizationEl?.value || "all";
+    const total_summary = Number(totalSummaryEl?.value || 0);
+
+    if ((bill_rcvr_org === "" || bill_rcvr_org === "all" || bill_rcvr_org === "undefined") && billRcvrOrgEl) {
+        const validOptions = Array.from(billRcvrOrgEl.options).filter(opt => opt.value && opt.value !== "all");
+        if (validOptions.length === 1) {
+            bill_rcvr_org = validOptions[0].value;
+            billRcvrOrgEl.value = bill_rcvr_org;
+        }
     }
 
-    if(bill_rcvr_org=="")
-    {
-        bill_rcvr_org="all";
-    }
-    let total_summary=document.getElementById("total_summary").value;
-    if (!bill_rcvr_org || bill_rcvr_org == "all" || bill_rcvr_org == "undefined" || organization=="all" || organization == "undefined") {
-        alert("Please select an organization to finalize the ledger.");
+    if (!organization || organization === "all" || organization === "undefined" || !bill_rcvr_org || bill_rcvr_org === "all" || bill_rcvr_org === "undefined") {
+        const msg = "Please select both the organization and the counterpart organization before finalizing.";
+        if (finalizeStatus) {
+            finalizeStatus.textContent = msg;
+            finalizeStatus.classList.remove("d-none", "alert-success");
+            finalizeStatus.classList.add("alert-danger");
+        }
+        show_message(msg, "error");
         return;
     }
-    if(!total_summary || String(total_summary)=="0"){
-        alert("kahatha is zero or may not shown");
+
+    if (total_summary === 0) {
+        const msg = "Cannot finalize ledger because the current balance is zero.";
+        if (finalizeStatus) {
+            finalizeStatus.textContent = msg;
+            finalizeStatus.classList.remove("d-none", "alert-success");
+            finalizeStatus.classList.add("alert-danger");
+        }
+        show_message(msg, "error");
         return;
     }
-    const data= {
-        bill_rcvr_org: bill_rcvr_org,
-        organization: organization
-    };
-    try{
-    let response=await call_shirkat(`/organizations/finalize-ledger`,"POST",data); 
+
+    if (finalizeButton) {
+        finalizeButton.disabled = true;
+        finalizeButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Finalizing...';
     }
-    catch(e){
-        // console.log("no finalize ",String(e));
-        show_message("can not finalize it may already zero kahatha ","error");
+
+    try {
+        const data = {
+            bill_rcvr_org: bill_rcvr_org,
+            organization: organization
+        };
+        const response = await call_shirkat(`/organizations/finalize-ledger`, "POST", data);
+        const responseData = response?.data || {};
+        const message = responseData.message || 'Ledger finalize request returned no message.';
+
+        if (responseData.success) {
+            if (finalizeStatus) {
+                finalizeStatus.textContent = message;
+                finalizeStatus.classList.remove("d-none", "alert-danger");
+                finalizeStatus.classList.add("alert-success");
+            }
+            show_message(message, "success");
+            await search_bills();
+        } else {
+            if (finalizeStatus) {
+                finalizeStatus.textContent = message;
+                finalizeStatus.classList.remove("d-none", "alert-success");
+                finalizeStatus.classList.add("alert-danger");
+            }
+            show_message(message, "error");
+        }
+    } catch (e) {
+        const errMsg = e?.response?.data?.message || e?.message || 'Unable to finalize ledger.';
+        if (finalizeStatus) {
+            finalizeStatus.textContent = errMsg;
+            finalizeStatus.classList.remove("d-none", "alert-success");
+            finalizeStatus.classList.add("alert-danger");
+        }
+        show_message(errMsg, "error");
+    } finally {
+        if (finalizeButton) {
+            finalizeButton.disabled = false;
+            finalizeButton.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i> کهاته صفر کول (Finalize Ledger)';
+        }
     }
-    search_bills();
 }
 
 document.getElementById("search_kahatha").addEventListener("click",e=>{e.preventDefault();search_bills(); return  false;});

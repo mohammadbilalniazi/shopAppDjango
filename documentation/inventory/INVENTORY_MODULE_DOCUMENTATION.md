@@ -57,24 +57,50 @@ From product/views_stock.py:
 @csrf_exempt
 @api_view(['POST'])
 def update(request):
-    current_amount=request.data.get('current_amount',0)
-    product_id=request.data.get('product_id',None)
-    organization_id=request.data.get('organization_id',None)
-    branch_id=request.data.get('branch_id',None)
+    data = request.data.copy()
+    current_amount = request.data.get('current_amount', 0)
+    product_id = request.data.get('product_id', None)
+    organization_id = request.data.get('organization_id', None)
+    branch_id = request.data.get('branch_id', None)
 
-    stock,_=Stock.objects.get_or_create(
+    product = Product.objects.get(id=int(product_id))
+    organization = Organization.objects.get(id=int(organization_id))
+
+    # Resolve optional branch, validated against organization
+    branch = None
+    if branch_id:
+        try:
+            branch = Branch.objects.get(
+                id=int(branch_id),
+                organization=organization,
+                is_active=True
+            )
+        except Branch.DoesNotExist:
+            pass  # branch is optional
+
+    data['product'] = product.id
+    data['organization'] = organization.id
+    data['branch'] = branch.id if branch else None
+    data['current_amount'] = current_amount
+
+    stock, _ = Stock.objects.get_or_create(
         product=product,
         organization=organization,
         branch=branch,
         defaults={'current_amount': 0}
     )
-    serializer=StockUpdateSerializer(stock,data=data,partial=True)
+    serializer = StockUpdateSerializer(stock, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 ```
 
 Behavior summary:
 - Accepts product, organization, and optional branch
-- Creates stock row if missing
-- Performs partial update through serializer
+- Validates branch belongs to the given organization before assigning it
+- Creates stock row if missing using get_or_create
+- Performs partial update through serializer and returns saved data
 
 4. Stock Listing And Branch Filtering
 

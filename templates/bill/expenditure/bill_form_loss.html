@@ -133,8 +133,18 @@
                         <input type="number"  value="{{bill.id}}" disabled name="bill_id" id="bill_id" >
                     </td>
                 </tr>
-
-                    <tr class="bill_creator">
+                <tr class="bill_creator">
+                    <td>Currency</td>
+                    <td>
+                        <select name="currency" id="currency" required>
+                            {% for cur in currencies %}
+                            <option value="{{ cur.currency }}" {% if bill.currency == cur.currency %}selected{% elif not bill and cur.is_domestic %}selected{% endif %}>{{ cur.currency }}{% if cur.is_domestic %} (Domestic){% endif %}</option>
+                            {% empty %}
+                            <option value="afg" {% if not bill or bill.currency == 'afg' %}selected{% endif %}>AFG (Domestic)</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
                          <td>
                              bill No 
                         </td>    

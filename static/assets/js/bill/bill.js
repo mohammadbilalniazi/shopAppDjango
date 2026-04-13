@@ -27,16 +27,25 @@ async function get_units() {
  */
 async function get_products(organization_id = "all", change_price = true) {
     const url = `/products/`;
-    let storedProductData = localStorage.getItem("product_data");
-    console.warn({storedProductData,organization_id})
+    const orgKey = organization_id || "all";
+    const cacheKey = `product_data_${orgKey}`;
+    let storedProductData = localStorage.getItem(cacheKey);
+
     if (storedProductData) {
         product_data = JSON.parse(storedProductData);
     } else {
-        // console.log("Fetching product data...");
-        const postData={'organization_id':organization_id}
-        let response = await call_shirkat(url, 'POST',postData);
-        product_data = response.data;
-        localStorage.setItem("product_data", JSON.stringify(product_data));
+        // Backend expects "organization", not "organization_id"
+        const postData = { organization: orgKey };
+        let response = await call_shirkat(url, 'POST', postData);
+        product_data = Array.isArray(response?.data) ? response.data : [];
+
+        // Fallback: if selected org has no data due API-side filtering issues, try all.
+        if (!product_data.length && orgKey !== "all") {
+            response = await call_shirkat(url, 'POST', { organization: "all" });
+            product_data = Array.isArray(response?.data) ? response.data : [];
+        }
+
+        localStorage.setItem(cacheKey, JSON.stringify(product_data));
     }
 
     for (const key in product_data) {
@@ -52,6 +61,7 @@ async function get_products(organization_id = "all", change_price = true) {
     }
     localStorage.setItem("selling_price_obj",JSON.stringify(selling_price_obj));
     localStorage.setItem("purchasing_price_obj",JSON.stringify(purchasing_price_obj));
+    // Keep legacy key for existing code paths that read product_data directly.
     localStorage.setItem("product_data", JSON.stringify(product_data));
     add_events_to_elements(change_price);
 }
@@ -289,18 +299,32 @@ function getElement(id) {
 
 async function init() {
   const addNawajans = getElement("addnawajans");
-  addNawajans.disabled = true;
-  const organization_id=getElement("organization").value;
-  if(!organization_id){
-    organization_id="all";
-  }
-  console.warn({organization_id})
-  await get_products(organization_id, false);
-   // console.log("Fetching unit data...");
-    let response = await call_shirkat(`/units/all/`, 'GET');
-    unit_data = response.data;
-    localStorage.setItem("unit_data", JSON.stringify(unit_data));
-  addNawajans.disabled = false;
+    const organizationEl = getElement("organization");
+
+    try {
+        addNawajans.disabled = true;
+        let organization_id = organizationEl ? organizationEl.value : "all";
+        if (!organization_id) {
+            organization_id = "all";
+        }
+
+        await get_products(organization_id, false);
+
+        let response = await call_shirkat(`/units/all/`, 'GET');
+        unit_data = response.data;
+        localStorage.setItem("unit_data", JSON.stringify(unit_data));
+
+        if (organizationEl) {
+            organizationEl.addEventListener("change", async function () {
+                const selectedOrg = this.value || "all";
+                addNawajans.disabled = true;
+                await get_products(selectedOrg, false);
+                addNawajans.disabled = false;
+            });
+        }
+    } finally {
+        addNawajans.disabled = false;
+    }
 }
 
 try {

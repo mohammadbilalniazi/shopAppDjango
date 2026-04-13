@@ -45,7 +45,7 @@ def submit(request):
         #messages.error(request,"اسم یوزر یا رمز صحیح نیست یا یوزر قابلیت ورود ندار ")
         status=http_status.HTTP_401_UNAUTHORIZED
         base_url_to_admin=None
-        message="Username {} or Password {} is incorrect ".format(username,password)
+        message="Invalid username or password"
     
     return JsonResponse({"status":status,"base_url":base_url_to_admin,"message":message})
     # return Response(status=status,base_url=base_url_to_admin,message=message)

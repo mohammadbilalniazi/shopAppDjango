@@ -10,7 +10,17 @@ The project follows a modular Django monolith architecture with domain-focused a
 - bill: transactional accounting and payment operations
 - asset and expenditure: financial summaries and expense-specific workflows
 
-2. Request Routing Layer
+2. Database Architecture and Persistence
+
+The system relies on a relational schema managed through Django ORM models. Database design decisions are documented separately in `documentation/database/DATABASE_ARCHITECTURE_DOCUMENTATION.md`.
+
+Key database concepts:
+- normalized domain tables for products, stock, bills, and users
+- denormalized summary tables for fast financial reporting (`AssetBillSummary`, `AssetWholeBillSummary`, `OrganizationAsset`)
+- transactional import and maintenance commands for bulk data management
+- unique constraints and branch/organization consistency checks at the model/schema level
+
+3. Request Routing Layer
 
 Main route aggregator is shop/urls.py, where views from all major apps are mounted directly.
 
@@ -21,7 +31,7 @@ This gives a centralized map of business capabilities:
 - user management and session endpoints
 - asset financial dashboards
 
-3. Multi-Tenant Access Pattern
+4. Multi-Tenant Access Pattern
 
 Core helper in common/organization.py:
 
@@ -44,7 +54,7 @@ def find_userorganization(request, organization_id=None):
 
 Thesis note: this helper is a central policy utility used by multiple modules.
 
-4. Domain Relationship Summary
+5. Domain Relationship Summary
 
 Main conceptual relationships:
 - Organization has many Branch
@@ -55,7 +65,7 @@ Main conceptual relationships:
 - StripePayment links online payment events to Bill
 - Asset summary tables aggregate bill-level financial totals
 
-5. Event-Driven Consistency
+6. Event-Driven Consistency
 
 Django signals in bill/models.py update summary tables for financial consistency:
 - on Bill save/delete
@@ -63,7 +73,7 @@ Django signals in bill/models.py update summary tables for financial consistency
 
 This reduces manual reconciliation requirements and keeps dashboards aligned.
 
-6. Payment Subsystem Design
+7. Payment Subsystem Design
 
 Two payment mechanisms coexist:
 - Manual payment and receivement via bill/views_bill_receive_payment.py
@@ -71,7 +81,7 @@ Two payment mechanisms coexist:
 
 Both write to TransactionLog, giving a unified audit stream.
 
-7. Important Engineering Practices In This Project
+8. Important Engineering Practices In This Project
 
 1. Atomic DB transactions for critical create/update endpoints.
 2. Role-based and organization-based permission checks.
@@ -79,7 +89,7 @@ Both write to TransactionLog, giving a unified audit stream.
 4. Explicit webhook event logging for external integration traceability.
 5. Partial and full refund handling with idempotent local update logic.
 
-8. Suggested Thesis Chapter Mapping
+9. Suggested Thesis Chapter Mapping
 
 - Chapter 1: Problem and domain context (supermarket digital management)
 - Chapter 2: Architecture and data model design
@@ -89,7 +99,7 @@ Both write to TransactionLog, giving a unified audit stream.
 - Chapter 6: Financial summaries and dashboard computations
 - Chapter 7: Testing, limitations, and future improvements
 
-9. Future Improvement Ideas For Thesis Conclusion
+10. Future Improvement Ideas For Thesis Conclusion
 
 1. Move from function-based views to class-based API views for consistency.
 2. Introduce service layer for payment and accounting domain logic.

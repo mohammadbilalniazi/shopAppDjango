@@ -29,11 +29,36 @@ async function selectBillNo() {
 }
 
 /**
+ * Attach change listeners to relevant bill fields.
+ */
+function bindBillNoAutoSelect() {
+    const detailOrUpdate = document.getElementById("detail_or_update");
+    if (!detailOrUpdate || detailOrUpdate.value === "1") return;
+
+    const billType = document.getElementById("bill_type");
+    const organization = document.getElementById("organization");
+    const billRcvrOrg = document.getElementById("bill_rcvr_org");
+
+    const updateBillNo = () => {
+        if (billType && billType.value) {
+            selectBillNo();
+        }
+    };
+
+    [billType, organization, billRcvrOrg].forEach((element) => {
+        if (element) {
+            element.addEventListener("change", updateBillNo);
+        }
+    });
+}
+
+/**
  * Auto-trigger on page load
  */
 document.addEventListener("DOMContentLoaded", () => {
     const detailOrUpdate = document.getElementById("detail_or_update");
     if (detailOrUpdate && detailOrUpdate.value !== "1") {
         selectBillNo();
+        bindBillNoAutoSelect();
     }
 });

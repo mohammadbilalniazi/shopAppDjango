@@ -1,0 +1,26 @@
+{# Reusable branch dropdown that auto-filters when the organisation select changes.
+   Context variables (pass via 'with'):
+     field_name     (default: 'branch')         — name attribute on <select>
+     field_id       (default: 'branch')         — id  attribute on <select>
+     org_select_id  (default: 'organization')   — id of the org <select> to listen to
+     branches       (required)                  — queryset/list of Branch objects
+     selected_branch (optional)                 — Branch instance for edit-mode pre-selection
+     css_class      (optional)                  — extra CSS classes for the <select>
+     placeholder    (optional)                  — placeholder option text
+#}
+{% with bname=field_name|default:'branch' bid=field_id|default:'branch' oid=org_select_id|default:'organization' ph=placeholder|default:'— Select Branch (Optional) —' %}
+<select name="{{ bname }}"
+        id="{{ bid }}"
+        class="form-select {{ css_class|default:'' }}">
+    <option value="">{{ ph }}</option>
+    {% if branches %}
+        {% for b in branches %}
+        <option value="{{ b.id }}"
+                data-org-id="{{ b.organization.id }}"
+                {% if selected_branch and selected_branch.id == b.id %}selected{% endif %}>
+            {{ b.name }}{% if b.code %} ({{ b.code }}){% endif %}
+        </option>
+        {% endfor %}
+    {% endif %}
+</select>
+{% endwith %}

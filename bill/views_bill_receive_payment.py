@@ -17,6 +17,7 @@ from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q
 from .models_stripe import TransactionLog
+from .views_bill import getBillNo
 # from .views_bill import get_opposit_bill
 
 
@@ -85,9 +86,10 @@ def bill_form(request):
     context={
         'form':form,
         'organization':self_organization,
-        'organizations':organizations,  # ← ADD THIS
-        'rcvr_orgs':rcvr_orgs,  # ← ADD THIS
+        'organizations':organizations,
+        'rcvr_orgs':rcvr_orgs,
         'date':date,
+        'currencies': Currency.objects.all(),
     } 
     # Add branches for the selected organization(s)
     from configuration.models import Branch
@@ -103,18 +105,25 @@ def bill_form(request):
 def bill_insert(request):  
     print(".request.data ",request.data)
     ########################################## Bill input taking############################
-    bill_no=int(request.data.get("bill_no",None))  
-    id=request.data.get("id")
-    date=request.data.get("date")
-    year=date.split("-")[0]
-    status=int(request.data.get("status",0))
+    bill_no_raw = request.data.get("bill_no", None)
+    bill_no = None
+    id = request.data.get("id")
+    date = request.data.get("date")
+    year = date.split("-")[0]
+    status = int(request.data.get("status",0))
     ############before request.data  and request.data.getlist
-    organization_id=request.data.get("organization",0)
-    organization=Organization.objects.get(id=int(organization_id))
+    organization_id = request.data.get("organization",0)
+    organization = Organization.objects.get(id=int(organization_id))
     self_organization, user_orgs = find_userorganization(request,organization_id)
-    bill_type=request.data.get("bill_type",None)
-    creator=request.user
-    total=request.data.get("total",0)
+    bill_type = request.data.get("bill_type",None)
+    creator = request.user
+    try:
+        bill_no = int(bill_no_raw) if bill_no_raw not in (None, '', '0') else None
+    except (TypeError, ValueError):
+        bill_no = None
+    if bill_no is None:
+        bill_no = getBillNo(request, organization.id, None, bill_type)
+    total = request.data.get("total",0)
     if total=='' or total=="" or total==None:
         total=0
     payment=request.data.get("total_payment",0)      
@@ -171,7 +180,12 @@ def bill_insert(request):
             return Response({"message":message,"ok":ok})
         bill_obj=bill_query[0] 
 
-        query_new_bill=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=int(year)),Q(organization=organization),Q(bill_type=bill_type),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org) )
+        query_new_bill=Bill.objects.filter(
+            Q(bill_no=int(bill_no)),
+            Q(year=int(year)),
+            Q(organization=organization),
+            Q(bill_type=bill_type)
+        )
         #after_update_same_bill_duplicate
         if query_new_bill.count()>0:
             if query_new_bill[0].id!=bill_obj.id:
@@ -191,20 +205,33 @@ def bill_insert(request):
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
         bill_obj.profit=0
+        if request.data.get('currency'):
+            bill_obj.currency=request.data.get('currency')
         if previous_bill_type!="EXPENSE":
             if hasattr(bill_obj,'bill_receiver2'):
                 bill_receiver2=bill_obj.bill_receiver2
         if previous_bill_type!="EXPENSE" and bill_type=="EXPENSE":
             bill_receiver2.delete()
     else: ############### new insert Bill if not in system#############
-        # opposit_bill=get_opposit_bill(bill_type)
-        # bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=year),Q(Q(bill_type=bill_type),Q(organization=organization)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=organization)))
-        bill_query=Bill.objects.filter(Q(bill_no=int(bill_no)),Q(year=int(year)),Q(organization=organization),Q(bill_type=bill_type),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org) )
+        if bill_no_raw in (None, '', '0'):
+            bill_no = getBillNo(request, organization.id, None, bill_type)
+        else:
+            try:
+                bill_no = int(bill_no_raw)
+            except (TypeError, ValueError):
+                bill_no = getBillNo(request, organization.id, None, bill_type)
+
+        bill_query=Bill.objects.filter(
+            Q(bill_no=int(bill_no)),
+            Q(year=int(year)),
+            Q(organization=organization),
+            Q(bill_type=bill_type)
+        )
         if bill_query.count()>0: # if we are not having update then we check if such bill present or not if exists we not enter
             ok=False
             message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
             return Response({"message":message,"ok":ok})
-        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
+        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment,currency=request.data.get('currency','afg') or 'afg')
     try:
         bill_obj.save()
         if bill_type!="EXPENSE":  # in expense we do not need  and bill_receiver2
