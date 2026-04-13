@@ -20,6 +20,9 @@ Configuration
 Inventory
 - inventory/INVENTORY_MODULE_DOCUMENTATION.md: stock tracking, branch filtering, and inventory update flow
 
+Database
+- database/DATABASE_ARCHITECTURE_DOCUMENTATION.md: database schema, summary tables, import commands, constraints, and persistence patterns
+
 Expenditure and Asset
 - expenditure_asset/ASSET_EXPENDITURE_MODULE_DOCUMENTATION.md: financial summaries, expenditure flow, and asset models
 

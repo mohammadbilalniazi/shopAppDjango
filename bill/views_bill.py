@@ -24,22 +24,34 @@ from rest_framework.pagination import PageNumberPagination
 from django.http import JsonResponse
 
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
-    date = date2jalali(datetime.now()) 
-    year=date.strftime('%Y')
-    self_organization,user_orgs = find_userorganization(request,organization_id)
-    # print("self_organization ",self_organization)
-    bill_rcvr_org,user_orgs = find_userorganization(request,bill_rcvr_org_id)
-    opposit_bill=get_opposit_bill(bill_type)
-    print("opposit_bill ",opposit_bill)
-    if bill_type=="EXPENSE":
-        bill_query=Bill.objects.filter(year=int(year),bill_type=bill_type,organization=self_organization)
-    else:    
-        bill_query=Bill.objects.filter(Q(year=int(year)),Q(Q(bill_type=bill_type),Q(organization=self_organization),Q(bill_receiver2__bill_rcvr_org=bill_rcvr_org)) | Q(Q(bill_type=opposit_bill),Q(bill_receiver2__bill_rcvr_org=self_organization),Q(organization=bill_rcvr_org)))
+    date = date2jalali(datetime.now())
+    year = int(date.strftime('%Y'))
 
-    if bill_query.count()>0:  
-        bill_no=bill_query.aggregate(Max('bill_no'))['bill_no__max']+1
+    organization = None
+    if organization_id not in (None, '', 'all'):
+        try:
+            organization = Organization.objects.get(id=int(organization_id))
+        except (ValueError, Organization.DoesNotExist):
+            organization = None
+
+    if organization is None:
+        organization, user_orgs = find_userorganization(request, organization_id)
+        if organization is None and user_orgs.exists():
+            organization = user_orgs.first()
+
+    if organization is None:
+        return 1
+
+    bill_query = Bill.objects.filter(
+        year=year,
+        bill_type=bill_type,
+        organization=organization
+    )
+
+    if bill_query.exists():
+        bill_no = bill_query.aggregate(Max('bill_no'))['bill_no__max'] + 1
     else:
-        bill_no=1
+        bill_no = 1
     return bill_no
 
 @api_view(("GET",))
@@ -380,7 +392,7 @@ def bill_insert(request):
     # Basic fields
     # -----------------------------
     bill_id = data.get("id")
-    bill_no = int(data.get("bill_no"))
+    bill_no_raw = data.get("bill_no")
     date = data.get("date")
     year = date.split("-")[0]
     status = int(data.get("status", 0))
@@ -390,6 +402,20 @@ def bill_insert(request):
 
     organization = Organization.objects.get(id=int(data.get("organization")))
     self_org, _ = find_userorganization(request, organization.id)
+
+    if bill_id:
+        try:
+            bill_no = int(bill_no_raw)
+        except (TypeError, ValueError):
+            bill_no = None
+    else:
+        try:
+            bill_no = int(bill_no_raw) if bill_no_raw not in (None, '', '0') else None
+        except (TypeError, ValueError):
+            bill_no = None
+
+    if bill_no is None:
+        bill_no = getBillNo(request, organization.id, None, bill_type)
 
     # -----------------------------
     # Branch (optional)
