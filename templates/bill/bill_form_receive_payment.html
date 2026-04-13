@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load jalali_tags static %}
+{% load i18n jalali_tags static %}
 
 {% block title %}{% if bill %}Update Bill{% else %}Add Bill{% endif %} | Shirkat{% endblock %}
 
@@ -48,6 +48,28 @@ input[name="date"]:focus {
     border-color: #417690;
     box-shadow: 0 0 0 0.2rem rgba(65,118,144,0.2);
     outline: none;
+}
+.receiver-org-group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    width: 100%;
+    gap: 0;
+}
+.receiver-org-group .form-select {
+    width: 100%;
+    min-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.receiver-org-group .receiver-org-add-btn {
+    width: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: -1px;
+    padding: 0;
 }
 .bill-acceptor-card .bill-section-header { color: #c0392b; border-bottom-color: #f8d7da; }
 .bill-acceptor-card { background: #fff9f9; }
@@ -194,15 +216,15 @@ input[name="date"]:focus {
                 <div class="row g-3">
                     <!-- Receiver Organization -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Receiver Organization <span class="text-danger">*</span></label>
-                        <div class="input-group" id="rcvr_org_span">
+                        <label class="form-label form-label-bold">{% trans "Receiver Organization" %} <span class="text-danger">*</span></label>
+                        <div class="receiver-org-group" id="rcvr_org_span">
                             <select name="bill_rcvr_org" id="bill_rcvr_org" class="form-select" required>
                                 {% for row in rcvr_orgs %}
                                 <option {% if bill.bill_receiver2.bill_rcvr_org == row %}selected{% endif %} value="{{ row.id }}">{{ row }}</option>
                                 {% endfor %}
                             </select>
                             <button type="button" id="add_org_modal_btn" onclick="openOrganizationModal()"
-                                    class="btn btn-success px-3" title="Add New Organization">
+                                    class="btn btn-success receiver-org-add-btn" title="{% trans 'Add New Organization' %}">
                                 <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>

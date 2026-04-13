@@ -19,6 +19,7 @@ urlpatterns = [
     # NEW: Organization Ledger Summary (uses cached data)
     path('ledger/', views_financial.organization_ledger_summary, name='organization_ledger'),
     path('ledger/adjustment/save/', views_financial.ledger_adjustment_save, name='ledger_adjustment_save'),
+    path('opening-summary/', views_financial.opening_summary, name='opening_summary'),
     
     # NEW: Financial Dashboard (uses AssetWholeBillSummary for performance)
     path('financial/', views_financial.financial_summary_dashboard, name='financial_dashboard'),
@@ -31,6 +32,7 @@ urlpatterns = [
     path('admin/update-ajax/', views_financial.admin_update_summary_ajax, name='admin_update_ajax'),
     
     # API Endpoints
+    path('refresh/', views.refresh_assets, name='refresh_assets'),
     path('api/refresh/', views.refresh_assets, name='refresh_assets_api'),
     path('api/summary/<int:org_id>/', views.get_asset_summary_api, name='asset_summary_api'),
 ]

@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load jalali_tags static %}
+{% load i18n jalali_tags static %}
 
 {% block title %}{% if bill %}Update Bill{% else %}Add Bill{% endif %} | Shirkat{% endblock %}
 
@@ -233,15 +233,15 @@ input[name="date"]:focus {
                 <div class="row g-3">
                     <!-- Receiver Organization -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Receiver Organization <span class="text-danger">*</span></label>
-                        <div class="input-group receiver-org-group" id="rcvr_org_span">
+                        <label class="form-label form-label-bold">{% trans "Receiver Organization" %} <span class="text-danger">*</span></label>
+                        <div class="receiver-org-group" id="rcvr_org_span">
                             <select name="bill_rcvr_org" id="bill_rcvr_org" class="form-select" required>
                                 {% for row in rcvr_orgs %}
                                 <option {% if bill.bill_receiver2.bill_rcvr_org == row %}selected{% endif %} value="{{ row.id }}">{{ row }}</option>
                                 {% endfor %}
                             </select>
                             <button type="button" id="add_org_modal_btn" onclick="openOrganizationModal()"
-                                    class="btn btn-success receiver-org-add-btn" title="Add New Organization">
+                                    class="btn btn-success receiver-org-add-btn" title="{% trans 'Add New Organization' %}">
                                 <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>

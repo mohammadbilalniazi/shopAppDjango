@@ -85,6 +85,7 @@ Financial reporting and ledger views:
 - ledger_adjustment_save: saves manual ledger adjustments
 - financial_summary_dashboard: dashboard using AssetWholeBillSummary for performance
 - admin_adjust_summary: admin interface for correcting cached summary values
+- opening_summary: set the organization's opening financial position once, then carry it into all future reports
 
 API endpoints:
 - api/refresh/ : refreshes asset calculations on demand

@@ -374,6 +374,9 @@
                 <a href="{% url 'cash_flow' %}?organization={{ selected_organization.id }}" class="action-btn">
                     <i class="bi bi-cash-coin"></i> View Cash Flow
                 </a>
+                <a href="{% url 'opening_summary' %}?organization={{ selected_organization.id }}" class="action-btn secondary">
+                    <i class="bi bi-journal-plus"></i> Opening Summary
+                </a>
                 <a href="{% url 'loans' %}?organization={{ selected_organization.id }}" class="action-btn secondary">
                     <i class="bi bi-bank"></i> Manage Loans
                 </a>

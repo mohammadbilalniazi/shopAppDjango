@@ -231,6 +231,89 @@ class OrganizationAsset(models.Model):
         super().save(*args, **kwargs)
 
 
+class OpeningBalance(models.Model):
+    """Store the initial starting financial position for an organization."""
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.PROTECT,
+        related_name='opening_balance'
+    )
+    effective_date = models.CharField(
+        max_length=10,
+        default=current_shamsi_date,
+        help_text='Date when the opening summary became effective'
+    )
+    cash_on_hand = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Liquid cash available at the starting point'
+    )
+    inventory_value = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Value of inventory at the starting point'
+    )
+    accounts_receivable = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Money owed to the organization at the starting point'
+    )
+    accounts_payable = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Money owed by the organization at the starting point'
+    )
+    loans_receivable = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Outstanding loans receivable at the starting point'
+    )
+    loans_payable = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Outstanding loans payable at the starting point'
+    )
+    total_revenue = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Opening revenue carried into the system'
+    )
+    total_cost_of_goods_sold = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Opening cost of goods sold at the starting point'
+    )
+    total_expenses = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Opening expenses at the starting point'
+    )
+    total_losses = models.DecimalField(
+        max_digits=20,
+        decimal_places=5,
+        default=0,
+        help_text='Opening losses at the starting point'
+    )
+    note = models.TextField(blank=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Opening Summary'
+        verbose_name_plural = 'Opening Summaries'
+
+    def __str__(self):
+        return f"Opening Summary for {self.organization.name}"
+
+
 LOAN_TYPE = (
     ('PAYABLE', 'Loan Payable'),  # Money we borrowed (liability)
     ('RECEIVABLE', 'Loan Receivable'),  # Money we lent (asset)

@@ -5,7 +5,7 @@ Handles automatic calculation and updating of asset summaries from bills
 
 from decimal import Decimal
 from django.db.models import Sum, Q, F
-from asset.models import OrganizationAsset, Loan
+from asset.models import OrganizationAsset, OpeningBalance, Loan
 from bill.models import Bill, Bill_Receiver2
 from product.models import Stock, Product_Detail
 
@@ -252,6 +252,19 @@ def update_organization_assets(organization):
     asset_summary.total_cost_of_goods_sold = pl_items['cogs']
     asset_summary.total_expenses = pl_items['expenses']
     asset_summary.total_losses = pl_items['losses']
+
+    opening_balance = OpeningBalance.objects.filter(organization=organization).first()
+    if opening_balance:
+        asset_summary.cash_on_hand += opening_balance.cash_on_hand
+        asset_summary.inventory_value += opening_balance.inventory_value
+        asset_summary.accounts_receivable += opening_balance.accounts_receivable
+        asset_summary.accounts_payable += opening_balance.accounts_payable
+        asset_summary.loans_receivable += opening_balance.loans_receivable
+        asset_summary.loans_payable += opening_balance.loans_payable
+        asset_summary.total_revenue += opening_balance.total_revenue
+        asset_summary.total_cost_of_goods_sold += opening_balance.total_cost_of_goods_sold
+        asset_summary.total_expenses += opening_balance.total_expenses
+        asset_summary.total_losses += opening_balance.total_losses
     
     # Save will automatically calculate totals, assets, liabilities, equity
     asset_summary.save()

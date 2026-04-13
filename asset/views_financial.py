@@ -7,7 +7,10 @@ Shows organization ledger summaries
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
 from django.db.models import Sum, Q, F
+from django.utils.translation import gettext as _
+from common.organization import find_userorganization
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -15,8 +18,9 @@ from decimal import Decimal, InvalidOperation
 
 from asset.models import (
     AssetBillSummary, AssetWholeBillSummary,
-    OrganizationAsset, Loan, ProfitLossStatement
+    OrganizationAsset, OpeningBalance, Loan, ProfitLossStatement
 )
+from asset.utils import update_organization_assets
 from bill.models import Bill, LedgerAdjustment
 from configuration.models import Organization
 from user.models import OrganizationUser
@@ -265,6 +269,110 @@ def ledger_adjustment_save(request):
         'adj_id': adj.id,
         'date': adj.date,
     })
+
+
+def _parse_decimal(value):
+    try:
+        return Decimal(str(value).strip()) if value not in (None, '', 'null') else Decimal('0')
+    except Exception:
+        return Decimal('0')
+
+
+@login_required
+def opening_summary(request):
+    """Render and save the organization's opening financial summary."""
+    selected_org_id = request.GET.get('organization')
+    self_org, user_orgs = find_userorganization(request, selected_org_id)
+
+    if selected_org_id and selected_org_id != 'all':
+        try:
+            selected_org = Organization.objects.get(id=selected_org_id)
+            if not request.user.is_superuser:
+                if selected_org.id not in user_orgs.values_list('id', flat=True):
+                    selected_org = self_org or user_orgs.first()
+        except Organization.DoesNotExist:
+            selected_org = self_org or user_orgs.first()
+    else:
+        selected_org = self_org or user_orgs.first()
+
+    opening_balance = None
+    asset_summary = None
+    if selected_org:
+        opening_balance = OpeningBalance.objects.filter(
+            organization=selected_org
+        ).first()
+        asset_summary = update_organization_assets(selected_org)
+
+    if request.method == 'POST' and selected_org:
+        if not (request.user.is_superuser or request.user.is_staff):
+            is_member = OrganizationUser.objects.filter(
+                user=request.user,
+                organization=selected_org,
+                is_active=True
+            ).exists()
+            if not is_member:
+                messages.error(request, _('Permission denied.'))
+                return redirect('opening_summary')
+
+        cash_on_hand = _parse_decimal(request.POST.get('cash_on_hand'))
+        inventory_value = _parse_decimal(request.POST.get('inventory_value'))
+        accounts_receivable = _parse_decimal(request.POST.get('accounts_receivable'))
+        accounts_payable = _parse_decimal(request.POST.get('accounts_payable'))
+        loans_receivable = _parse_decimal(request.POST.get('loans_receivable'))
+        loans_payable = _parse_decimal(request.POST.get('loans_payable'))
+        total_revenue = _parse_decimal(request.POST.get('total_revenue'))
+        total_cost_of_goods_sold = _parse_decimal(request.POST.get('total_cost_of_goods_sold'))
+        total_expenses = _parse_decimal(request.POST.get('total_expenses'))
+        total_losses = _parse_decimal(request.POST.get('total_losses'))
+        note = request.POST.get('note', '').strip()
+        effective_date = request.POST.get('effective_date', '').strip()
+
+        if opening_balance:
+            opening_balance.cash_on_hand = cash_on_hand
+            opening_balance.inventory_value = inventory_value
+            opening_balance.accounts_receivable = accounts_receivable
+            opening_balance.accounts_payable = accounts_payable
+            opening_balance.loans_receivable = loans_receivable
+            opening_balance.loans_payable = loans_payable
+            opening_balance.total_revenue = total_revenue
+            opening_balance.total_cost_of_goods_sold = total_cost_of_goods_sold
+            opening_balance.total_expenses = total_expenses
+            opening_balance.total_losses = total_losses
+            opening_balance.note = note
+            if effective_date:
+                opening_balance.effective_date = effective_date
+            opening_balance.save()
+        else:
+            create_data = {
+                'organization': selected_org,
+                'cash_on_hand': cash_on_hand,
+                'inventory_value': inventory_value,
+                'accounts_receivable': accounts_receivable,
+                'accounts_payable': accounts_payable,
+                'loans_receivable': loans_receivable,
+                'loans_payable': loans_payable,
+                'total_revenue': total_revenue,
+                'total_cost_of_goods_sold': total_cost_of_goods_sold,
+                'total_expenses': total_expenses,
+                'total_losses': total_losses,
+                'note': note,
+            }
+            if effective_date:
+                create_data['effective_date'] = effective_date
+            OpeningBalance.objects.create(**create_data)
+
+        update_organization_assets(selected_org)
+        messages.success(request, _('Opening summary saved successfully. Future reports will include this starting position.'))
+        return redirect(f"{request.path}?organization={selected_org.id}")
+
+    context = {
+        'organizations': user_orgs,
+        'selected_org': selected_org,
+        'organization': selected_org,
+        'opening_balance': opening_balance,
+        'asset_summary': asset_summary,
+    }
+    return render(request, 'asset/opening_summary.html', context)
 
 
 @login_required

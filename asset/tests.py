@@ -5,7 +5,7 @@ from rest_framework import status
 from django.db import transaction
 from decimal import Decimal
 from datetime import date
-from .models import OrganizationAsset, AssetBillSummary, AssetWholeBillSummary, Loan
+from .models import OrganizationAsset, AssetBillSummary, AssetWholeBillSummary, OpeningBalance, Loan
 from .utils import (
     update_organization_assets,
     get_balance_sheet,
@@ -213,6 +213,25 @@ class AssetCalculationTestCase(TestCase):
         self.assertTrue(
             OrganizationAsset.objects.filter(organization=self.organization).exists()
         )
+
+    def test_opening_balance_integration(self):
+        """Test that opening summary values are included in asset updates"""
+        OpeningBalance.objects.create(
+            organization=self.organization,
+            cash_on_hand=Decimal('300000.00'),
+            inventory_value=Decimal('800000.00'),
+            accounts_receivable=Decimal('400000.00'),
+            accounts_payable=Decimal('100000.00'),
+            total_expenses=Decimal('200000.00')
+        )
+
+        asset_summary = update_organization_assets(self.organization)
+
+        self.assertEqual(asset_summary.cash_on_hand, Decimal('300000.00'))
+        self.assertEqual(asset_summary.inventory_value, Decimal('800000.00'))
+        self.assertEqual(asset_summary.accounts_receivable, Decimal('400000.00'))
+        self.assertEqual(asset_summary.accounts_payable, Decimal('100000.00'))
+        self.assertEqual(asset_summary.total_expenses, Decimal('200000.00'))
 
 
 class BalanceSheetTestCase(TestCase):
