@@ -1,5 +1,5 @@
 {% extends 'master.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}Balance Sheet - {{ selected_organization.name }}{% endblock %}
 
@@ -176,17 +176,17 @@
         <h2 class="section-title assets">💰 ASSETS</h2>
         
         <div class="subsection">
-            <h4>Current Assets</h4>
+            <h4>{% trans "Current Assets" %}</h4>
             <div class="line-item">
-                <span>Cash on Hand</span>
+                <span>{% trans "Cash on Hand" %}</span>
                 <span class="amount positive">{{ balance_sheet.assets.current_assets.cash|floatformat:2 }} AFN</span>
             </div>
             <div class="line-item">
-                <span>Accounts Receivable</span>
+                <span>{% trans "Accounts Receivable" %}</span>
                 <span class="amount positive">{{ balance_sheet.assets.current_assets.accounts_receivable|floatformat:2 }} AFN</span>
             </div>
             <div class="line-item">
-                <span>Inventory Value</span>
+                <span>{% trans "Inventory Value" %}</span>
                 <span class="amount positive">{{ balance_sheet.assets.current_assets.inventory|floatformat:2 }} AFN</span>
             </div>
             <div class="line-item">

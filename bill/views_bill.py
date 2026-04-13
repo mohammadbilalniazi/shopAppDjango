@@ -153,6 +153,17 @@ def bill_show(request,bill_id=None):
     context['branches'] = branches
     context['rcvr_orgs']=rcvr_orgs
     context['currencies'] = Currency.objects.all()
+    
+    # Set initial values for organization and branch
+    if bill_id == None:
+        initial_organization_id = organization.id if organization else ''
+        initial_branch_id = ''
+    else:
+        initial_organization_id = bill.organization.id
+        initial_branch_id = bill.branch.id if bill.branch else ''
+    context['initial_organization_id'] = initial_organization_id
+    context['initial_branch_id'] = initial_branch_id
+    
     return HttpResponse(template.render(context,request))
 
 

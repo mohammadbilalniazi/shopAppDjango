@@ -134,6 +134,7 @@ urlpatterns = [
     path('accounts/login/', views_login.login_form, name='login_form'),
     path('login_form/', views_login.login_form, name='login_form'),
     path("login_form/submit/", views_login.submit, name="login_submit"),
+    path('i18n/', include('django.conf.urls.i18n')),
 ]
 
 

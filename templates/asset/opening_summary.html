@@ -22,8 +22,8 @@
     {% if selected_org %}
         <div class="card" style="border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); margin-bottom: 30px;">
             <div class="card-body" style="padding: 30px;">
-                <h2 style="margin-top: 0;">{{ selected_org.name }} Opening Summary</h2>
-                <p style="color: #4b5563;">Use this form to set the starting position for cash, inventory, receivables, payables, loans, and opening profit/loss values.</p>
+                <h2 style="margin-top: 0;">{% blocktrans with org_name=selected_org.name %}{{ org_name }} Opening Summary{% endblocktrans %}</h2>
+                <p style="color: #4b5563;">{% trans "Use this form to set the starting position for cash, inventory, receivables, payables, loans, and opening profit/loss values." %}</p>
                 <form method="post" novalidate>
                     {% csrf_token %}
                     <div class="row gx-4 gy-3">
@@ -87,21 +87,21 @@
         {% if opening_balance %}
             <div class="card" style="border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
                 <div class="card-body" style="padding: 24px;">
-                    <h3 style="margin-top: 0;">Current Opening Summary</h3>
+                    <h3 style="margin-top: 0;">{% trans "Current Opening Summary" %}</h3>
                     <div class="row gx-4 gy-3">
-                        <div class="col-md-4"><strong>Cash on Hand:</strong> {{ opening_balance.cash_on_hand|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Inventory value:</strong> {{ opening_balance.inventory_value|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Accounts receivable:</strong> {{ opening_balance.accounts_receivable|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Accounts payable:</strong> {{ opening_balance.accounts_payable|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Loans receivable:</strong> {{ opening_balance.loans_receivable|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Loans payable:</strong> {{ opening_balance.loans_payable|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Revenue:</strong> {{ opening_balance.total_revenue|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>COGS:</strong> {{ opening_balance.total_cost_of_goods_sold|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Expenses:</strong> {{ opening_balance.total_expenses|floatformat:2 }}</div>
-                        <div class="col-md-4"><strong>Losses:</strong> {{ opening_balance.total_losses|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Cash on Hand" %}:</strong> {{ opening_balance.cash_on_hand|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Inventory Value" %}:</strong> {{ opening_balance.inventory_value|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Accounts Receivable" %}:</strong> {{ opening_balance.accounts_receivable|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Accounts Payable" %}:</strong> {{ opening_balance.accounts_payable|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Loans Receivable" %}:</strong> {{ opening_balance.loans_receivable|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Loans Payable" %}:</strong> {{ opening_balance.loans_payable|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Revenue" %}:</strong> {{ opening_balance.total_revenue|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "COGS" %}:</strong> {{ opening_balance.total_cost_of_goods_sold|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Expenses" %}:</strong> {{ opening_balance.total_expenses|floatformat:2 }}</div>
+                        <div class="col-md-4"><strong>{% trans "Losses" %}:</strong> {{ opening_balance.total_losses|floatformat:2 }}</div>
                     </div>
                     {% if opening_balance.note %}
-                        <div style="margin-top: 18px;"><strong>Note:</strong> {{ opening_balance.note }}</div>
+                        <div style="margin-top: 18px;"><strong>{% trans "Note" %}:</strong> {{ opening_balance.note }}</div>
                     {% endif %}
                 </div>
             </div>

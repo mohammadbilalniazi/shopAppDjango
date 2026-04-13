@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}Asset Dashboard - {{ selected_organization.name }}{% endblock %}
 
@@ -254,15 +254,15 @@
                 </div>
                 <div class="section-body">
                     <div class="financial-row">
-                        <span class="financial-label">Cash on Hand</span>
+                        <span class="financial-label">{% trans "Cash on Hand" %}</span>
                         <span class="financial-value positive">{{ balance_sheet.assets.current_assets.cash|floatformat:2 }}</span>
                     </div>
                     <div class="financial-row">
-                        <span class="financial-label">Inventory Value</span>
+                        <span class="financial-label">{% trans "Inventory Value" %}</span>
                         <span class="financial-value">{{ balance_sheet.assets.current_assets.inventory|floatformat:2 }}</span>
                     </div>
                     <div class="financial-row">
-                        <span class="financial-label">Accounts Receivable</span>
+                        <span class="financial-label">{% trans "Accounts Receivable" %}</span>
                         <span class="financial-value">{{ balance_sheet.assets.current_assets.accounts_receivable|floatformat:2 }}</span>
                     </div>
                     <div class="financial-row">

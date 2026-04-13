@@ -1,7 +1,7 @@
 {% extends "master.html" %}
 {% load i18n jalali_tags static %}
 
-{% block title %}{% if bill %}Update Bill{% else %}Add Bill{% endif %} | Shirkat{% endblock %}
+{% block title %}{% if bill %}{% trans "Update Bill" %}{% else %}{% trans "Add Bill" %}{% endif %} | Shirkat{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{% static 'assets/css/toastr.min.css' %}">
@@ -50,24 +50,29 @@ input[name="date"]:focus {
     outline: none;
 }
 .receiver-org-group {
-    display: grid;
-    grid-template-columns: 1fr auto;
+    display: flex;
     width: 100%;
-    gap: 0;
+    align-items: stretch;
 }
 .receiver-org-group .form-select {
-    width: 100%;
+    flex: 1 1 auto;
     min-width: 0;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
 }
 .receiver-org-group .receiver-org-add-btn {
-    width: 52px;
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
     margin-left: -1px;
     padding: 0;
 }
@@ -99,25 +104,24 @@ input[name="date"]:focus {
         <!-- ── Bill Creator Section ── -->
         <div class="card bill-section-card mb-4">
             <div class="bill-section-header">
-                <i class="bi bi-cash-coin"></i>Payment / Receivement Bill
+                <i class="bi bi-cash-coin"></i>{% trans "Payment / Receivement Bill" %}
             </div>
             <div class="bill-section-body">
                 <div class="row g-3">
                     <!-- Organization -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Organization <span class="text-danger">*</span></label>
-                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization css_class='form-select' %}
-                        <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% endif %}">
+                        <label class="form-label form-label-bold">{% trans "Organization" %} <span class="text-danger">*</span></label>
+                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization css_class='form-select' %}
+                        <input type="hidden" id="initial_branch_id" value="{{ initial_branch_id }}">
                     </div>
                     <!-- Branch -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Branch</label>
+                        <label class="form-label form-label-bold">{% trans "Branch" %}</label>
                         <select name="branch" id="branch" class="form-select">
-                            <option value="">— Select Branch (Optional) —</option>
+                            <option value="">— {% trans "Select Branch (Optional)" %} —</option>
                             {% if branches %}
                                 {% for branch in branches %}
-                                <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}"
-                                        {% if bill.branch == branch %}selected{% endif %}>
+                                <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}">
                                     {{ branch.name }} — {{ branch.organization.name }}
                                 </option>
                                 {% endfor %}
@@ -126,7 +130,7 @@ input[name="date"]:focus {
                     </div>
                     <!-- Bill Type -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Bill Type <span class="text-danger">*</span></label>
+                        <label class="form-label form-label-bold">{% trans "Bill Type" %} <span class="text-danger">*</span></label>
                         <select name="bill_type" id="bill_type" class="form-select" required>
                             <option {% if bill.bill_type == 'PAYMENT' %}selected{% endif %} value="PAYMENT">PAYMENT</option>
                             <option {% if bill.bill_type == 'RECEIVEMENT' %}selected{% endif %} value="RECEIVEMENT">RECEIVEMENT</option>
@@ -134,46 +138,46 @@ input[name="date"]:focus {
                     </div>
                     <!-- Bill No -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Bill No <span class="text-danger">*</span></label>
+                        <label class="form-label form-label-bold">{% trans "Bill No" %} <span class="text-danger">*</span></label>
                         <input type="number" name="bill_no" id="bill_no"
                                value="{% if bill.bill_no %}{{ bill.bill_no }}{% else %}{{ bill_no }}{% endif %}"
                                placeholder="بل شمیره" class="form-control" required>
                     </div>
                     <!-- Date -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Date</label>
+                        <label class="form-label form-label-bold">{% trans "Date" %}</label>
                         {{ form.date }}
                     </div>
                     <!-- Creator -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Bill Creator</label>
+                        <label class="form-label form-label-bold">{% trans "Bill Creator" %}</label>
                         <input type="text" disabled name="creator"
                                value="{% if bill %}{{ bill.creator }}{% else %}{{ user.username }}{% endif %}"
                                class="form-control" id="creator">
                     </div>
                     <!-- Status -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Bill Status <span class="text-danger">*</span></label>
+                        <label class="form-label form-label-bold">{% trans "Bill Status" %} <span class="text-danger">*</span></label>
                         <select name="status" id="status" class="form-select" required>
-                            <option value="0" {% if bill.status == 0 %}selected{% endif %}>CREATED</option>
-                            <option value="1" {% if bill.status == 1 %}selected{% endif %}>APPROVED</option>
-                            <option value="2" {% if bill.status == 2 %}selected{% endif %}>REVERSED</option>
-                            <option value="3" {% if bill.status == 3 %}selected{% endif %}>REJECTED</option>
+                            <option value="0" {% if bill.status == 0 %}selected{% endif %}>{% trans "CREATED" %}</option>
+                            <option value="1" {% if bill.status == 1 %}selected{% endif %}>{% trans "APPROVED" %}</option>
+                            <option value="2" {% if bill.status == 2 %}selected{% endif %}>{% trans "REVERSED" %}</option>
+                            <option value="3" {% if bill.status == 3 %}selected{% endif %}>{% trans "REJECTED" %}</option>
                         </select>
                     </div>
                     <!-- System Bill ID -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">System Bill ID</label>
+                        <label class="form-label form-label-bold">{% trans "System Bill ID" %}</label>
                         <input type="number" value="{{ bill.id }}" disabled name="bill_id" id="bill_id" class="form-control">
                     </div>
                     <!-- Currency -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Currency <span class="text-danger">*</span></label>
+                        <label class="form-label form-label-bold">{% trans "Currency" %} <span class="text-danger">*</span></label>
                         <select name="currency" id="currency" class="form-select" required>
                             {% for cur in currencies %}
-                            <option value="{{ cur.currency }}" {% if bill.currency == cur.currency %}selected{% elif not bill and cur.is_domestic %}selected{% endif %}>{{ cur.currency }}{% if cur.is_domestic %} (Domestic){% endif %}</option>
+                            <option value="{{ cur.currency }}" {% if bill.currency == cur.currency %}selected{% elif not bill and cur.is_domestic %}selected{% endif %}>{{ cur.currency }}{% if cur.is_domestic %} ({% trans "Domestic" %}){% endif %}</option>
                             {% empty %}
-                            <option value="afg" {% if not bill or bill.currency == 'afg' %}selected{% endif %}>AFG (Domestic)</option>
+                            <option value="afg" {% if not bill or bill.currency == 'afg' %}selected{% endif %}>AFG ({% trans "Domestic" %})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -184,13 +188,13 @@ input[name="date"]:focus {
                 <div class="row g-3">
                     <!-- Total Bill -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Total Bill</label>
+                        <label class="form-label form-label-bold">{% trans "Total Bill" %}</label>
                         <input type="number" id="total" name="total" disabled step="any"
                                value="{{ bill.total }}" placeholder="0.00" class="form-control">
                     </div>
                     <!-- Payment/Receivement Amount -->
                     <div class="col-md-4">
-                        <label class="form-label form-label-bold">Payment / Receivement Amount <span class="text-danger">*</span></label>
+                        <label class="form-label form-label-bold">{% trans "Payment / Receivement Amount" %} <span class="text-danger">*</span></label>
                         <input type="number" name="total_payment"
                                value="{% if bill %}{{ bill.payment }}{% else %}0{% endif %}"
                                placeholder="0.00" class="form-control" id="total_payment" min="0" step="0.0001" required>
@@ -200,7 +204,7 @@ input[name="date"]:focus {
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="is_approved" name="is_approved"
                                    {% if bill.bill_receiver2.is_approved %}checked{% endif %}>
-                            <label class="form-check-label form-label-bold" for="is_approved">Approved</label>
+                            <label class="form-check-label form-label-bold" for="is_approved">{% trans "Approved" %}</label>
                         </div>
                     </div>
                 </div>
@@ -210,7 +214,7 @@ input[name="date"]:focus {
         <!-- ── Bill Receiver Section ── -->
         <div class="card bill-section-card bill-acceptor-card mb-4">
             <div class="bill-section-header">
-                <i class="bi bi-building"></i>Bill Receiver Information
+                <i class="bi bi-building"></i>{% trans "Bill Receiver Information" %}
             </div>
             <div class="bill-section-body">
                 <div class="row g-3">
@@ -233,13 +237,13 @@ input[name="date"]:focus {
                     <div class="col-md-6"></div>
                     <!-- Approval User -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Approval User</label>
+                        <label class="form-label form-label-bold">{% trans "Approval User" %}</label>
                         <input type="text" name="approval_user" value="{{ bill.bill_receiver2.approval_user }}"
                                disabled id="approval_user" class="form-control" placeholder="—">
                     </div>
                     <!-- Approval Date -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Approval Date</label>
+                        <label class="form-label form-label-bold">{% trans "Approval Date" %}</label>
                         <input type="text" name="approval_date" value="{{ bill.bill_receiver2.approval_date }}"
                                disabled id="approval_date" class="form-control" placeholder="—">
                     </div>
@@ -248,14 +252,14 @@ input[name="date"]:focus {
             <div class="submit-actions d-flex align-items-center gap-3">
                 {% if bill %}
                 <button type="submit" name="_save" class="btn btn-save text-white">
-                    <i class="bi bi-check-circle me-1"></i>Update Bill
+                    <i class="bi bi-check-circle me-1"></i>{% trans "Update Bill" %}
                 </button>
                 <a href="/bill/payment/{{ bill.id }}/" class="btn btn-pay text-white">
-                    <i class="bi bi-credit-card me-1"></i>Pay with Card
+                    <i class="bi bi-credit-card me-1"></i>{% trans "Pay with Card" %}
                 </a>
                 {% else %}
                 <button type="submit" name="_save" class="btn btn-save text-white">
-                    <i class="bi bi-floppy me-1"></i>Save Bill
+                    <i class="bi bi-floppy me-1"></i>{% trans "Save Bill" %}
                 </button>
                 {% endif %}
             </div>
@@ -268,7 +272,7 @@ input[name="date"]:focus {
 <div id="organizationModal" class="product-modal" style="display: none;">
     <div class="product-modal-content" style="max-width: 700px;">
         <div class="product-modal-header" style="background-color: #417690; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="margin: 0;">Add New Organization</h2>
+            <h2 style="margin: 0;">{% trans "Add New Organization" %}</h2>
             <span class="organization-modal-close" style="cursor: pointer; font-size: 28px;">&times;</span>
         </div>
         <div class="product-modal-body" style="padding: 20px;">
@@ -277,11 +281,11 @@ input[name="date"]:focus {
                 
                 <table style="width: 100%;">
                     <tr>
-                        <td style="width: 35%; padding: 10px;"><label for="modal_org_owner">Owner User Name: <span style="color:red">*</span></label></td>
+                        <td style="width: 35%; padding: 10px;"><label for="modal_org_owner">{% trans "Owner User Name" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="owner" id="modal_org_owner" maxlength="10" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_org_type">Organization Type: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_org_type">{% trans "Organization Type" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;">
                             <select name="type" id="modal_org_type" class="form-control" required style="width: 100%;">
                                 <option value="SHIRKAT">SHIRKAT</option>
@@ -291,32 +295,32 @@ input[name="date"]:focus {
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_org_name">Shirkat/Shop Name: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_org_name">{% trans "Shirkat/Shop Name" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="name" id="modal_org_name" maxlength="20" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_org_email">Email: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_org_email">{% trans "Email" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="email" class="form-control" name="email" id="modal_org_email" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_org_password">Password: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_org_password">{% trans "Password" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="password" class="form-control" name="password" id="modal_org_password" value="Afghan123" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_org_location">Location: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_org_location">{% trans "Location" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px; display: flex; gap: 5px;">
                             <select name="location" id="modal_org_location" class="form-control" required style="flex: 1;"></select>
-                            <button type="button" class="btn btn-sm" onclick="openLocationModal()" style="background-color: #417690; color: white; padding: 5px 15px;" title="Add Location">+</button>
+                            <button type="button" class="btn btn-sm" onclick="openLocationModal()" style="background-color: #417690; color: white; padding: 5px 15px;" title="{% trans 'Add Location' %}">+</button>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_org_is_active">Is Active:</label></td>
+                        <td style="padding: 10px;"><label for="modal_org_is_active">{% trans "Is Active" %}:</label></td>
                         <td style="padding: 10px;"><input type="checkbox" name="is_active" id="modal_org_is_active" checked></td>
                     </tr>
                     <tr>
                         <td colspan="2" style="text-align: right; padding: 20px 10px 10px;">
-                            <button type="button" class="btn" onclick="closeOrganizationModal()" style="margin-right: 10px; padding: 8px 20px;">Cancel</button>
-                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">Save Organization</button>
+                            <button type="button" class="btn" onclick="closeOrganizationModal()" style="margin-right: 10px; padding: 8px 20px;">{% trans "Cancel" %}</button>
+                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">{% trans "Save Organization" %}</button>
                         </td>
                     </tr>
                 </table>
@@ -329,7 +333,7 @@ input[name="date"]:focus {
 <div id="locationModal" class="product-modal" style="display: none;">
     <div class="product-modal-content" style="max-width: 500px;">
         <div class="product-modal-header" style="background-color: #417690; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="margin: 0;">Add New Location</h2>
+            <h2 style="margin: 0;">{% trans "Add New Location" %}</h2>
             <span class="location-modal-close" style="cursor: pointer; font-size: 28px;">&times;</span>
         </div>
         <div class="product-modal-body" style="padding: 20px;">
@@ -338,18 +342,18 @@ input[name="date"]:focus {
                 
                 <table style="width: 100%;">
                     <tr>
-                        <td style="width: 35%; padding: 10px;"><label for="modal_location_country">Country: <span style="color:red">*</span></label></td>
+                        <td style="width: 35%; padding: 10px;"><label for="modal_location_country">{% trans "Country" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px; display: flex; align-items: center; gap: 5px;">
                             <select class="form-control" name="country" id="modal_location_country" required style="flex: 1;"></select>
-                            <button type="button" onclick="openCountryModal()" class="btn btn-sm btn-success" style="padding: 5px 10px; background-color: green; color: white; border: none; cursor: pointer; border-radius: 3px;" title="Add new country">+</button>
+                            <button type="button" onclick="openCountryModal()" class="btn btn-sm btn-success" style="padding: 5px 10px; background-color: green; color: white; border: none; cursor: pointer; border-radius: 3px;" title="{% trans 'Add new country' %}">+</button>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_location_state">State/Province: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_location_state">{% trans "State/Province" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="state" id="modal_location_state" maxlength="20" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_location_city">City: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_location_city">{% trans "City" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="city" id="modal_location_city" maxlength="20" required style="width: 100%;"></td>
                     </tr>
                     <tr>
@@ -369,7 +373,7 @@ input[name="date"]:focus {
     <div class="product-modal-content" style="width: 400px; max-width: 90%;">
         <span class="product-modal-close country-modal-close">&times;</span>
         <div class="product-modal-header">
-            <h2 style="color: white; margin: 0;">Add New Country</h2>
+            <h2 style="color: white; margin: 0;">{% trans "Add New Country" %}</h2>
         </div>
         <div class="product-modal-body" style="padding: 20px;">
             <form id="modal_country_form">
@@ -377,21 +381,21 @@ input[name="date"]:focus {
                 
                 <table style="width: 100%;">
                     <tr>
-                        <td style="width: 35%; padding: 10px;"><label for="modal_country_name">Country Name: <span style="color:red">*</span></label></td>
+                        <td style="width: 35%; padding: 10px;"><label for="modal_country_name">{% trans "Country Name" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="name" id="modal_country_name" maxlength="20" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_country_shortcut">Shortcut: <span style="color:red">*</span></label></td>
+                        <td style="padding: 10px;"><label for="modal_country_shortcut">{% trans "Shortcut" %}: <span style="color:red">*</span></label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="shortcut" id="modal_country_shortcut" maxlength="5" required style="width: 100%;"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px;"><label for="modal_country_currency">Currency:</label></td>
+                        <td style="padding: 10px;"><label for="modal_country_currency">{% trans "Currency" %}:</label></td>
                         <td style="padding: 10px;"><input type="text" class="form-control" name="currency" id="modal_country_currency" maxlength="5" value="Afg" style="width: 100%;"></td>
                     </tr>
                     <tr>
                         <td colspan="2" style="text-align: right; padding: 20px 10px 10px;">
-                            <button type="button" class="btn" onclick="closeCountryModal()" style="margin-right: 10px; padding: 8px 20px;">Cancel</button>
-                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">Save Country</button>
+                            <button type="button" class="btn" onclick="closeCountryModal()" style="margin-right: 10px; padding: 8px 20px;">{% trans "Cancel" %}</button>
+                            <button type="submit" class="btn btn-primary" style="background-color: green; color: white; padding: 8px 20px;">{% trans "Save Country" %}</button>
                         </td>
                     </tr>
                 </table>
