@@ -14,8 +14,19 @@ bill_types=(("PURCHASE","PURCHASE"),("SELLING","SELLING"),("PAYMENT","PAYMENT"),
 bill_types_update_with_bill_receiver2=['PURCHASE','SELLING','PAYMENT','RECEIVEMENT']
 def get_year():
     return int(current_shamsi_date().split("-")[0])
+
 def get_date():
     return current_shamsi_date()
+
+
+def _to_decimal(value):
+    if isinstance(value, Decimal):
+        return value
+    if value is None:
+        return Decimal(0)
+    return Decimal(str(value))
+
+
 class Bill(models.Model):
     bill_no=models.IntegerField()
     bill_type=models.CharField(max_length=11,default="PURCHASE",choices=bill_types)  
@@ -27,8 +38,8 @@ class Bill(models.Model):
         help_text="Branch where this bill was created"
     )
     creator=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,related_name="creator_set")
-    total=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
-    payment=models.DecimalField(default=0.0,max_digits=20,decimal_places=5)
+    total=models.DecimalField(default=Decimal(0),max_digits=20,decimal_places=5)
+    payment=models.DecimalField(default=Decimal(0),max_digits=20,decimal_places=5)
     year=models.SmallIntegerField(default=get_year)
     date=models.CharField(max_length=10,default=get_date)  
     profit=models.IntegerField(default=0)
@@ -123,13 +134,13 @@ def _update_receiver_summaries(organization, bill_rcvr_org, bill_type, year,
     )
     
     if is_create or abs_created:
-        abs_obj.total += Decimal(total)
-        abs_obj.payment += Decimal(payment)
+        abs_obj.total += _to_decimal(total)
+        abs_obj.payment += _to_decimal(payment)
         abs_obj.profit += Decimal(profit)
     else:
         # For updates, set to current values (assuming bill was updated)
-        abs_obj.total = Decimal(total)
-        abs_obj.payment = Decimal(payment)
+        abs_obj.total = _to_decimal(total)
+        abs_obj.payment = _to_decimal(payment)
         abs_obj.profit = Decimal(profit)
     
     abs_obj.save()
@@ -146,12 +157,12 @@ def _update_receiver_summaries(organization, bill_rcvr_org, bill_type, year,
     )
     
     if is_create or awbs_created:
-        awbs_obj.total += Decimal(total)
-        awbs_obj.payment += Decimal(payment)
+        awbs_obj.total += _to_decimal(total)
+        awbs_obj.payment += _to_decimal(payment)
         awbs_obj.profit += Decimal(profit)
     else:
-        awbs_obj.total = Decimal(total)
-        awbs_obj.payment = Decimal(payment)
+        awbs_obj.total = _to_decimal(total)
+        awbs_obj.payment = _to_decimal(payment)
         awbs_obj.profit = Decimal(profit)
     
     awbs_obj.save()
@@ -170,8 +181,8 @@ def _rollback_receiver_summaries(organization, bill_rcvr_org, bill_type, year,
             bill_type=bill_type,
             year=year
         )
-        abs_obj.total -= Decimal(total)
-        abs_obj.payment -= Decimal(payment)
+        abs_obj.total -= _to_decimal(total)
+        abs_obj.payment -= _to_decimal(payment)
         abs_obj.profit -= Decimal(profit)
         abs_obj.save()
     except AssetBillSummary.DoesNotExist:
@@ -220,8 +231,8 @@ class Bill_detail(models.Model):
     bill=models.ForeignKey(Bill,on_delete=models.CASCADE)
     product=models.ForeignKey(Product,on_delete=models.PROTECT,null=False, blank=False)
     unit=models.ForeignKey(Unit,on_delete=models.PROTECT,null=True, blank=True)
-    item_amount =models.DecimalField(default=0.0,max_digits=15,decimal_places=5)
-    item_price=models.DecimalField(default=0.0,max_digits=15,decimal_places=5)
+    item_amount =models.DecimalField(default=Decimal(0),max_digits=15,decimal_places=5)
+    item_price=models.DecimalField(default=Decimal(0),max_digits=15,decimal_places=5)
     return_qty=models.IntegerField(null=True,blank=True)      
     discount=models.IntegerField(default=0)
     profit=models.IntegerField(default=None,null=True)  
@@ -274,13 +285,13 @@ def update_asset_bill_summary(sender, instance, created, **kwargs):
     # Calculate deltas for update operations
     if not created:
         # For updates, use cached old values from pre_save signal
-        total_delta = bill.total - getattr(bill, '_old_total', 0)
-        payment_delta = bill.payment - getattr(bill, '_old_payment', 0)
+        total_delta = _to_decimal(bill.total) - _to_decimal(getattr(bill, '_old_total', 0))
+        payment_delta = _to_decimal(bill.payment) - _to_decimal(getattr(bill, '_old_payment', 0))
         profit_delta = bill.profit - getattr(bill, '_old_profit', 0)
     else:
         # For new bills, the delta is the full amount
-        total_delta = bill.total
-        payment_delta = bill.payment
+        total_delta = _to_decimal(bill.total)
+        payment_delta = _to_decimal(bill.payment)
         profit_delta = bill.profit
 
     # Update AssetBillSummary (per organization, bill_type, year)
@@ -453,8 +464,10 @@ def update_stock_and_price(sender, instance, created, **kwargs):
     # Update Product_Detail with latest prices
     pd_obj, _ = Product_Detail.objects.get_or_create(
         product=product,
-        organization=organization
+        defaults={"organization": organization}
     )
+    if pd_obj.organization is None:
+        pd_obj.organization = organization
     
     if bill_type == "PURCHASE":
         pd_obj.purchased_price = price

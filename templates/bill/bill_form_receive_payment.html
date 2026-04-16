@@ -121,7 +121,7 @@ input[name="date"]:focus {
                             <option value="">— {% trans "Select Branch (Optional)" %} —</option>
                             {% if branches %}
                                 {% for branch in branches %}
-                                <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}">
+                                <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch and bill.branch.id == branch.id %}selected{% endif %}>
                                     {{ branch.name }} — {{ branch.organization.name }}
                                 </option>
                                 {% endfor %}

@@ -28,7 +28,7 @@ def find_userorganization(request, organization_id=None):
         organization = None
     if not organization_id and request.user.is_superuser:
         orgs = Organization.objects.all()
-    print(f"organization: {organization}, orgs: {orgs}")
+    print(f"%%%%%%%%organization: {organization}, orgs: {orgs}")
     return organization, orgs
 
 

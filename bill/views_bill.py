@@ -116,11 +116,21 @@ def bill_show(request,bill_id=None):
         template=loader.get_template('bill/bill_detail_show.html')
     else:  
         bill=Bill.objects.get(id=int(bill_id))
+        print("#########bill organization ",bill.organization)
         form.fields['date'].initial=str(bill.date) #before  hawala.mustharadi_file
         # print("bill_obj",bill_obj.bill_detail_set.all().order_by("id"))
         context['bill_detail_set']=bill.bill_detail_set.all().order_by("id")
         context['bill']=bill
         print("bill 0",model_to_dict(bill))
+        # Use the bill's organization as the selected organization when editing
+        if bill.organization:
+            organization = bill.organization
+            if request.user.is_superuser:
+                organizations = Organization.objects.all()
+            else:
+                organizations = Organization.objects.filter(id=bill.organization.id)
+            branches = Branch.objects.filter(organization=bill.organization, is_active=True)
+            context['branches'] = branches
         if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
         elif bill.bill_type in ("LOSSDEGRADE"):

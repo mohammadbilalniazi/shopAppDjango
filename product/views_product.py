@@ -80,8 +80,8 @@ def form(request,id=None):
                     context['product'] = product
             
             stock_query=stock_query.filter(product=product)
-            if stock_query.count()>0:
-                stock=stock_query[0]
+            if stock_query.exists():
+                stock=stock_query.first()
             else:
                 stock=Stock(product=product,organization=self_organization,current_amount=0)
                 stock.save()
@@ -99,6 +99,8 @@ def form(request,id=None):
         context['selected_org'] = context['product'].product_detail.organization
     else:
         context['selected_org'] = self_organization
+    
+    print("$$$product form ",context)
     return HttpResponse(template.render(context, request))
 
 
@@ -242,7 +244,7 @@ def show(request):
             query_set=Product.objects.filter(product_detail__organization__in=user_orgs)
     if item_name: 
         query_set=query_set.filter(item_name__icontains=item_name)
-    print("self_organization ",self_organization)
+
     context={'organization':self_organization.id if hasattr(self_organization,'id') else None,'request':request}
     is_paginate=int(request.data.get("is_paginate",0))
     if  is_paginate==1:

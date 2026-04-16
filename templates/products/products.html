@@ -333,7 +333,7 @@
     <div class="products-table-container">
         {% csrf_token %}
         <table class="products-table" id="result_list">
-            <thead>
+            <thead style="color:black; font-weight:bolder; font-size:20px">
                 <tr>
                     <th>Item Name</th>
                     <th>Model</th>
@@ -384,7 +384,7 @@ const item_name=document.getElementById("item_name");
      const organization=document.getElementById("organization");
       const search_by_org=true;
     search_product(null,search_by_org);
-     item_name.addEventListener("input",(e)=>{
+     item_name.addEventListener("change",(e)=>{
          search_product(null,search_by_org);
      });
       organization.addEventListener("change",(e)=>{
