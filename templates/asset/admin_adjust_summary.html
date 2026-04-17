@@ -154,10 +154,28 @@
     <!-- Organization Filter -->
     <div class="org-filter">
         <label><strong>Filter by Organization:</strong></label>
-        <form method="GET" style="display: inline;">
-            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=selected_organization %}
+        <form method="GET" style="display: inline-flex; gap: 12px; align-items: center;">
+            <select name="organization" id="organization" class="organization-select">
+                {% if is_superuser %}
+                    <option value="all" {% if selected_org_id == 'all' or not selected_organization %}selected{% endif %}>
+                        All Organizations
+                    </option>
+                {% endif %}
+                {% for org in organizations %}
+                    <option value="{{ org.id }}" {% if selected_organization and selected_organization.id == org.id %}selected{% endif %}>
+                        {{ org.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button class="save-btn" type="submit">Load Summaries</button>
         </form>
     </div>
+    
+    {% if not can_edit %}
+    <div class="warning-box">
+        <strong>Note:</strong> You can view cached summaries for your organization only. Editing is restricted to admin users.
+    </div>
+    {% endif %}
     
     <!-- Summaries Table -->
     <div class="summaries-table-container">
@@ -193,7 +211,8 @@
                                data-summary-id="{{ summary.id }}" 
                                data-field="total"
                                value="{{ summary.total }}"
-                               id="total-{{ summary.id }}">
+                               id="total-{{ summary.id }}"
+                               {% if not can_edit %}disabled{% endif %}>
                     </td>
                     <td>
                         <input type="number" 
@@ -202,11 +221,12 @@
                                data-summary-id="{{ summary.id }}" 
                                data-field="payment"
                                value="{{ summary.payment }}"
-                               id="payment-{{ summary.id }}">
+                               id="payment-{{ summary.id }}"
+                               {% if not can_edit %}disabled{% endif %}>
                     </td>
                     <td>
                         <span id="outstanding-{{ summary.id }}">
-                            {{ summary.total|add:summary.payment|floatformat:2 }}
+                            {{ summary.outstanding|floatformat:2 }}
                         </span>
                     </td>
                     <td>
@@ -215,12 +235,17 @@
                                data-summary-id="{{ summary.id }}" 
                                data-field="profit"
                                value="{{ summary.profit }}"
-                               id="profit-{{ summary.id }}">
+                               id="profit-{{ summary.id }}"
+                               {% if not can_edit %}disabled{% endif %}>
                     </td>
                     <td>
-                        <button class="save-btn" onclick="saveSummary({{ summary.id }})">
+                        {% if can_edit %}
+                        <button class="save-btn" onclick="saveSummary({{ summary.id }})" type="button">
                             Save
                         </button>
+                        {% else %}
+                        <span style="color:#6c757d;">Read-only</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

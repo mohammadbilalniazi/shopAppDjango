@@ -477,12 +477,28 @@ def financial_summary_dashboard(request):
     return render(request, 'asset/financial_dashboard.html', context)
 
 
-@staff_member_required
+@login_required(login_url='/')
 def admin_adjust_summary(request):
     """
     Admin interface to manually adjust AssetWholeBillSummary values
     Useful for corrections or adjustments
     """
+    user = request.user
+    is_superuser = user.is_superuser
+    can_edit = user.is_superuser
+
+    if is_superuser:
+        organizations = Organization.objects.all().order_by('name')
+    else:
+        organizations = Organization.objects.filter(
+            organizationuser__user=user
+        ).distinct().order_by('name')
+
+    if not organizations.exists():
+        return render(request, 'asset/no_organization.html', {
+            'message': 'You are not assigned to any organization'
+        })
+
     if request.method == 'POST':
         summary_id = request.POST.get('summary_id')
         summary = get_object_or_404(AssetWholeBillSummary, id=summary_id)
@@ -497,26 +513,41 @@ def admin_adjust_summary(request):
             'success': True,
             'message': 'Summary updated successfully'
         })
-    
-    # Get all organizations
-    organizations = Organization.objects.all()
+
     selected_org_id = request.GET.get('organization')
-    
-    if selected_org_id:
-        selected_org = get_object_or_404(Organization, id=selected_org_id)
+    selected_org = None
+
+    if selected_org_id and selected_org_id != 'all':
+        selected_org = organizations.filter(id=selected_org_id).first()
+
+    if is_superuser:
+        if selected_org_id == 'all' or not selected_org:
+            selected_org = None
+            summaries = AssetWholeBillSummary.objects.all().order_by(
+                'organization', 'bill_type'
+            )
+        else:
+            summaries = AssetWholeBillSummary.objects.filter(
+                organization=selected_org
+            ).order_by('bill_type')
+    else:
+        if not selected_org:
+            selected_org = organizations.first()
         summaries = AssetWholeBillSummary.objects.filter(
             organization=selected_org
         ).order_by('bill_type')
-    else:
-        selected_org = None
-        summaries = AssetWholeBillSummary.objects.all().order_by(
-            'organization', 'bill_type'
-        )[:50]  # Limit for performance
-    
+
+    summaries = list(summaries)
+    for summary in summaries:
+        summary.outstanding = summary.total - summary.payment
+
     context = {
         'organizations': organizations,
         'selected_organization': selected_org,
+        'selected_org_id': selected_org_id,
         'summaries': summaries,
+        'can_edit': can_edit,
+        'is_superuser': is_superuser,
     }
     
     return render(request, 'asset/admin_adjust_summary.html', context)
