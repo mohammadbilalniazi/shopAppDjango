@@ -22,8 +22,14 @@ def submit(request):
     print("data ",data," type(data) ", type(data))
     data=json.loads(data)
     print("type(data) ",type(data)," data ",data )
-    username=str(data['username'])
-    password=str(data['password'])
+    username=str(data.get('username', '')).strip()
+    password=str(data.get('password', '')).strip()
+
+    if not username or not password:
+        return JsonResponse(
+            {"status":http_status.HTTP_400_BAD_REQUEST, "base_url":None, "message":"Username and password are required."},
+            status=http_status.HTTP_400_BAD_REQUEST,
+        )
 
     # return JsonResponse({"status":"test","base_url":"sksk"})
     
@@ -47,7 +53,10 @@ def submit(request):
         base_url_to_admin=None
         message="Invalid username or password"
     
-    return JsonResponse({"status":status,"base_url":base_url_to_admin,"message":message})
+    return JsonResponse(
+        {"status":status,"base_url":base_url_to_admin,"message":message},
+        status=status,
+    )
     # return Response(status=status,base_url=base_url_to_admin,message=message)
     
 def root_entry(request):

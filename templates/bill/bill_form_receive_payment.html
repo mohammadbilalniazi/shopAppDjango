@@ -518,80 +518,94 @@ input[name="date"]:focus {
     // Also check periodically (every 2 seconds) to ensure button stays
     setInterval(ensureOrganizationButton, 2000);
 })();
-</script>
 
-<script>
-// Organization-Branch filtering functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const organizationSelect = document.getElementById('organization');
-    const branchSelect = document.getElementById('branch');
-    const initialBranchInput = document.getElementById('initial_branch_id');
-    const initialBranchId = initialBranchInput ? initialBranchInput.value : '';
-    
-    if (organizationSelect && branchSelect) {
-        async function loadBranchesForOrganization(organizationId) {
-            // Clear current branches
-            branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
-            
-            if (!organizationId) {
+(function() {
+    function getBranchSelectElements() {
+        return {
+            organizationSelect: document.getElementById('organization'),
+            branchSelect: document.getElementById('branch'),
+            initialBranchId: document.getElementById('initial_branch_id')?.value || ''
+        };
+    }
+
+    function resetBranchOptions(branchSelect) {
+        branchSelect.innerHTML = '<option value="">— Select Branch (Optional) —</option>';
+    }
+
+    function renderBranchOptions(branchSelect, branches, selectedBranchId) {
+        resetBranchOptions(branchSelect);
+        branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.id;
+            const orgId = branch.organization_id || (branch.organization && branch.organization.id) || branch.organization;
+            const orgName = branch.organization_name || (branch.organization && branch.organization.name) || '';
+            if (orgId) {
+                option.dataset.organizationId = orgId;
+            }
+            option.textContent = branch.name + (orgName ? ' — ' + orgName : '');
+            if (String(branch.id) === String(selectedBranchId)) {
+                option.selected = true;
+            }
+            branchSelect.appendChild(option);
+        });
+    }
+
+    function renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId) {
+        const existingOptions = Array.from(branchSelect.querySelectorAll('option[data-organization-id]'))
+            .filter(option => String(option.dataset.organizationId) === String(organizationId));
+        resetBranchOptions(branchSelect);
+        if (!existingOptions.length) {
+            return false;
+        }
+        existingOptions.forEach(option => {
+            const clone = option.cloneNode(true);
+            clone.selected = String(clone.value) === String(selectedBranchId);
+            branchSelect.appendChild(clone);
+        });
+        return true;
+    }
+
+    async function loadBranchesForOrganization(organizationId, branchSelect, selectedBranchId) {
+        if (!organizationId) {
+            resetBranchOptions(branchSelect);
+            return;
+        }
+
+        const localRendered = renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId);
+        if (localRendered) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
                 return;
             }
-            
-            try {
-                branchSelect.disabled = true;
-                
-                // Fetch branches for the selected organization
-                const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.branches && data.branches.length > 0) {
-                        const orgName = organizationSelect.options[organizationSelect.selectedIndex]?.text || '';
-                        data.branches.forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch.id;
-                            option.setAttribute('data-organization-id', organizationId);
-                            option.textContent = orgName ? `${branch.name} - ${orgName}` : branch.name;
-                            branchSelect.appendChild(option);
-                        });
-                        
-                        // If there is an initial branch id (editing), select it
-                        if (initialBranchId) {
-                            branchSelect.value = initialBranchId;
-                        }
-                    } else {
-                        const option = document.createElement('option');
-                        option.value = '';
-                        option.textContent = 'No branches available';
-                        option.disabled = true;
-                        branchSelect.appendChild(option);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading branches:', error);
-            } finally {
-                branchSelect.disabled = false;
+            const data = await response.json();
+            if (Array.isArray(data.branches)) {
+                renderBranchOptions(branchSelect, data.branches, selectedBranchId);
             }
-        }
-        
-        // Load branches when organization changes
-        organizationSelect.addEventListener('change', function() {
-            loadBranchesForOrganization(this.value);
-        });
-        
-        // Trigger initial load if organization is already selected
-        if (organizationSelect.value) {
-            loadBranchesForOrganization(organizationSelect.value);
+        } catch (error) {
+            console.error('Unable to load branches for organization:', error);
         }
     }
-});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const { organizationSelect, branchSelect, initialBranchId } = getBranchSelectElements();
+        if (!organizationSelect || !branchSelect) {
+            return;
+        }
+
+        organizationSelect.addEventListener('change', function() {
+            loadBranchesForOrganization(this.value, branchSelect, '');
+        });
+
+        const initialOrganizationId = organizationSelect.value || organizationSelect.querySelector('option[value]:not([value=""])')?.value;
+        loadBranchesForOrganization(initialOrganizationId, branchSelect, initialBranchId);
+    });
+})();
 </script>
 
 {% if detail %}

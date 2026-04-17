@@ -669,92 +669,94 @@ input[name="date"]:focus {
     // Also check periodically (every 2 seconds) to ensure button stays
     setInterval(ensureOrganizationButton, 2000);
 })();
-</script>
 
-<script>
-// Branch loading functionality for bill form
-document.addEventListener('DOMContentLoaded', function() {
-    const organizationSelect = document.getElementById('organization');
-    const branchSelect = document.getElementById('branch');
-    const initialBranchInput = document.getElementById('initial_branch_id');
-    const initialBranchId = initialBranchInput ? initialBranchInput.value : '';
-    
-    if (organizationSelect && branchSelect) {
-        organizationSelect.addEventListener('change', async function() {
-            const organizationId = this.value;
-            
-            // Clear current branches
-branchSelect.innerHTML = '<option value="">{% trans "Select Branch (Optional)" %}</option>';
-            
-            if (!organizationId) {
+(function() {
+    function getBranchSelectElements() {
+        return {
+            organizationSelect: document.getElementById('organization'),
+            branchSelect: document.getElementById('branch'),
+            initialBranchId: document.getElementById('initial_branch_id')?.value || ''
+        };
+    }
+
+    function resetBranchOptions(branchSelect) {
+        branchSelect.innerHTML = '<option value="">— Select Branch (Optional) —</option>';
+    }
+
+    function renderBranchOptions(branchSelect, branches, selectedBranchId) {
+        resetBranchOptions(branchSelect);
+        branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.id;
+            const orgId = branch.organization_id || (branch.organization && branch.organization.id) || branch.organization;
+            const orgName = branch.organization_name || (branch.organization && branch.organization.name) || '';
+            if (orgId) {
+                option.dataset.organizationId = orgId;
+            }
+            option.textContent = branch.name + (orgName ? ' — ' + orgName : '');
+            if (String(branch.id) === String(selectedBranchId)) {
+                option.selected = true;
+            }
+            branchSelect.appendChild(option);
+        });
+    }
+
+    function renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId) {
+        const existingOptions = Array.from(branchSelect.querySelectorAll('option[data-organization-id]'))
+            .filter(option => String(option.dataset.organizationId) === String(organizationId));
+        resetBranchOptions(branchSelect);
+        if (!existingOptions.length) {
+            return false;
+        }
+        existingOptions.forEach(option => {
+            const clone = option.cloneNode(true);
+            clone.selected = String(clone.value) === String(selectedBranchId);
+            branchSelect.appendChild(clone);
+        });
+        return true;
+    }
+
+    async function loadBranchesForOrganization(organizationId, branchSelect, selectedBranchId) {
+        if (!organizationId) {
+            resetBranchOptions(branchSelect);
+            return;
+        }
+
+        const localRendered = renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId);
+        if (localRendered) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
                 return;
             }
-            
-            try {
-                // Fetch branches for the selected organization
-                const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                    if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.branches && data.branches.length > 0) {
-                        // Determine selected organization name to append to branch labels
-                        const orgName = organizationSelect.options[organizationSelect.selectedIndex]?.text || '';
-                        data.branches.forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch.id;
-                            // attach organization id to option for reverse lookup when branch changes
-                            option.setAttribute('data-organization-id', organizationId);
-                            option.textContent = orgName ? `${branch.name} - ${orgName}` : branch.name;
-                            branchSelect.appendChild(option);
-                        });
-                        // If there is an initial branch id (editing), select it
-                        if (initialBranchId) {
-                            branchSelect.value = initialBranchId;
-                        }
-                    } else {
-                        // No branches available
-                        const option = document.createElement('option');
-                        option.value = '';
-                        option.textContent = 'No branches available';
-                        option.disabled = true;
-                        branchSelect.appendChild(option);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading branches:', error);
+            const data = await response.json();
+            if (Array.isArray(data.branches)) {
+                renderBranchOptions(branchSelect, data.branches, selectedBranchId);
             }
-        });
-        
-        // When a branch is selected, update the organization select to match the branch's organization
-        branchSelect.addEventListener('change', function() {
-            const selectedOption = branchSelect.options[branchSelect.selectedIndex];
-            if (!selectedOption) return;
-            const orgId = selectedOption.getAttribute('data-organization-id');
-            if (orgId && organizationSelect) {
-                // If organizationSelect already has this value, no change; otherwise set it
-                if (organizationSelect.value !== orgId.toString()) {
-                    organizationSelect.value = orgId;
-                    // trigger change so dependent UI updates (branches will reload)
-                    const event = new Event('change', { bubbles: true });
-                    organizationSelect.dispatchEvent(event);
-                }
-            }
-        });
-
-        // Trigger initial load of branches for current organization on page load
-        if (organizationSelect.value) {
-            const ev = new Event('change', { bubbles: true });
-            organizationSelect.dispatchEvent(ev);
+        } catch (error) {
+            console.error('Unable to load branches for organization:', error);
         }
     }
-});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const { organizationSelect, branchSelect, initialBranchId } = getBranchSelectElements();
+        if (!organizationSelect || !branchSelect) {
+            return;
+        }
+
+        organizationSelect.addEventListener('change', function() {
+            loadBranchesForOrganization(this.value, branchSelect, '');
+        });
+
+        const initialOrganizationId = organizationSelect.value || organizationSelect.querySelector('option[value]:not([value=""])')?.value;
+        loadBranchesForOrganization(initialOrganizationId, branchSelect, initialBranchId);
+    });
+})();
 </script>
 
 {% if detail %}

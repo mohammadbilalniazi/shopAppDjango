@@ -516,8 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Branch selection functionality
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
     const organizationSelect = document.getElementById('organization');
     const branchSelect = document.getElementById('branch');
     if (!organizationSelect || !branchSelect) {
@@ -579,7 +578,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function renderBranchesForOrganization(organizationId, preferredBranchId = '') {
         resetBranchOptions();
-
         if (!organizationId) {
             return;
         }
@@ -628,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const initialOrganizationId = resolveOrganizationId();
     renderBranchesForOrganization(initialOrganizationId, initialSelectedBranchId);
-});
+})();
 </script>
 
 <script>
