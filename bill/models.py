@@ -370,6 +370,12 @@ def rollback_asset_bill_summary(sender, instance, **kwargs):
 # ---------------------------------------------------
 # Bill_detail Signal: Revert Stock Before Update
 # ---------------------------------------------------
+def _bill_detail_net_qty(bill_detail):
+    amount = Decimal(bill_detail.item_amount or 0)
+    returns = Decimal(bill_detail.return_qty or 0)
+    return amount - returns
+
+
 @receiver(pre_save, sender=Bill_detail)
 def revert_old_stock_before_update(sender, instance, **kwargs):
     """
@@ -387,7 +393,7 @@ def revert_old_stock_before_update(sender, instance, **kwargs):
     bill_type = old_instance.bill.bill_type
     organization = old_instance.bill.organization
     product = old_instance.product
-    amount = Decimal(old_instance.item_amount)
+    net_qty = _bill_detail_net_qty(old_instance)
     
     # Get or create stock record
     stock, _ = Stock.objects.get_or_create(
@@ -398,13 +404,13 @@ def revert_old_stock_before_update(sender, instance, **kwargs):
     
     # Revert stock based on bill type
     if bill_type == "PURCHASE":
-        stock.current_amount -= amount  # Remove previous purchase
+        stock.current_amount -= net_qty  # Remove previous purchase quantity
     elif bill_type == "SELLING":
-        stock.current_amount += amount  # Restore previous sale
+        stock.current_amount += net_qty  # Restore previous sale quantity
     elif bill_type == "LOSSDEGRADE":
-        stock.current_amount += amount  # Restore previous loss
+        stock.current_amount += net_qty  # Restore previous loss quantity
         if hasattr(stock, "loss_amount"):
-            stock.loss_amount -= amount
+            stock.loss_amount -= net_qty
     
     stock.save()
 
@@ -421,7 +427,7 @@ def rollback_stock_on_delete(sender, instance, **kwargs):
     bill_type = instance.bill.bill_type
     organization = instance.bill.organization
     product = instance.product
-    amount = Decimal(instance.item_amount)
+    net_qty = _bill_detail_net_qty(instance)
     
     # Get or create stock record
     stock, _ = Stock.objects.get_or_create(
@@ -432,13 +438,13 @@ def rollback_stock_on_delete(sender, instance, **kwargs):
     
     # Rollback stock based on bill type
     if bill_type == "PURCHASE":
-        stock.current_amount -= amount  # Remove purchase
+        stock.current_amount -= net_qty  # Remove purchase quantity
     elif bill_type == "SELLING":
-        stock.current_amount += amount  # Restore stock from sale
+        stock.current_amount += net_qty  # Restore stock from sale
     elif bill_type == "LOSSDEGRADE":
-        stock.current_amount += amount  # Restore lost stock
+        stock.current_amount += net_qty  # Restore lost stock
         if hasattr(stock, "loss_amount"):
-            stock.loss_amount -= amount
+            stock.loss_amount -= net_qty
     
     stock.save()
 
@@ -458,7 +464,7 @@ def update_stock_and_price(sender, instance, created, **kwargs):
     bill_type = instance.bill.bill_type
     organization = instance.bill.organization
     product = instance.product
-    amount = Decimal(instance.item_amount)
+    net_qty = _bill_detail_net_qty(instance)
     price = Decimal(instance.item_price)
 
     # Update Product_Detail with latest prices
@@ -484,13 +490,13 @@ def update_stock_and_price(sender, instance, created, **kwargs):
     )
     
     if bill_type == "PURCHASE":
-        stock.current_amount += amount  # Add to inventory
+        stock.current_amount += net_qty  # Add net quantity to inventory
     elif bill_type == "SELLING":
-        stock.current_amount -= amount  # Remove from inventory
+        stock.current_amount -= net_qty  # Remove net quantity from inventory
     elif bill_type == "LOSSDEGRADE":
-        stock.current_amount -= amount  # Remove lost items
+        stock.current_amount -= net_qty  # Remove lost net quantity
         if hasattr(stock, "loss_amount"):
-            stock.loss_amount += amount  # Track total losses
+            stock.loss_amount += net_qty  # Track total losses
     
     stock.save()
 

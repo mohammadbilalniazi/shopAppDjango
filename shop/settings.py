@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
-import django_heroku
-from dotenv import load_dotenv
+# import django_heroku
+# from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+# load_dotenv()
 
 # ---------------------------
 # Base Directory
@@ -185,7 +185,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Heroku
 # ---------------------------
 # Configure django-heroku but override staticfiles storage
-django_heroku.settings(locals())
+# django_heroku.settings(locals())
 
 # Override the staticfiles storage set by django_heroku to avoid missing .map file errors
 # Use CompressedStaticFilesStorage instead of CompressedManifestStaticFilesStorage

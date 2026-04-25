@@ -158,8 +158,8 @@ package-lock.json
 ############################
 # Sass / CSS
 ############################
-.sass-cache/
-*.css.map
+# .sass-cache/
+# *.css.map
 
 ############################
 # Redis
