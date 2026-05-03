@@ -116,12 +116,24 @@
                     <span>Branches</span>
                 </a>
             </li>
+               <li class="nav-item">
+                   <a href="{% url 'unit_show' %}" class="nav-link {% if '/unit/' in request.path %}active{% endif %}">
+                       <i class="nav-icon bi bi-collection"></i>
+                       <span>Units</span>
+                   </a>
+               </li>
             <li class="nav-item">
                 <a href="{% url 'location_show' %}" class="nav-link {% if '/location/' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-geo-alt"></i>
                     <span>Locations</span>
                 </a>
             </li>
+               <li class="nav-item">
+                   <a href="{% url 'get_countries' %}" class="nav-link {% if '/countries/' in request.path %}active{% endif %}">
+                       <i class="nav-icon bi bi-globe"></i>
+                       <span>Countries</span>
+                   </a>
+               </li>
         </ul>
     </div>
 

@@ -66,7 +66,7 @@ def get_countries(request):
     return Response(data)
 
 @api_view(('GET','POST'))
-def show(request,id="all"):
+def show(request,id=None):
     """
     GET: Retrieve location(s)
     POST: Create new location
@@ -116,7 +116,7 @@ def show(request,id="all"):
     
     # GET request - retrieve locations
     print("id=",id)
-    if id=="all":
+    if id==None:
         query_set=Location.objects.all().order_by('-pk')
     else:
         query_set=Location.objects.filter(id=int(id))

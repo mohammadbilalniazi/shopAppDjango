@@ -379,13 +379,29 @@
     <div class="quick-actions">
         <h2>⚡ Quick Actions</h2>
         <div class="actions-grid">
-            {% for action in quick_actions %}
-            <a href="{{ action.url }}" class="action-card" style="--card-color: {{ action.color }}; --card-color-dark: {{ action.color }}dd;">
-                <div class="action-icon">{{ action.icon }}</div>
-                <div class="action-title">{{ action.title }}</div>
-                <div class="action-description">{{ action.description }}</div>
-            </a>
-            {% endfor %}
+                {% for action in quick_actions %}
+                <a href="{{ action.url }}" class="action-card" style="--card-color: {{ action.color }}; --card-color-dark: {{ action.color }}dd;">
+                    <div class="action-icon">{{ action.icon }}</div>
+                    <div class="action-title">{{ action.title }}</div>
+                    <div class="action-description">{{ action.description }}</div>
+                </a>
+                {% endfor %}
+                <!-- Direct CRUD links for Units, Locations, Countries -->
+                <a href="{% url 'unit_show' %}" class="action-card" style="--card-color: #6c5ce7; --card-color-dark: #341f97;">
+                    <div class="action-icon">📏</div>
+                    <div class="action-title">Manage Units</div>
+                    <div class="action-description">Add, edit, or remove units</div>
+                </a>
+                <a href="{% url 'location_show' %}" class="action-card" style="--card-color: #00b894; --card-color-dark: #00695c;">
+                    <div class="action-icon">📍</div>
+                    <div class="action-title">Manage Locations</div>
+                    <div class="action-description">Add, edit, or remove locations</div>
+                </a>
+                <a href="{% url 'get_countries' %}" class="action-card" style="--card-color: #0984e3; --card-color-dark: #2d3436;">
+                    <div class="action-icon">🌍</div>
+                    <div class="action-title">Manage Countries</div>
+                    <div class="action-description">Add, edit, or remove countries</div>
+                </a>
         </div>
     </div>
 

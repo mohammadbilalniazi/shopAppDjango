@@ -263,6 +263,37 @@ function closeLocationModal() {
     }
 }
 
+async function show_location() {
+    try {
+        const response = await fetch('/configuration/location/');
+        const data = await response.json();
+
+        const locationSelect = document.getElementById('location');
+
+        if (!locationSelect) return;
+
+        locationSelect.innerHTML = '<option value="">Select Location</option>';
+
+        data.forEach(loc => {
+            const option = document.createElement('option');
+            option.value = loc.id;
+            option.textContent = `${loc.state}, ${loc.city}`;
+            locationSelect.appendChild(option);
+        });
+
+        console.log('✓ Locations loaded');
+
+        // Optional: set selected location (for edit mode)
+        const selectedId = document.getElementById('update_location_id')?.value;
+        if (selectedId) {
+            locationSelect.value = selectedId;
+        }
+
+    } catch (error) {
+        console.error('Error loading locations:', error);
+    }
+}
+
 // Handle location form submission
 document.addEventListener('DOMContentLoaded', function() {
     const locationForm = document.getElementById('modal_location_form_org');
@@ -271,22 +302,27 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             const formData = new FormData(this);
-            const data = {
-                name: formData.get('name')
-            };
             
+            const data = {
+                country: formData.get('country'),
+                state: formData.get('state'),
+                city: formData.get('city'),
+                is_active: true
+            };
+
+
             try {
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
                 
-                const response = await fetch('/configuration/location/all/', {
+               const response = await fetch('/configuration/location/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
+                        'X-CSRFToken': getCookie('csrftoken')
                     },
                     body: JSON.stringify(data)
                 });
-                
+                                
                 if (response.ok) {
                     const result = await response.json();
                     alert('Location created successfully!');

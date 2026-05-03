@@ -123,8 +123,8 @@ urlpatterns = [
     path('user/groups/details/', views_groups.get_group_details, name='get_group_details'),
 
     # Units
-    path('units/<id>/', views_unit.show, name='unit_show'),
-
+    path('units/', views_unit.show, name='unit_show'),
+    path('units/<id>/', views_unit.show, name='unit_show_id'),
     # Custom Admin Dashboard (replaces Django admin)
     path('admin/', views_admin.custom_admin_dashboard, name='custom_admin_dashboard'),
     path('django-admin/', admin.site.urls, name='django_admin'),  # Keep Django admin accessible if needed

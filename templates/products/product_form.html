@@ -91,7 +91,7 @@
         width: 200px;
     }
     
-    .form-control-custom,
+ 
     .inputs,
     .form-table input[type="text"],
     .form-table input[type="number"],
@@ -189,7 +189,7 @@
             {% csrf_token %}  
             
             <table class="form-table">
-                <tr>
+                {% comment %} <tr>
                     <td>Is Service</td>
                     <td colspan="2">
                         <input name="is_service" checked type="checkbox" id="is_service">
@@ -202,7 +202,7 @@
                         {{product.id}}
                         <input type="hidden" class="inputs" name="id" disabled id="id" value='{{product.id}}'>
                     </td>
-                </tr>
+                </tr> {% endcomment %}
                 
                 <tr>
                     <td>Item Name</td>
@@ -268,12 +268,12 @@
                     </td>
                 </tr>
                 
-                <tr>
+                {% comment %} <tr>
                     <td>Current Amount Available</td>
                     <td colspan="2">
                         <input type="number" class="form-control-custom" disabled {% if product %} value="{{current_amount}}" {% else %} value=0 {% endif %} id="current_amount" name="current_amount">
                     </td>
-                </tr>
+                </tr> {% endcomment %}
                 
                 <tr>
                     <td>Current Purchased Price</td>

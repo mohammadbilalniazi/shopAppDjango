@@ -16,35 +16,46 @@ function getCookie(name) {
 
 async function submit_login()
 {
-    // alert("test")
-    username=document.getElementById("username").value;
-    password=document.getElementById("password").value;
+    username = document.getElementById("username").value;
+    password = document.getElementById("password").value;
 
     // Clear previous error
     document.getElementById("error").innerHTML = "";
 
-    form={
-        "username":username,
-        "password":password
+    form = {
+        "username": username,
+        "password": password
     }
-    // console.log("form ",form);
 
-    url="/login_form/submit/"
-    
-    // const response=await call_shirkat(url,'POST',JSON.stringify(form));
-    
-    const response=await call_shirkat(url,'POST',form);
-    new_url=response['data']['base_url'];
-    status=response['data']['status'];
-    message=response['data']['message'];
-    console.log("response['data']['base_url']=",new_url);
-    console.log("response['data']['status']=",status);
-    if(status==200){
-        window.location.replace(new_url);
-    }
-    else{
-        error=document.getElementById("error");
-        error.innerHTML=message
+    url = "/login_form/submit/"
+    try {
+        const response = await call_shirkat(url, 'POST', form);
+        let new_url = response['data']['base_url'];
+        let status = response['data']['status'];
+        let message = response['data']['message'];
+        console.log("response['data']['base_url']=", new_url);
+        console.log("response['data']['status']=", status);
+        if (status == 200) {
+            window.location.replace(new_url);
+        } else {
+            document.getElementById("error").innerHTML = message;
+            if (typeof show_message === 'function') {
+                show_message(message || "Login failed", "error");
+            } else {
+                alert(message || "Login failed");
+            }
+        }
+    } catch (err) {
+        let msg = "Login failed. Please check your credentials.";
+        if (err.response && err.response.status === 401) {
+            msg = err.response.data && err.response.data.message ? err.response.data.message : "Unauthorized: Invalid username or password.";
+        }
+        document.getElementById("error").innerHTML = msg;
+        if (typeof show_message === 'function') {
+            show_message(msg, "error");
+        } else {
+            alert(msg);
+        }
     }
     return;
 }

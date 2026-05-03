@@ -1,6 +1,7 @@
 from django.db import models
 from configuration.models import Organization
 from django.contrib.auth.models import User
+
 # Create your models here.
 class OrganizationUser(models.Model):
     ROLE_CHOICES = (
@@ -34,3 +35,10 @@ class OrganizationUser(models.Model):
         if self.user:
             self.user.delete()
         super().delete(*args, **kwargs)
+
+
+
+class UserFace(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    embedding = models.JSONField()  # store vector as list
+    created_at = models.DateTimeField(auto_now_add=True)
