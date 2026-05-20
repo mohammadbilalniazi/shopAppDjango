@@ -1,126 +1,88 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .serializer import *
+from django.http import JsonResponse
+import json
+from .serializer import LocationSerializer
 from .models import Location, Country
 
-@api_view(('GET', 'POST'))
+
+def _parse_json_body(request):
+    try:
+        if request.content_type and 'application/json' in request.content_type:
+            return json.loads(request.body.decode()) if request.body else {}
+        return request.POST.dict()
+    except Exception:
+        return {}
+
+
 def get_countries(request):
-    """
-    GET: Retrieve all countries
-    POST: Create new country
+    """GET: Retrieve all countries
+       POST: Create new country (expects JSON or form data)
     """
     if request.method == 'POST':
         try:
-            data = request.data
+            data = _parse_json_body(request)
             name = data.get('name')
             shortcut = data.get('shortcut')
             currency = data.get('currency', 'Afg')
-            
-            # Validation
-            if not name or not shortcut:
-                return Response(
-                    {"error": "Country name and shortcut are required"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Check if country already exists
-            if Country.objects.filter(name=name).exists():
-                return Response(
-                    {"error": f"Country '{name}' already exists"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            if Country.objects.filter(shortcut=shortcut).exists():
-                return Response(
-                    {"error": f"Country with shortcut '{shortcut}' already exists"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Create new country
-            country = Country.objects.create(
-                name=name,
-                shortcut=shortcut,
-                currency=currency
-            )
-            
-            return Response(
-                {
-                    "message": "Country created successfully", 
-                    "data": {"id": country.id, "name": country.name, "shortcut": country.shortcut, "currency": country.currency}
-                }, 
-                status=status.HTTP_201_CREATED
-            )
-            
-        except Exception as e:
-            return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    # GET request
-    countries = Country.objects.all().order_by('name')
-    # Simple serialization
-    data = [{"id": c.id, "name": c.name, "shortcut": c.shortcut} for c in countries]
-    return Response(data)
 
-@api_view(('GET','POST'))
-def show(request,id=None):
+            if not name or not shortcut:
+                return JsonResponse({"error": "Country name and shortcut are required"}, status=400)
+
+            if Country.objects.filter(name=name).exists():
+                return JsonResponse({"error": f"Country '{name}' already exists"}, status=400)
+
+            if Country.objects.filter(shortcut=shortcut).exists():
+                return JsonResponse({"error": f"Country with shortcut '{shortcut}' already exists"}, status=400)
+
+            country = Country.objects.create(name=name, shortcut=shortcut, currency=currency)
+            return JsonResponse({"message": "Country created successfully", "data": {"id": country.id, "name": country.name, "shortcut": country.shortcut, "currency": country.currency}}, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    countries = Country.objects.all().order_by('name')
+    data = [{"id": c.id, "name": c.name, "shortcut": c.shortcut} for c in countries]
+    # If JSON explicitly requested, return JSON, otherwise render HTML page
+    if request.GET.get('json'):
+        return JsonResponse(data, safe=False)
+
+    return render(request, 'configurations/country_show.html', {'countries': countries})
+
+
+def show(request, id=None):
+    """If `?json=1` is present (or POST), behave as API returning JSON.
+       Otherwise render an HTML page for locations.
     """
-    GET: Retrieve location(s)
-    POST: Create new location
-    """
+    # Handle POST (creation) as API
     if request.method == 'POST':
-        # Handle location creation
         try:
-            data = request.data
+            data = _parse_json_body(request)
             country_id = data.get('country')
             state = data.get('state')
             city = data.get('city')
             is_active = data.get('is_active', True)
-            
-            # Validation
+
             if not country_id or not state or not city:
-                return Response(
-                    {"error": "Country, State, and City are required"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Check if location already exists
+                return JsonResponse({"error": "Country, State, and City are required"}, status=400)
+
             if Location.objects.filter(country_id=country_id, state=state, city=city).exists():
-                return Response(
-                    {"error": f"Location '{state}, {city}' already exists"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Create new location
-            location = Location.objects.create(
-                country_id=country_id,
-                state=state,
-                city=city,
-                is_active=is_active
-            )
+                return JsonResponse({"error": f"Location '{state}, {city}' already exists"}, status=400)
+
+            location = Location.objects.create(country_id=country_id, state=state, city=city, is_active=is_active)
             serializer = LocationSerializer(location)
-            
-            return Response(
-                {"message": "Location created successfully", "data": serializer.data}, 
-                status=status.HTTP_201_CREATED
-            )
-            
+            return JsonResponse({"message": "Location created successfully", "data": serializer.data}, status=201)
+
         except Exception as e:
-            return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    # GET request - retrieve locations
-    print("id=",id)
-    if id==None:
-        query_set=Location.objects.all().order_by('-pk')
-    else:
-        query_set=Location.objects.filter(id=int(id))
+            return JsonResponse({"error": str(e)}, status=500)
 
-    serializer=LocationSerializer(query_set,many=True)
+    # GET: either return JSON when requested, or render HTML
+    if request.GET.get('json'):
+        if id is None:
+            queryset = Location.objects.all().order_by('-pk')
+        else:
+            queryset = Location.objects.filter(id=int(id))
+        serializer = LocationSerializer(queryset, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
-    return Response(serializer.data) 
+    # Render HTML page for browser navigation
+    return render(request, 'configurations/location_show.html', {})

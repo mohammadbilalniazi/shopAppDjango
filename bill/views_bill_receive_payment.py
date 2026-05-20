@@ -18,6 +18,7 @@ from .forms import Bill_Form
 from django.db.models import Q
 from .models_stripe import TransactionLog
 from .views_bill import getBillNo
+from common.branch_utils import get_valid_branch_for_organization
 # from .views_bill import get_opposit_bill
 
 
@@ -115,6 +116,10 @@ def bill_insert(request):
     organization_id = request.data.get("organization",0)
     organization = Organization.objects.get(id=int(organization_id))
     self_organization, user_orgs = find_userorganization(request,organization_id)
+    try:
+        branch = get_valid_branch_for_organization(organization, request.data.get("branch"))
+    except ValueError as exc:
+        return Response({"message": str(exc), "ok": False, "data": None, "bill_id": None})
     bill_type = request.data.get("bill_type",None)
     creator = request.user
     try:
@@ -204,6 +209,8 @@ def bill_insert(request):
         bill_obj.bill_no=bill_no
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
+        bill_obj.organization=organization
+        bill_obj.branch=branch
         bill_obj.profit=0
         if request.data.get('currency'):
             bill_obj.currency=request.data.get('currency')
@@ -231,7 +238,7 @@ def bill_insert(request):
             ok=False
             message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
             return Response({"message":message,"ok":ok})
-        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment,currency=request.data.get('currency','afg') or 'afg')
+        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,branch=branch,creator=creator,total=total,payment=payment,currency=request.data.get('currency','afg') or 'afg')
     try:
         bill_obj.save()
         if bill_type!="EXPENSE":  # in expense we do not need  and bill_receiver2

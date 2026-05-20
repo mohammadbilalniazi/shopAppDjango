@@ -197,11 +197,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!orgId) return;
         try {
             branchEl.disabled = true;
+            console.debug('Loading branches for org', orgId);
             var resp = await fetch('/api/branches/by-organization/' + orgId + '/', {
                 headers: { 'Accept': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
             });
+            console.debug('Branch API status', resp.status);
             if (!resp.ok) return;
             var data = await resp.json();
+            console.debug('Branch API response', data);
             (data.branches || []).forEach(function (b) {
                 var opt = document.createElement('option');
                 opt.value = b.id;

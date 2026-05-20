@@ -316,6 +316,7 @@ try{
     bill_no=document.getElementById("bill_no");
     bill_id=document.getElementById("bill_id");
     bill_type=document.getElementById("bill_type");
+    branch=document.getElementById("branch");
     is_approved=document.getElementById("is_approved");
     // status=document.getElementById("status");
     status_bill=document.getElementById("status");
@@ -354,6 +355,7 @@ try{
         "id":bill_id.value,
         "date":date.value,
         "organization":organization.value,
+        "branch": branch ? branch.value : "",
         "creator":creator.value,
         "total":total.value,
         "total_payment":total_payment.value,

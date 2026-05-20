@@ -217,27 +217,26 @@ def branch_update(request, branch_id):
                 }, status=403)
             
             data = json.loads(request.body)
-            
-            # Update branch fields
-            branch.name = data.get('name', branch.name)
-            branch.code = data.get('code', branch.code)
-            branch.address = data.get('address', branch.address)
-            branch.phone = data.get('phone', branch.phone)
-            branch.email = data.get('email', branch.email)
-            branch.description = data.get('description', branch.description)
-            
-            # Update location if provided
-            if data.get('location'):
-                from .models import Location
-                location = get_object_or_404(Location, id=data.get('location'))
-                branch.location = location
-            
-            # Update manager if provided
-            if data.get('manager'):
-                manager = get_object_or_404(User, id=data.get('manager'))
-                branch.manager = manager
-            
-            branch.save()
+            form_data = {
+                'name': data.get('name', branch.name),
+                'code': data.get('code', branch.code),
+                'location': data.get('location') or None,
+                'address': data.get('address', branch.address),
+                'phone': data.get('phone', branch.phone),
+                'email': data.get('email', branch.email),
+                'manager': data.get('manager') or None,
+                'description': data.get('description', branch.description),
+            }
+            form = BranchForm(form_data, organization=branch.organization, instance=branch)
+
+            if not form.is_valid():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Form validation failed',
+                    'errors': form.errors
+                }, status=400)
+
+            branch = form.save()
             
             return JsonResponse({
                 'success': True,

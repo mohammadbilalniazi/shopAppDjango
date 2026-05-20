@@ -209,13 +209,18 @@ function submit()
 }
 
 var organization=document.getElementById('organization');
-organization.addEventListener("submit",async function(e){
-    console.log("organization ",organization)
-    var a=submit_function();
-    alert("after submit")
-    e.preventDefault();
-    // return false;
-});
+var organization=document.getElementById('organization');
+if (organization) {
+    // Allow the form to submit normally to the server-side view.
+    // Previously this handler called a non-existent `submit_function()` and
+    // prevented the default submit which blocked organization creation.
+    organization.addEventListener('submit', function(e) {
+        console.debug('Organization form submitting normally');
+        // If client-side validation/handling is desired, preventDefault can be used here.
+        // e.preventDefault();
+        // submit();
+    });
+}
 
 // ==================== LOCATION MODAL FOR ORGANIZATION FORM ====================
 function openLocationModal() {
@@ -362,6 +367,10 @@ document.addEventListener('DOMContentLoaded', function() {
             closeLocationModal();
         }
     });
+});
+// Populate locations on page load for the organization form
+document.addEventListener('DOMContentLoaded', function() {
+    try { show_location(); } catch (e) { console.warn('show_location not available', e); }
 });
 </script>
 

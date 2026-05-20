@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from common.branch_utils import get_valid_branch_for_organization
     
 def show_html(request,id=None):
     context={}
@@ -51,6 +52,15 @@ def form(request,id=None):
     context['branches'] = branches
     # Provide all branches for client-side filtering
     context['all_branches'] = Branch.objects.filter(is_active=True)
+    # JSON-serializable fallback for client-side JS
+    context['all_branches_data'] = [
+        {
+            'id': b.id,
+            'name': b.name,
+            'organization': {'id': b.organization.id, 'name': b.organization.name} if b.organization else None
+        }
+        for b in context['all_branches']
+    ]
         
     if id!=None:
         try:
@@ -151,18 +161,10 @@ def create(request, id=None):
         return Response({"message": "Please select a valid organization", "ok": False})
 
     # Handle branch selection
-    selected_branch = None
-    if branch_id:
-        try:
-            from configuration.models import Branch
-            selected_branch = Branch.objects.get(
-                id=int(branch_id), 
-                organization=selected_org,
-                is_active=True
-            )
-        except (Branch.DoesNotExist, ValueError, TypeError):
-            # Branch is optional, so we continue without it
-            pass
+    try:
+        selected_branch = get_valid_branch_for_organization(selected_org, branch_id)
+    except ValueError as exc:
+        return Response({"message": str(exc), "ok": False})
 
     product_detail["organization"] = selected_org
     product_detail["branch"] = selected_branch

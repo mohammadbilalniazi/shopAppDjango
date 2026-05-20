@@ -22,6 +22,7 @@ from .serializer import BillSearchSerializer
 import re
 from rest_framework.pagination import PageNumberPagination
 from django.http import JsonResponse
+from common.branch_utils import get_valid_branch_for_organization
 
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     date = date2jalali(datetime.now())
@@ -441,14 +442,10 @@ def bill_insert(request):
     # -----------------------------
     # Branch (optional)
     # -----------------------------
-    branch = None
-    branch_id = data.get("branch")
-    if branch_id:
-        branch = Branch.objects.filter(
-            id=int(branch_id),
-            organization=organization,
-            is_active=True
-        ).first()
+    try:
+        branch = get_valid_branch_for_organization(organization, data.get("branch"))
+    except ValueError as exc:
+        return Response({"ok": False, "message": str(exc)})
 
     # -----------------------------
     # Receiver organization
@@ -506,6 +503,7 @@ def bill_insert(request):
             bill.total = total
             bill.payment = payment
             bill.bill_type = bill_type
+            bill.organization = organization
             bill.branch = branch
             if data.get('currency'):
                 bill.currency = data.get('currency')

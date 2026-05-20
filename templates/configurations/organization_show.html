@@ -593,5 +593,31 @@
         // Toast messages will auto-display from Django messages
         console.log('Organizations page loaded');
     });
+
+    // Defensive: ensure Add Organization button opens modal and resetForm runs
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const addBtn = document.querySelector('button[data-bs-target="#organizationModal"]');
+            if (addBtn) {
+                addBtn.addEventListener('click', function(e) {
+                    console.debug('Add Organization button clicked');
+                    try { if (typeof resetForm === 'function') resetForm(); } catch (err) { console.warn('resetForm error', err); }
+                    try {
+                        const modalEl = document.getElementById('organizationModal');
+                        if (modalEl) {
+                            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                            modal.show();
+                        }
+                    } catch (err) {
+                        console.warn('Modal show error', err);
+                    }
+                });
+            } else {
+                console.warn('Add Organization button not found');
+            }
+        } catch (e) {
+            console.error('Error attaching Add Organization handler', e);
+        }
+    });
 </script>
 {% endblock %}

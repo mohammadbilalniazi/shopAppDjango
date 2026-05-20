@@ -240,9 +240,16 @@
                     <td colspan="2">
                         <select name="branch" class="form-control-custom branch-select" id="branch">
                             <option value="">Select Branch (Optional)</option>
-                            {% for branch in all_branches %}
-                                <option data-organization-id="{{ branch.organization.id }}" {% if product and product.product_detail and product.product_detail.branch and branch.id == product.product_detail.branch.id %} selected {% endif %} value="{{ branch.id }}">{{ branch.name }} ({{ branch.organization.name }})</option>
-                            {% endfor %}
+                            {# If view provided an already-filtered `branches` queryset (for the selected org), use it server-side #}
+                            {% if branches %}
+                                {% for branch in branches %}
+                                    <option {% if product and product.product_detail and product.product_detail.branch and branch.id == product.product_detail.branch.id %} selected {% endif %} value="{{ branch.id }}">{{ branch.name }} ({{ branch.organization.name }})</option>
+                                {% endfor %}
+                            {% else %}
+                                {% for branch in all_branches %}
+                                    <option data-organization-id="{{ branch.organization.id }}" {% if product and product.product_detail and product.product_detail.branch and branch.id == product.product_detail.branch.id %} selected {% endif %} value="{{ branch.id }}">{{ branch.name }} ({{ branch.organization.name }})</option>
+                                {% endfor %}
+                            {% endif %}
                         </select>
                     </td>
                 </tr>
@@ -514,6 +521,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+// Embedded all branches JSON (used as fallback by JS when needed)
+{% if all_branches_data %}
+    {{ all_branches_data|json_script:"all_branches_data" }}
+{% endif %}
 
 <script>
 (function() {
@@ -524,9 +535,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const initialSelectedBranchId = branchSelect.value;
-    const allBranchOptions = Array.from(
+    // Collect any pre-rendered options that include data-organization-id
+    let allBranchOptions = Array.from(
         branchSelect.querySelectorAll('option[data-organization-id]')
     ).map(option => option.cloneNode(true));
+
+    // If no DOM options carry organization mapping (server-side filtered render),
+    // fall back to a JSON blob embedded by the template (`all_branches`).
+    if (!allBranchOptions.length && document.getElementById('all_branches_data')) {
+        try {
+            const parsed = JSON.parse(document.getElementById('all_branches_data').textContent || '[]');
+            allBranchOptions = parsed.map(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = b.name + ' (' + (b.organization && b.organization.name ? b.organization.name : '') + ')';
+                opt.dataset.organizationId = b.organization ? b.organization.id : '';
+                return opt;
+            });
+        } catch (e) {
+            console.error('Failed to parse all_branches_data', e);
+        }
+    }
 
     function resetBranchOptions() {
         branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';

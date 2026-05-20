@@ -1,0 +1,14 @@
+{% extends 'master.html' %}
+{% block title %}Countries{% endblock %}
+{% block content %}
+<div class="container p-4">
+  <h2>Countries</h2>
+  <ul>
+    {% for c in countries %}
+      <li>{{ c.name }} ({{ c.shortcut }})</li>
+    {% empty %}
+      <li>No countries found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

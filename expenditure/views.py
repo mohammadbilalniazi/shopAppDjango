@@ -15,6 +15,7 @@ from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from .models import Expense
 from django.contrib import messages
+from common.branch_utils import get_valid_branch_for_organization
 # Create your views here.
 @login_required(login_url='/admin')
 def expense_form(request,id=None):
@@ -79,6 +80,10 @@ def expense_insert(request):
     ############before request.data  and request.data.getlist
     organization_id=request.data.get("organization")
     organization=Organization.objects.get(id=int(organization_id))
+    try:
+        branch = get_valid_branch_for_organization(organization, request.data.get("branch"))
+    except ValueError as exc:
+        return Response({"message": str(exc), "ok": False})
     bill_type=request.data.get("bill_type",None)
     expense_type=request.data.get("expense_type")
     # print("expense_type ",expense_type)
@@ -100,13 +105,15 @@ def expense_insert(request):
         bill_obj.total=total
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type
+        bill_obj.organization=organization
+        bill_obj.branch=branch
     else: ############### new insert Bill if not in system#############
         bill_query=Bill.objects.filter(bill_no=int(bill_no),year=int(year),bill_type=bill_type,organization=organization)
         if bill_query.count()>0: # if we are not having update then we check if such bill present or not if exists we not enter
             ok=False
             message="The Bill is already in system search for Bill No {} Bill Type {} Year {} ".format(bill_no,bill_type,year)
             return Response({"message":message,"ok":ok})
-        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,creator=creator,total=total,payment=payment)
+        bill_obj=Bill(bill_type=bill_type,date=date,year=year,bill_no=bill_no,organization=organization,branch=branch,creator=creator,total=total,payment=payment)
     try:  
         bill_obj.save()
         expense_query=Expense.objects.filter(bill=bill_obj)

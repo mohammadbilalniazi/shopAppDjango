@@ -728,13 +728,16 @@ input[name="date"]:focus {
         }
 
         try {
+            console.debug('Loading branches for org', organizationId);
             const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
                 headers: { 'Accept': 'application/json' }
             });
+            console.debug('Branch API status', response.status);
             if (!response.ok) {
                 return;
             }
             const data = await response.json();
+            console.debug('Branch API response', data);
             if (Array.isArray(data.branches)) {
                 renderBranchOptions(branchSelect, data.branches, selectedBranchId);
             }

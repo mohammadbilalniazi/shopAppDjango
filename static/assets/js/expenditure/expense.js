@@ -37,11 +37,13 @@ try{
         bill_no=document.getElementById("bill_no");
         bill_id=document.getElementById("bill_id");
         bill_type=document.getElementById("bill_type");
+        branch=document.getElementById("branch");
         expense_type=document.getElementById("expense_type");
         status_bill=document.getElementById("status");
         bill_obj={
             "date":date.value,
             "organization":organization.value,
+            "branch": branch ? branch.value : "",
             "creator":creator.value,
             "total":0,
             "total_payment":total_payment.value,

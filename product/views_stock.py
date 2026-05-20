@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render
 from common.organization import find_userorganization
+from common.branch_utils import get_valid_branch_for_organization
 
 @csrf_exempt
 @api_view(['POST'])
@@ -24,17 +25,10 @@ def update(request):
     organization=Organization.objects.get(id=int(organization_id))
     
     # Handle branch if provided
-    branch = None
-    if branch_id:
-        try:
-            from configuration.models import Branch
-            branch = Branch.objects.get(
-                id=int(branch_id), 
-                organization=organization,
-                is_active=True
-            )
-        except Branch.DoesNotExist:
-            pass  # Branch is optional
+    try:
+        branch = get_valid_branch_for_organization(organization, branch_id)
+    except ValueError as exc:
+        return Response({"message": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     
     data['product']=product.id
     data['organization']=organization.id

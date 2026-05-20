@@ -403,6 +403,7 @@
             <td>Organization</td>
             <td colspan="2">
               {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization_user.organization %}
+              <input type="hidden" id="initial_branch_id" value="{% if organization_user.branch %}{{ organization_user.branch.id }}{% endif %}">
             </td>
           </tr>
 
@@ -413,8 +414,8 @@
                 <option value="">Select Branch (Optional)</option>
                 {% if branches %}
                   {% for branch in branches %}
-                    <option value="{{branch.id}}" {% if organization_user.branch == branch %}selected{% endif %}>
-                      {{branch.name}}
+                    <option value="{{branch.id}}" data-organization-id="{{ branch.organization.id }}" {% if organization_user.branch == branch %}selected{% endif %}>
+                      {{branch.name}} ({{ branch.organization.name }})
                     </option>
                   {% endfor %}
                 {% endif %}
@@ -606,13 +607,20 @@
             const data = await response.json();
             branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
 
+            const initialBranch = document.getElementById('initial_branch_id');
+            const preferredBranchId = initialBranch ? initialBranch.value : '';
+
             if (data.branches && data.branches.length > 0) {
               data.branches.forEach(branch => {
                 const option = document.createElement('option');
                 option.value = branch.id;
                 option.textContent = branch.name;
+                if (preferredBranchId && String(branch.id) === String(preferredBranchId)) {
+                  option.selected = true;
+                }
                 branchSelect.appendChild(option);
               });
+              if (initialBranch) initialBranch.value = '';
             } else {
               const option = document.createElement('option');
               option.value = '';
@@ -623,7 +631,7 @@
 
             // Keep Select2 in sync after replacing options dynamically
             if (typeof jQuery !== 'undefined') {
-              jQuery(branchSelect).val('').trigger('change');
+              jQuery(branchSelect).trigger('change');
               refreshBranchSelect2();
             }
           } else {

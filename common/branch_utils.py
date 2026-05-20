@@ -239,3 +239,25 @@ def assign_user_to_branch(user, branch, role='employee'):
 def get_default_branch_for_user(user, organization):
     """Convenience wrapper for BranchManager.get_default_branch_for_user"""
     return BranchManager.get_default_branch_for_user(user, organization)
+
+
+def get_valid_branch_for_organization(organization, branch_id):
+    """
+    Return an active branch only when it belongs to the given organization.
+
+    Empty branch values are treated as no branch. A non-empty invalid value raises
+    ValueError so save views cannot silently attach data to the wrong scope.
+    """
+    if branch_id in (None, "", "null", "None"):
+        return None
+
+    try:
+        branch = Branch.objects.get(
+            id=int(branch_id),
+            organization=organization,
+            is_active=True,
+        )
+    except (Branch.DoesNotExist, TypeError, ValueError):
+        raise ValueError("Selected branch does not belong to the selected organization.")
+
+    return branch

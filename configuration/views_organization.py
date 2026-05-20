@@ -184,17 +184,22 @@ def form(request,id=None):
 @transaction.atomic
 def create(request,id=None):
     ##################################################data gathering#############################
-    owner=request.data['owner']
-    text=""
-    for i in owner.split():
-        text=text+i
-    owner=text
-    password=request.data['password']
-    last_name=request.data['type']
-    organization_type=request.data['type']
-    email=request.data['email']
-    name=request.data['name']
-    location_id=request.data['location'] # location id
+    # Use safe accessors so missing fields result in a 400 response instead of an exception
+    owner = request.data.get('owner', '')
+    text = ""
+    for i in str(owner).split():
+        text = text + i
+    owner = text
+    password = request.data.get('password', '')
+    last_name = request.data.get('type', '')
+    organization_type = request.data.get('type', '')
+    email = request.data.get('email', '')
+    name = request.data.get('name')
+    location_id = request.data.get('location')  # location id
+
+    # Basic required-field validation: return 400 when required fields are missing
+    if not name or not location_id:
+        return Response({'error': 'missing required fields'}, status=400)
     try:
         location=Location.objects.get(id=int(location_id))
         # print("location ",location)

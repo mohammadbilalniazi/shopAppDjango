@@ -5,24 +5,42 @@ from .serializer import UnitSerializer
 from .models import Unit
 
         
-@api_view(('GET','POST'))
-def show(request,id="all"):
-    print("id=",id)
-    if request.method=="GET":
-        if id=="all":
-            query_set=Unit.objects.all().order_by('-pk')
+from django.shortcuts import render
+from django.http import JsonResponse
+import json
+
+def _parse_json_body(request):
+    try:
+        if request.content_type and 'application/json' in request.content_type:
+            return json.loads(request.body.decode()) if request.body else {}
+        return request.POST.dict()
+    except Exception:
+        return {}
+
+def show(request, id="all"):
+    # GET: return JSON when ?json=1 else render HTML page
+    if request.method == "GET":
+        if id == "all":
+            query_set = Unit.objects.all().order_by('-pk')
         else:
-            query_set=Unit.objects.filter(id=int(id))
-        serializer=UnitSerializer(query_set,many=True)
+            query_set = Unit.objects.filter(id=int(id))
+        serializer = UnitSerializer(query_set, many=True)
+        if request.GET.get('json'):
+            return JsonResponse(serializer.data, safe=False)
+        return render(request, 'configurations/unit_show.html', {'units': query_set})
+
+    # POST: create units (accept JSON or form)
+    data = _parse_json_body(request)
+    # support creating a single unit or list
+    if isinstance(data, dict):
+        serializer = UnitSerializer(data=data)
     else:
-        # print("request.data ",request.data)
-        data=request.data
-        # return Response(request.data)
-        serializer=UnitSerializer(data=data,many=True)
-        if serializer.is_valid():
-            serializer.save()
-        # query_set=Unit.objects.create(request.data)
-    return Response(serializer.data)
+        serializer = UnitSerializer(data=data, many=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse(serializer.data, safe=False)
+    return JsonResponse({'errors': serializer.errors}, status=400)
 
 
 

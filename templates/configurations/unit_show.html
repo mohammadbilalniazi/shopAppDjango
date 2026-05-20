@@ -1,0 +1,14 @@
+{% extends 'master.html' %}
+{% block title %}Units{% endblock %}
+{% block content %}
+<div class="container p-4">
+  <h2>Units</h2>
+  <ul>
+    {% for u in units %}
+      <li>{{ u.name }}</li>
+    {% empty %}
+      <li>No units found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

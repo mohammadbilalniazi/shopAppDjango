@@ -1,0 +1,18 @@
+{% extends 'master.html' %}
+{% block title %}Locations{% endblock %}
+{% block content %}
+<div class="container p-4">
+  <h2>Locations</h2>
+  <p>This page provides a UI for managing locations.</p>
+  <div id="location-list"></div>
+</div>
+<script>
+async function loadLocations(){
+  const res = await fetch(window.location.pathname + '?json=1');
+  const data = await res.json();
+  const el = document.getElementById('location-list');
+  el.innerHTML = '<ul>' + data.map(l=>`<li>${l.city}, ${l.state} (${l.id})</li>`).join('') + '</ul>';
+}
+window.addEventListener('DOMContentLoaded', loadLocations);
+</script>
+{% endblock %}

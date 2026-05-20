@@ -1,6 +1,7 @@
 from django.db import models
 from product.models import Product,Unit
 from configuration.models import Organization,Location
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from common.date import current_shamsi_date
 from django.dispatch import receiver
@@ -46,6 +47,14 @@ class Bill(models.Model):
     status=models.SmallIntegerField(choices=STATUS,default=0) # 0 created 1 approved 2 reversed  3  rejected
     currency=models.CharField(max_length=7,default="afg")
     shipment_location=models.ForeignKey(Location,on_delete=models.PROTECT,null=True,default=None)
+
+    def clean(self):
+        if self.branch and self.organization and self.branch.organization_id != self.organization_id:
+            raise ValidationError("Selected branch does not belong to the selected organization.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 class Bill_Receiver2(models.Model):
     bill=models.OneToOneField(Bill,on_delete=models.CASCADE)
@@ -399,6 +408,7 @@ def revert_old_stock_before_update(sender, instance, **kwargs):
     stock, _ = Stock.objects.get_or_create(
         product=product,
         organization=organization,
+        branch=old_instance.bill.branch,
         defaults={"current_amount": Decimal(0)},
     )
     
@@ -433,6 +443,7 @@ def rollback_stock_on_delete(sender, instance, **kwargs):
     stock, _ = Stock.objects.get_or_create(
         product=product,
         organization=organization,
+        branch=instance.bill.branch,
         defaults={"current_amount": Decimal(0)},
     )
     
@@ -486,6 +497,7 @@ def update_stock_and_price(sender, instance, created, **kwargs):
     stock, _ = Stock.objects.get_or_create(
         product=product,
         organization=organization,
+        branch=instance.bill.branch,
         defaults={"current_amount": Decimal(0)},
     )
     

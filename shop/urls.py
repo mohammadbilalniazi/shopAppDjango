@@ -73,6 +73,7 @@ urlpatterns = [
     # Stripe Payment Gateway
     path('bill/payment/<int:bill_id>/', views_stripe.payment_page, name='stripe_payment_page'),
     path('bill/payment/create-intent/', views_stripe.create_payment_intent, name='stripe_create_intent'),
+    path('bill/payment/confirm-intent/', views_stripe.confirm_payment_intent, name='stripe_confirm_intent'),
     path('bill/payment/status/<int:payment_id>/', views_stripe.get_payment_status, name='stripe_payment_status'),
     path('bill/payment/refund/<int:payment_id>/', views_stripe.refund_payment, name='stripe_refund_payment'),
     path('bill/payment/history/<int:bill_id>/', views_stripe.get_bill_payments, name='stripe_bill_payments'),

@@ -60,6 +60,21 @@ def _create_transaction_log(
         print(f"Error creating transaction log: {exc}")
 
 
+def _user_can_access_organization(request, organization):
+    self_organization, user_orgs = find_userorganization(request)
+
+    if request.user.is_superuser:
+        return True
+
+    if self_organization:
+        return organization == self_organization
+
+    if user_orgs:
+        return organization in user_orgs
+
+    return False
+
+
 @login_required
 @api_view(['POST'])
 def create_payment_intent(request):
@@ -89,35 +104,42 @@ def create_payment_intent(request):
         # Get the bill
         bill = get_object_or_404(Bill, id=bill_id)
         
-        # Verify user has access to this bill's organization
-        self_organization, user_orgs = find_userorganization(request)
-        
-        if not request.user.is_superuser:
-            if self_organization:
-                if bill.organization != self_organization:
-                    return Response({
-                        'ok': False,
-                        'message': 'You do not have permission to pay this bill'
-                    }, status=status.HTTP_403_FORBIDDEN)
-            elif user_orgs:
-                if bill.organization not in user_orgs:
-                    return Response({
-                        'ok': False,
-                        'message': 'You do not have permission to pay this bill'
-                    }, status=status.HTTP_403_FORBIDDEN)
+        if not _user_can_access_organization(request, bill.organization):
+            return Response({
+                'ok': False,
+                'message': 'You do not have permission to pay this bill'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        if not getattr(settings, 'STRIPE_SECRET_KEY', ''):
+            return Response({
+                'ok': False,
+                'message': 'Stripe secret key is not configured'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Calculate amount to pay
+        remaining = Decimal(bill.total) - Decimal(bill.payment)
+        if remaining <= 0:
+            return Response({
+                'ok': False,
+                'message': 'This bill has already been fully paid'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         if amount:
             payment_amount = Decimal(str(amount))
         else:
-            # Calculate remaining amount to be paid
-            remaining = bill.total - bill.payment
-            if remaining <= 0:
-                return Response({
-                    'ok': False,
-                    'message': 'This bill has already been fully paid'
-                }, status=status.HTTP_400_BAD_REQUEST)
             payment_amount = remaining
+
+        if payment_amount <= 0:
+            return Response({
+                'ok': False,
+                'message': 'Payment amount must be greater than zero'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if payment_amount > remaining:
+            return Response({
+                'ok': False,
+                'message': f'Payment amount exceeds remaining balance ({remaining})'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         # Stripe requires amount in cents (smallest currency unit)
         stripe_amount = int(payment_amount * 100)
@@ -126,6 +148,7 @@ def create_payment_intent(request):
         payment_intent = stripe.PaymentIntent.create(
             amount=stripe_amount,
             currency=currency.lower(),
+            payment_method_types=['card'],
             metadata={
                 'bill_id': bill.id,
                 'bill_no': bill.bill_no,
@@ -288,9 +311,10 @@ def handle_payment_success(payment_intent, webhook_event=None):
     
     try:
         # Get the StripePayment record
-        stripe_payment = StripePayment.objects.get(
+        stripe_payment = StripePayment.objects.select_for_update().get(
             stripe_payment_intent_id=payment_intent_id
         )
+        was_already_succeeded = stripe_payment.status == 'succeeded'
         
         # Update stripe payment status
         stripe_payment.status = 'succeeded'
@@ -298,7 +322,14 @@ def handle_payment_success(payment_intent, webhook_event=None):
         stripe_payment.stripe_charge_id = payment_intent.get('latest_charge')
         
         # Extract card details if available
-        if payment_intent.get('charges') and payment_intent['charges'].get('data'):
+        latest_charge = payment_intent.get('latest_charge')
+        if isinstance(latest_charge, dict):
+            payment_method = latest_charge.get('payment_method_details', {})
+            card = payment_method.get('card', {})
+            stripe_payment.stripe_charge_id = latest_charge.get('id')
+            stripe_payment.card_brand = card.get('brand', '').capitalize()
+            stripe_payment.card_last4 = card.get('last4')
+        elif payment_intent.get('charges') and payment_intent['charges'].get('data'):
             charge = payment_intent['charges']['data'][0]
             payment_method = charge.get('payment_method_details', {})
             card = payment_method.get('card', {})
@@ -307,27 +338,27 @@ def handle_payment_success(payment_intent, webhook_event=None):
         
         stripe_payment.save()
         
-        # Update the bill payment amount
         bill = stripe_payment.bill
-        bill.payment = Decimal(bill.payment) + stripe_payment.amount
-        bill.save()
+        if not was_already_succeeded:
+            bill.payment = Decimal(bill.payment) + stripe_payment.amount
+            bill.save()
 
-        _create_transaction_log(
-            bill=bill,
-            organization=bill.organization,
-            user=stripe_payment.user,
-            source='stripe',
-            event_type='payment_succeeded',
-            status_value='succeeded',
-            amount=stripe_payment.amount,
-            currency=stripe_payment.currency,
-            reference_id=stripe_payment.stripe_charge_id or payment_intent_id,
-            message=f'Payment succeeded for Bill #{bill.bill_no}',
-            metadata={
-                'payment_intent_id': payment_intent_id,
-                'stripe_payment_id': stripe_payment.id,
-            },
-        )
+            _create_transaction_log(
+                bill=bill,
+                organization=bill.organization,
+                user=stripe_payment.user,
+                source='stripe',
+                event_type='payment_succeeded',
+                status_value='succeeded',
+                amount=stripe_payment.amount,
+                currency=stripe_payment.currency,
+                reference_id=stripe_payment.stripe_charge_id or payment_intent_id,
+                message=f'Payment succeeded for Bill #{bill.bill_no}',
+                metadata={
+                    'payment_intent_id': payment_intent_id,
+                    'stripe_payment_id': stripe_payment.id,
+                },
+            )
         
         # Link webhook event to payment
         if webhook_event:
@@ -382,6 +413,68 @@ def handle_payment_failure(payment_intent, webhook_event=None):
         print(f"StripePayment not found for payment_intent: {payment_intent_id}")
     except Exception as e:
         print(f"Error handling payment failure: {e}")
+
+
+@login_required
+@api_view(['POST'])
+def confirm_payment_intent(request):
+    """
+    Confirm a Stripe PaymentIntent after Stripe.js completes card confirmation.
+    This keeps local bill totals in sync even when webhooks are not available.
+    """
+    try:
+        payment_intent_id = request.data.get('payment_intent_id')
+        stripe_payment_id = request.data.get('stripe_payment_id')
+
+        if not payment_intent_id:
+            return Response({
+                'ok': False,
+                'message': 'Payment intent ID is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        stripe_payment = get_object_or_404(
+            StripePayment.objects.select_related('bill', 'organization'),
+            id=stripe_payment_id,
+            stripe_payment_intent_id=payment_intent_id,
+        )
+
+        if not _user_can_access_organization(request, stripe_payment.organization):
+            return Response({
+                'ok': False,
+                'message': 'Access denied'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        payment_intent = stripe.PaymentIntent.retrieve(
+            payment_intent_id,
+            expand=['latest_charge'],
+        )
+
+        if payment_intent.status == 'succeeded':
+            handle_payment_success(payment_intent)
+        elif payment_intent.status in ('requires_payment_method', 'canceled'):
+            handle_payment_failure(payment_intent)
+
+        stripe_payment.refresh_from_db()
+        stripe_payment.bill.refresh_from_db()
+
+        return Response({
+            'ok': stripe_payment.status == 'succeeded',
+            'message': 'Payment confirmed successfully' if stripe_payment.status == 'succeeded' else 'Payment has not succeeded yet',
+            'status': stripe_payment.status,
+            'bill_id': stripe_payment.bill_id,
+            'bill_payment': float(stripe_payment.bill.payment),
+        }, status=status.HTTP_200_OK)
+
+    except stripe.error.StripeError as e:
+        return Response({
+            'ok': False,
+            'message': f'Stripe error: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'ok': False,
+            'message': f'Error confirming payment: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 def handle_payment_refund(charge, webhook_event=None):
@@ -807,6 +900,7 @@ def payment_page(request, bill_id):
         'bill': bill,
         'remaining_amount': remaining,
         'stripe_publishable_key': getattr(settings, 'STRIPE_PUBLISHABLE_KEY', ''),
+        'stripe_currency': getattr(settings, 'STRIPE_CURRENCY', 'USD').upper(),
     }
     
     return render(request, 'bill/stripe_payment.html', context)
