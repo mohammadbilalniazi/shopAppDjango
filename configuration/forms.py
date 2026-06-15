@@ -80,6 +80,7 @@ class BranchForm(forms.ModelForm):
 
     def __init__(self, *args, organization=None, **kwargs):
         super(BranchForm, self).__init__(*args, **kwargs)
+        self.organization = organization
         
         # Filter locations to active ones
         self.fields['location'].queryset = Location.objects.filter(is_active=True)
@@ -111,4 +112,35 @@ class BranchForm(forms.ModelForm):
         if name:
             name = name.strip()
         return name
-    
+
+    def clean(self):
+        cleaned_data = super().clean()
+        organization = self.organization or getattr(self.instance, 'organization', None)
+        if not organization:
+            return cleaned_data
+
+        name = cleaned_data.get('name')
+        code = cleaned_data.get('code')
+        branch_id = self.instance.pk if self.instance else None
+
+        if name:
+            duplicate_name = Branch.objects.filter(
+                organization=organization,
+                name__iexact=name,
+            )
+            if branch_id:
+                duplicate_name = duplicate_name.exclude(pk=branch_id)
+            if duplicate_name.exists():
+                self.add_error('name', 'A branch with this name already exists for this organization.')
+
+        if code:
+            duplicate_code = Branch.objects.filter(
+                organization=organization,
+                code__iexact=code,
+            )
+            if branch_id:
+                duplicate_code = duplicate_code.exclude(pk=branch_id)
+            if duplicate_code.exists():
+                self.add_error('code', 'A branch with this code already exists for this organization.')
+
+        return cleaned_data

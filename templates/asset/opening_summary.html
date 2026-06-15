@@ -9,7 +9,12 @@
         <h1 style="margin: 0 0 10px; font-size: 30px;">Opening Summary</h1>
         <p style="margin: 0; opacity: 0.92;">{% trans "Enter your business opening balances once, then continue adding bills and financial entries normally." %}</p>
         <form method="GET" id="org-filter-form" style="margin-top: 18px;">
-            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=selected_org %}
+            <select name="organization" id="organization" class="organization-select">
+                <option value="">Select Organization</option>
+                {% for org in organizations %}
+                    <option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
+            </select>
         </form>
     </div>
 

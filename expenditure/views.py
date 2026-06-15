@@ -1,70 +1,61 @@
 from django.shortcuts import render
 from jalali_date import date2jalali
 from datetime import datetime
-from common.organization import find_userorganization
 from bill.forms import Bill_Form
 from django.contrib.auth.decorators import login_required
 from django.template import loader
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
-from bill.views_bill import getBillNo
-from configuration.models import Organization
-from configuration.models import Branch
+from bill.views_bill import (
+    can_user_access_bill,
+    getBillNo,
+    get_bill_form_scope,
+    get_bill_organization_for_user,
+)
 from bill.models import Bill
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from .models import Expense
 from django.contrib import messages
-from common.branch_utils import get_valid_branch_for_organization
+from common.branch_utils import get_required_branch_for_user_organization
 # Create your views here.
 @login_required(login_url='/admin')
 def expense_form(request,id=None):
     template=loader.get_template('bill/expenditure/expense_form.html')
     date = date2jalali(datetime.now())
-    self_organization, user_orgs = find_userorganization(request)
-
     form=Bill_Form()
-    context={}
     form.fields['date'].initial=date
-    
-    # Handle organizations
-    if self_organization is None:
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            self_organization = None
+    organizations, organization, branches = get_bill_form_scope(request)
+    bill = None
+
+    if id is not None:
+        bill = Bill.objects.select_related("organization", "branch").get(id=int(id))
+        if not can_user_access_bill(request, bill):
+            messages.error(request, "You do not have access to this expense bill.")
+            bill = None
         else:
-            if user_orgs and user_orgs.count() > 0:
-                self_organization = user_orgs.first()
-                organizations = user_orgs
-            else:
-                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
-                organizations = Organization.objects.none()
-    else:
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-        else:
-            organizations = Organization.objects.filter(id=self_organization.id)
-    
-    if self_organization:
-        bill_no=getBillNo(request,self_organization.id,self_organization.id,"EXPENSE")
-    else:
-        bill_no=getBillNo(request,None,None,"EXPENSE")
+            organization = bill.organization
+
+    if not organizations.exists():
+        messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+
+    bill_no = getBillNo(
+        request,
+        organization.id if organization else None,
+        organization.id if organization else None,
+        "EXPENSE",
+    )
     
     context={
         'form':form,
         'bill_no':bill_no,
-        'organization':self_organization,
+        'organization':organization,
         'organizations':organizations,  # ← ADD THIS
+        'branches':branches,
         'date':date,
-    } 
-    if id!=None:
-        bill=Bill.objects.get(id=int(id))
+    }
+    if bill is not None:
         context['bill']=bill
-    # Provide branches related to the selected organization(s)
-    if self_organization is not None:
-        context['branches'] = Branch.objects.filter(organization=self_organization, is_active=True).order_by('name')
-    else:
-        context['branches'] = Branch.objects.filter(organization__in=user_orgs, is_active=True).order_by('organization__name', 'name')
     return HttpResponse(template.render(context,request))
 
 
@@ -79,9 +70,13 @@ def expense_insert(request):
     year=date.split("-")[0]
     ############before request.data  and request.data.getlist
     organization_id=request.data.get("organization")
-    organization=Organization.objects.get(id=int(organization_id))
     try:
-        branch = get_valid_branch_for_organization(organization, request.data.get("branch"))
+        organization = get_bill_organization_for_user(request, organization_id)
+        branch = get_required_branch_for_user_organization(
+            request.user,
+            organization,
+            request.data.get("branch"),
+        )
     except ValueError as exc:
         return Response({"message": str(exc), "ok": False})
     bill_type=request.data.get("bill_type",None)
@@ -102,6 +97,9 @@ def expense_insert(request):
             message="The Bill with Id {} not exist ".format(id)
             return Response({"message":message,"ok":ok})
         bill_obj=bill_query[0] 
+        if not can_user_access_bill(request, bill_obj):
+            return Response({"message": "You do not have access to this bill.", "ok": False})
+
         bill_obj.total=total
         bill_obj.payment=payment
         bill_obj.bill_type=bill_type

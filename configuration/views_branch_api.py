@@ -4,7 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Branch
-from common.organization import find_userorganization
+from common.branch_utils import BranchManager
+from user.models import OrganizationUser
 
 
 @api_view(['GET'])
@@ -27,17 +28,18 @@ def get_branches_by_organization(request, organization_id=None):
 
         org_id = int(org_id_str)
 
-        # Use helper to determine user's accessible orgs and primary org
-        self_organization, user_orgs = find_userorganization(request, org_id)
-
         # Determine access
         if request.user.is_superuser or request.user.is_staff:
             branches = Branch.objects.filter(organization_id=org_id, is_active=True).order_by('name')
-        elif self_organization and self_organization.id == org_id:
-            branches = Branch.objects.filter(organization=self_organization, is_active=True).order_by('name')
-        elif user_orgs and user_orgs.filter(id=org_id).exists():
-            org = user_orgs.get(id=org_id)
-            branches = Branch.objects.filter(organization=org, is_active=True).order_by('name')
+        elif OrganizationUser.objects.filter(
+            user=request.user,
+            organization_id=org_id,
+            is_active=True,
+        ).exists():
+            branches = BranchManager.get_user_branches(
+                request.user,
+                organization=org_id,
+            ).select_related("organization").order_by("name")
         else:
             return Response({"error": "You don't have access to this organization"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -69,24 +71,14 @@ def get_all_user_branches(request):
     Get all branches accessible to the current user
     """
     try:
-        self_organization, user_orgs = find_userorganization(request)
-        
-        if self_organization:
-            branches = Branch.objects.filter(
-                organization=self_organization, 
-                is_active=True
-            ).order_by('organization__name', 'name')
-        elif user_orgs:
-            branches = Branch.objects.filter(
-                organization__in=user_orgs, 
-                is_active=True
-            ).order_by('organization__name', 'name')
-        elif request.user.is_superuser:
+        if request.user.is_superuser:
             branches = Branch.objects.filter(
                 is_active=True
             ).order_by('organization__name', 'name')
         else:
-            branches = Branch.objects.none()
+            branches = BranchManager.get_user_branches(
+                request.user,
+            ).select_related("organization").order_by("organization__name", "name")
         
         # Serialize branches with organization info
         branch_data = []

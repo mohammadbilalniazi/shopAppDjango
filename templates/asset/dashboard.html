@@ -202,7 +202,12 @@
     <div class="dashboard-header">
         <h1><i class="bi bi-graph-up"></i> Financial Dashboard</h1>
         <form method="GET" id="org-filter-form">
-            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=selected_organization %}
+            <select name="organization" id="organization" class="organization-select">
+                <option value="">Select Organization</option>
+                {% for org in organizations %}
+                    <option value="{{ org.id }}" {% if selected_organization and selected_organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
+            </select>
         </form>
         {% if selected_organization %}
             <p style="margin: 10px 0 0; opacity: 0.9;">

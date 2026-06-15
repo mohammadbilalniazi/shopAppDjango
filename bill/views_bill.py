@@ -22,7 +22,70 @@ from .serializer import BillSearchSerializer
 import re
 from rest_framework.pagination import PageNumberPagination
 from django.http import JsonResponse
-from common.branch_utils import get_valid_branch_for_organization
+from common.branch_utils import (
+    BranchManager,
+    get_required_branch_for_user_organization,
+)
+
+
+def get_bill_form_scope(request):
+    """Return the organizations, selected organization, and branches a user can use."""
+    if request.user.is_superuser:
+        organizations = Organization.objects.all().order_by("name")
+    else:
+        organizations = Organization.objects.filter(
+            organizationuser__user=request.user,
+            organizationuser__is_active=True,
+            is_active=True,
+        ).distinct().order_by("name")
+
+    organization = organizations.first()
+    branches = BranchManager.get_user_branches(request.user).filter(
+        organization__in=organizations,
+        is_active=True,
+    ).select_related("organization").order_by("organization__name", "name")
+
+    return organizations, organization, branches
+
+
+def get_bill_organization_for_user(request, organization_id):
+    """Resolve a submitted organization without allowing cross-organization saves."""
+    try:
+        organization_id = int(organization_id)
+    except (TypeError, ValueError):
+        raise ValueError("Please select a valid organization.")
+
+    organizations = Organization.objects.filter(id=organization_id, is_active=True)
+    if not request.user.is_superuser:
+        organizations = organizations.filter(
+            organizationuser__user=request.user,
+            organizationuser__is_active=True,
+        )
+
+    organization = organizations.first()
+    if organization is None:
+        raise ValueError("You do not have access to the selected organization.")
+
+    return organization
+
+
+def can_user_access_bill(request, bill):
+    """Check both organization membership and branch assignment for a bill."""
+    if request.user.is_superuser:
+        return True
+
+    organization_allowed = Organization.objects.filter(
+        id=bill.organization_id,
+        organizationuser__user=request.user,
+        organizationuser__is_active=True,
+    ).exists()
+    if not organization_allowed:
+        return False
+
+    return bill.branch_id is None or BranchManager.can_user_access_branch(
+        request.user,
+        bill.branch,
+    )
 
 def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     date = date2jalali(datetime.now())
@@ -70,12 +133,10 @@ def bill_show(request,bill_id=None):
     context['form']=form
     self_organization,user_orgs = find_userorganization(request)
     
-    # Get branches for the organization(s)
-    from configuration.models import Branch
-    if self_organization is not None:
-        branches = Branch.objects.filter(organization=self_organization, is_active=True)
-    else:
-        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
+    branches = BranchManager.get_user_branches(
+        request.user,
+        organization=self_organization,
+    ).select_related("organization").order_by("organization__name", "name")
     
     organizations=Organization.objects.all()
     organization=self_organization
@@ -117,6 +178,10 @@ def bill_show(request,bill_id=None):
         template=loader.get_template('bill/bill_detail_show.html')
     else:  
         bill=Bill.objects.get(id=int(bill_id))
+        if not can_user_access_bill(request, bill):
+            messages.error(request, "You do not have access to this bill.")
+            return bill_show(request)
+
         print("#########bill organization ",bill.organization)
         form.fields['date'].initial=str(bill.date) #before  hawala.mustharadi_file
         # print("bill_obj",bill_obj.bill_detail_set.all().order_by("id"))
@@ -130,7 +195,10 @@ def bill_show(request,bill_id=None):
                 organizations = Organization.objects.all()
             else:
                 organizations = Organization.objects.filter(id=bill.organization.id)
-            branches = Branch.objects.filter(organization=bill.organization, is_active=True)
+            branches = BranchManager.get_user_branches(
+                request.user,
+                organization=bill.organization,
+            ).select_related("organization").order_by("name")
             context['branches'] = branches
         if bill.bill_type in ('PAYMENT', 'RECEIVEMENT'):
             template=loader.get_template('bill/bill_form_receive_payment.html')
@@ -264,48 +332,17 @@ def bill_form_sell_purchase(request):
     print("bill_form_sell_purchase called")
     template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
-    self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
-    context={}
     form.fields['date'].initial=date
-    
-    # Get branches for the organization(s)
-    from configuration.models import Branch
-    if self_organization is not None:
-        branches = Branch.objects.filter(organization=self_organization, is_active=True)
-    else:
-        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
-    # Handle case when self_organization is None
-    if self_organization is None:
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            rcvr_orgs = Organization.objects.all()
-            self_organization = None  # Superuser can work without specific org
-        else:
-            # Regular user with multiple orgs - use first org as fallback
-            if user_orgs and user_orgs.count() > 0:
-                self_organization = user_orgs.first()
-                organizations = user_orgs
-                # User's organization present; receiver orgs should exclude user's own org
-                rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
-            else:
-                # No organizations assigned
-                from django.contrib import messages
-                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
-                organizations = Organization.objects.none()
-                rcvr_orgs = Organization.objects.none()
-    else:
-        # Normal case - self_organization exists
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            rcvr_orgs = Organization.objects.all()
-        else:
-            organizations = Organization.objects.filter(id=self_organization.id)
-            rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
-    
+    organizations, organization, branches = get_bill_form_scope(request)
+    rcvr_orgs = Organization.objects.exclude(id=organization.id) if organization else Organization.objects.all()
+
+    if not organizations.exists():
+        messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+
     context={
         'form':form,
-        'organization':self_organization,
+        'organization':organization,
         'organizations':organizations,
         'rcvr_orgs':rcvr_orgs,
         'branches': branches,
@@ -322,48 +359,17 @@ def bill_form_sell_purchase(request):
 def bill_form_loss_degrade_product(request):
     template=loader.get_template('bill/bill_form_sell_purchase.html')
     date = date2jalali(datetime.now())
-    self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
-    context={}
     form.fields['date'].initial=date
+    organizations, organization, branches = get_bill_form_scope(request)
+    rcvr_orgs = Organization.objects.exclude(id=organization.id) if organization else Organization.objects.all()
 
-    # Get branches for the organization(s)
-    from configuration.models import Branch
-    if self_organization is not None:
-        branches = Branch.objects.filter(organization=self_organization, is_active=True)
-    else:
-        branches = Branch.objects.filter(organization__in=user_orgs, is_active=True)
-    
-    # Handle case when self_organization is None
-    if self_organization is None:
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            rcvr_orgs = Organization.objects.all()
-            self_organization = None  # Superuser can work without specific org
-        else:
-            # Regular user with multiple orgs - use first org as fallback
-            if user_orgs and user_orgs.count() > 0:
-                self_organization = user_orgs.first()
-                organizations = user_orgs
-                rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
-            else:
-                # No organizations assigned
-                from django.contrib import messages
-                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
-                organizations = Organization.objects.none()
-                rcvr_orgs = Organization.objects.none()
-    else:
-        # Normal case - self_organization exists
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            rcvr_orgs = Organization.objects.all()
-        else:
-            organizations = Organization.objects.filter(id=self_organization.id)
-            rcvr_orgs = Organization.objects.exclude(id=self_organization.id)
-    
+    if not organizations.exists():
+        messages.error(request, "No organizations assigned to your account. Please contact administrator.")
+
     context={
         'form':form,
-        'organization':self_organization,
+        'organization':organization,
         'organizations':organizations,
         'rcvr_orgs':rcvr_orgs,
         'branches': branches,
@@ -422,8 +428,10 @@ def bill_insert(request):
     total = float(data.get("total") or 0)
     payment = float(data.get("total_payment") or 0)
 
-    organization = Organization.objects.get(id=int(data.get("organization")))
-    self_org, _ = find_userorganization(request, organization.id)
+    try:
+        organization = get_bill_organization_for_user(request, data.get("organization"))
+    except ValueError as exc:
+        return Response({"ok": False, "message": str(exc)})
 
     if bill_id:
         try:
@@ -440,10 +448,14 @@ def bill_insert(request):
         bill_no = getBillNo(request, organization.id, None, bill_type)
 
     # -----------------------------
-    # Branch (optional)
+    # Branch
     # -----------------------------
     try:
-        branch = get_valid_branch_for_organization(organization, data.get("branch"))
+        branch = get_required_branch_for_user_organization(
+            request.user,
+            organization,
+            data.get("branch"),
+        )
     except ValueError as exc:
         return Response({"ok": False, "message": str(exc)})
 
@@ -495,6 +507,8 @@ def bill_insert(request):
         # =============================
         if bill_id:
             bill = get_object_or_404(Bill, id=bill_id)
+            if not can_user_access_bill(request, bill):
+                return Response({"ok": False, "message": "You do not have access to this bill."})
 
             if hasattr(bill, 'bill_receiver2') and bill.bill_receiver2.is_approved:
                 return Response({"ok": False, "message": "Approved bill cannot be updated"})

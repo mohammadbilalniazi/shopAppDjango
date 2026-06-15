@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from common.branch_utils import get_valid_branch_for_organization
+from .stock_utils import get_stock_for_scope
     
 def show_html(request,id=None):
     context={}
@@ -93,8 +94,14 @@ def form(request,id=None):
             if stock_query.exists():
                 stock=stock_query.first()
             else:
-                stock=Stock(product=product,organization=self_organization,current_amount=0)
-                stock.save()
+                stock_organization = getattr(product.product_detail, 'organization', None) or self_organization
+                stock = get_stock_for_scope(
+                    product=product,
+                    organization=stock_organization,
+                    branch=getattr(product.product_detail, 'branch', None),
+                    defaults={'current_amount': 0},
+                    align_branch=True,
+                )
             current_amount=stock.current_amount
             context['current_amount']=current_amount
     template=loader.get_template('products/product_form.html')
@@ -203,26 +210,20 @@ def create(request, id=None):
     org_for_product = product_detail.get("organization")
     branch_for_product = product_detail.get("branch")
     
-    # Update or create Product_Detail
-    product_detail_query = Product_Detail.objects.filter(product=product, organization=org_for_product)
-    if product_detail_query.exists():
-        product_detail_query.update(**product_detail)
-        product_detail_obj = product_detail_query.first()
-    else:
-        product_detail_obj = Product_Detail.objects.create(product=product, **product_detail)
-    
-    # Always ensure stock exists for the organization and branch
-    stock, created = Stock.objects.get_or_create(
-        product=product, 
+    Product_Detail.objects.update_or_create(
+        product=product,
+        defaults=product_detail,
+    )
+
+    stock = get_stock_for_scope(
+        product=product,
         organization=org_for_product,
         branch=branch_for_product,
-        defaults={'current_amount': stock_detail.get("current_amount", 0)}
+        defaults={'current_amount': stock_detail.get("current_amount", 0)},
+        align_branch=True,
     )
-    
-    if not created:
-        # Update existing stock amount
-        stock.current_amount = stock_detail.get("current_amount", stock.current_amount)
-        stock.save()
+    stock.current_amount = stock_detail.get("current_amount", stock.current_amount)
+    stock.save()
     return Response({"message": message, "ok": ok, "id": product.id})
  
 

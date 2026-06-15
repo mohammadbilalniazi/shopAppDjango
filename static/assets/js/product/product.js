@@ -81,12 +81,12 @@ function updatePagination(prv, nex, search_by_org) {
     
     let html = "";
     
-    if (nex) {
-        html += `<tr><td><a href="${nex}" onclick='search_product(this.getAttribute("href"), ${search_by_org}); return false;' class="btn btn-success" role="button">Next</a></td></tr>`;
-    }
-    
     if (prv) {
-        html += `<tr><td><a href="${prv}" onclick='search_product(this.getAttribute("href"), ${search_by_org}); return false;' class="btn btn-success" role="button">Previous</a></td></tr>`;
+        html += `<a href="${prv}" onclick='search_product(this.getAttribute("href"), ${search_by_org}); return false;' class="btn btn-secondary" role="button">Previous</a>`;
+    }
+
+    if (nex) {
+        html += `<a href="${nex}" onclick='search_product(this.getAttribute("href"), ${search_by_org}); return false;' class="btn btn-secondary" role="button">Next</a>`;
     }
     
     if (html) {
@@ -148,6 +148,8 @@ function createProductRow(productData, organization) {
         selling_price = product_detail.selling_price || 0;
         minimum_requirement = product_detail.minimum_requirement || 0;
     }
+
+    const branchId = product_detail && product_detail.branch ? product_detail.branch : '';
     
     const imageUrl = productData.img || '/static/assets/images/no-image.png';
     
@@ -166,6 +168,7 @@ function createProductRow(productData, organization) {
                 <input type="number" 
                        id="stock_input_${productData.id}" 
                        value="${productData.current_amount || 0}" 
+                       data-branch-id="${branchId}"
                        class="form-control" 
                        min="0" 
                        step="1" />
@@ -180,8 +183,7 @@ function createProductRow(productData, organization) {
             </td>
             <td data-label="Actions" class="action-buttons">
                 <a href="/product/product/add/${productData.id}" 
-                   class="btn btn-success btn-sm" 
-                   style="text-decoration: none;">
+                   class="btn btn-success btn-sm">
                     <i class="fas fa-edit"></i> Update
                 </a>
                 <button class="btn btn-primary btn-sm" 
@@ -202,6 +204,7 @@ async function update_stock(event, product_id) {
     try {
         const input = document.getElementById(`stock_input_${product_id}`);
         const current_amount = input.value;
+        const branch_id = input.dataset.branchId || '';
         const organizationSelect = document.getElementById("organization");
         
         if (!organizationSelect || !organizationSelect.value) {
@@ -220,7 +223,8 @@ async function update_stock(event, product_id) {
         const formData = {
             current_amount: parseInt(current_amount),
             product_id: product_id,
-            organization_id: organization_id
+            organization_id: organization_id,
+            branch_id: branch_id
         };
         
         // Use API Manager to update stock
@@ -234,7 +238,7 @@ async function update_stock(event, product_id) {
         
         if (response.success) {
             // Briefly highlight the input to show it was updated
-            input.style.backgroundColor = 'var(--color-success-lighter)';
+            input.style.backgroundColor = 'var(--success-light)';
             setTimeout(() => {
                 input.style.backgroundColor = '';
             }, 1500);
@@ -261,8 +265,8 @@ function showTemporaryStockMessage() {
     if (message) {
         message.innerHTML = "Stock information updated successfully";
         message.style.display = 'block';
-        message.style.backgroundColor = 'var(--color-success-lighter)';
-        message.style.color = 'var(--color-success-darker)';
+        message.style.backgroundColor = 'var(--success-light)';
+        message.style.color = 'var(--success-dark)';
         message.style.padding = 'var(--space-3)';
         message.style.borderRadius = 'var(--radius-md)';
         message.style.marginTop = 'var(--space-4)';

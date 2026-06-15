@@ -402,7 +402,12 @@
             </td>
             <td>Organization</td>
             <td colspan="2">
-              {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization_user.organization %}
+              <select name="organization" id="organization" class="form-control-custom organization-select" required>
+                <option value="">Select Organization</option>
+                {% for org in organizations %}
+                  <option value="{{ org.id }}" {% if organization_user.organization and organization_user.organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
+              </select>
               <input type="hidden" id="initial_branch_id" value="{% if organization_user.branch %}{{ organization_user.branch.id }}{% endif %}">
             </td>
           </tr>
@@ -614,7 +619,8 @@
               data.branches.forEach(branch => {
                 const option = document.createElement('option');
                 option.value = branch.id;
-                option.textContent = branch.name;
+                const orgName = branch.organization && branch.organization.name ? branch.organization.name : '';
+                option.textContent = branch.name + (orgName ? ' (' + orgName + ')' : '');
                 if (preferredBranchId && String(branch.id) === String(preferredBranchId)) {
                   option.selected = true;
                 }
@@ -660,7 +666,8 @@
               fallbackBranches.forEach(branch => {
                 const option = document.createElement('option');
                 option.value = branch.id;
-                option.textContent = branch.name;
+                const orgName = branch.organization && branch.organization.name ? branch.organization.name : '';
+                option.textContent = branch.name + (orgName ? ' (' + orgName + ')' : '');
                 branchSelect.appendChild(option);
               });
 

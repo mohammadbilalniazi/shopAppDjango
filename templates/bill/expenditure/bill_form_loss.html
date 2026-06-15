@@ -85,16 +85,21 @@
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization %}
+                                <select name="organization" id="organization" class="organization-select" required>
+                                    <option value="">Select Organization</option>
+                                    {% for org in organizations %}
+                                        <option value="{{ org.id }}" {% if bill and bill.organization and bill.organization.id == org.id %}selected{% elif organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </span>  
                     </td> 
                     <td>
-                        Branch
+                        Branch <span style="color: red;">*</span>
                     </td>
                     <td>
                         <span style="display:inline;margin:3%">
-                            <select name="branch" id="branch">
-                                <option value="">Select Branch (Optional)</option>
+                            <select name="branch" id="branch" required aria-required="true">
+                                <option value="">Select Branch</option>
                                 {% if branches %}
                                     {% for branch in branches %}
                                     <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch == branch %}selected{% endif %}>{{ branch.name }} - {{ branch.organization.name }}</option>
@@ -378,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const organizationId = this.value;
             console.log('Organization changed to', organizationId);
             // Clear current branches
-            branchSelect.innerHTML = '<option value="">Select Branch (Optional)</option>';
+            branchSelect.innerHTML = '<option value="">Select Branch</option>';
 
             if (!organizationId) {
                 return;

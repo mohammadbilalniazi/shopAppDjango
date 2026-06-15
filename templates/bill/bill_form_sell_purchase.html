@@ -123,14 +123,19 @@ input[name="date"]:focus {
                     <!-- Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">{% trans "Organization" %} <span class="text-danger">*</span></label>
-                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=organization css_class='form-select' %}
+                        <select name="organization" id="organization" class="form-select organization-select" required>
+                            <option value="">{% trans "Select Organization" %}</option>
+                            {% for org in organizations %}
+                                <option value="{{ org.id }}" {% if organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                            {% endfor %}
+                        </select>
                         <input type="hidden" id="initial_branch_id" value="{{ initial_branch_id }}">
                     </div>
                     <!-- Branch -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">{% trans "Branch" %}</label>
-                        <select name="branch" id="branch" class="form-select">
-                            <option value="">— {% trans "Select Branch (Optional)" %} —</option>
+                        <label class="form-label form-label-bold">{% trans "Branch" %} <span class="text-danger">*</span></label>
+                        <select name="branch" id="branch" class="form-select" required aria-required="true">
+                            <option value="">— {% trans "Select Branch" %} —</option>
                             {% with branch_list=branches|default:user_branches %}
                                 {% for branch in branch_list %}
                                 <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}" {% if bill.branch and bill.branch.id == branch.id %}selected{% endif %}>
@@ -671,6 +676,8 @@ input[name="date"]:focus {
 })();
 
 (function() {
+    let originalBranchOptions = [];
+
     function getBranchSelectElements() {
         return {
             organizationSelect: document.getElementById('organization'),
@@ -680,7 +687,7 @@ input[name="date"]:focus {
     }
 
     function resetBranchOptions(branchSelect) {
-        branchSelect.innerHTML = '<option value="">— Select Branch (Optional) —</option>';
+        branchSelect.innerHTML = '<option value="">— Select Branch —</option>';
     }
 
     function renderBranchOptions(branchSelect, branches, selectedBranchId) {
@@ -702,7 +709,7 @@ input[name="date"]:focus {
     }
 
     function renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId) {
-        const existingOptions = Array.from(branchSelect.querySelectorAll('option[data-organization-id]'))
+        const existingOptions = originalBranchOptions
             .filter(option => String(option.dataset.organizationId) === String(organizationId));
         resetBranchOptions(branchSelect);
         if (!existingOptions.length) {
@@ -751,12 +758,13 @@ input[name="date"]:focus {
         if (!organizationSelect || !branchSelect) {
             return;
         }
+        originalBranchOptions = Array.from(branchSelect.querySelectorAll('option[data-organization-id]')).map(option => option.cloneNode(true));
 
         organizationSelect.addEventListener('change', function() {
             loadBranchesForOrganization(this.value, branchSelect, '');
         });
 
-        const initialOrganizationId = organizationSelect.value || organizationSelect.querySelector('option[value]:not([value=""])')?.value;
+        const initialOrganizationId = organizationSelect.value;
         loadBranchesForOrganization(initialOrganizationId, branchSelect, initialBranchId);
     });
 })();

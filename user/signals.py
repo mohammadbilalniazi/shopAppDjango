@@ -44,9 +44,9 @@ def assign_all_organizations_to_admin(sender, instance, created, **kwargs):
                 assigned_count += 1
         
         if created:
-            print(f"✅ Admin user '{instance.username}' assigned to {assigned_count}/{all_orgs.count()} organizations (no branch restrictions)")
+            print(f"Admin user '{instance.username}' assigned to {assigned_count}/{all_orgs.count()} organizations (no branch restrictions)")
         else:
-            print(f"✅ Admin user '{instance.username}' organization assignments updated ({assigned_count} new, no branch restrictions)")
+            print(f"Admin user '{instance.username}' organization assignments updated ({assigned_count} new, no branch restrictions)")
 
 
 @receiver(post_save, sender=Organization)
@@ -77,7 +77,7 @@ def assign_organization_to_all_admins(sender, instance, created, **kwargs):
             if was_created:
                 assigned_count += 1
         
-        print(f"✅ Organization '{instance.name}' assigned to {assigned_count}/{admin_users.count()} admin users (no branch restrictions)")
+        print(f"Organization '{instance.name}' assigned to {assigned_count}/{admin_users.count()} admin users (no branch restrictions)")
 
 
 @receiver(post_save, sender=Branch)
@@ -89,7 +89,7 @@ def handle_branch_creation(sender, instance, created, **kwargs):
     """
     if created and instance.is_active:
         org_name = instance.organization.name if instance.organization else "Unknown"
-        print(f"✅ New branch '{instance.name}' created for organization '{org_name}'")
+        print(f"New branch '{instance.name}' created for organization '{org_name}'")
         
         # Count superusers who have access to this organization (and thus this branch)
         superusers_count = OrganizationUser.objects.filter(
@@ -99,7 +99,7 @@ def handle_branch_creation(sender, instance, created, **kwargs):
         ).count()
         
         if superusers_count > 0:
-            print(f"   → {superusers_count} superuser(s) automatically have access to this branch")
+            print(f"   -> {superusers_count} superuser(s) automatically have access to this branch")
 
 
 def assign_user_to_branch(user, organization, branch, role='employee'):
@@ -135,7 +135,7 @@ def assign_user_to_branch(user, organization, branch, role='employee'):
         org_user.is_active = True
         org_user.save()
     
-    print(f"✅ User '{user.username}' assigned to branch '{branch.name}' in organization '{organization.name}' with role '{role}'")
+    print(f"User '{user.username}' assigned to branch '{branch.name}' in organization '{organization.name}' with role '{role}'")
     return org_user, was_created
 
 

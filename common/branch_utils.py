@@ -261,3 +261,30 @@ def get_valid_branch_for_organization(organization, branch_id):
         raise ValueError("Selected branch does not belong to the selected organization.")
 
     return branch
+
+
+def get_required_branch_for_organization(organization, branch_id):
+    """
+    Return a valid active branch for bill-like records.
+
+    Bills should always be scoped to a real branch, and the submitted branch
+    must belong to the same organization.
+    """
+    if branch_id in (None, "", "null", "None"):
+        raise ValueError("Please select a branch for the selected organization.")
+
+    branch = get_valid_branch_for_organization(organization, branch_id)
+    return branch
+
+
+def get_required_branch_for_user_organization(user, organization, branch_id):
+    """
+    Return a required branch that belongs to the organization and is accessible
+    to the current user.
+    """
+    branch = get_required_branch_for_organization(organization, branch_id)
+
+    if not BranchManager.can_user_access_branch(user, branch):
+        raise ValueError("You do not have access to the selected branch.")
+
+    return branch

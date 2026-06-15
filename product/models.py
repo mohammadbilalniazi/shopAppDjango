@@ -161,6 +161,7 @@ class Stock(models.Model):
     selling_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     purchasing_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
     loss_amount= models.DecimalField(default=0,max_digits=22, decimal_places=2)
+    updated_at=models.DateTimeField(auto_now=True)
     class Meta:
         unique_together=("organization","product","branch")
 

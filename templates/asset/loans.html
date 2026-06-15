@@ -217,7 +217,12 @@
     <div class="org-selector" style="margin-bottom: 30px; font-weight: 800;">
         <label><strong>Select Organization:</strong></label>
         <form method="GET">
-            {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=selected_organization %}
+            <select name="organization" id="organization" class="organization-select">
+                <option value="">Select Organization</option>
+                {% for org in organizations %}
+                    <option value="{{ org.id }}" {% if selected_organization and selected_organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
+            </select>
         </form>
     </div>
             </button>

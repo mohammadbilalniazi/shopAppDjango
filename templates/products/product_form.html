@@ -7,71 +7,63 @@
 <link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
 <style>
-    /* Force visible text in all form inputs - CRITICAL FIX */
-    .form-table input[type="text"],
-    .form-table input[type="number"],
-    .form-table input[type="password"],
-    .form-table input[type="email"],
-    .form-table select,
-    .form-table textarea,
-    input.form-control-custom,
-    input.inputs,
-    select.form-control-custom,
-    select.inputs {
-        color: #000000 !important;
-        background-color: #ffffff !important;
-        -webkit-text-fill-color: #000000 !important;
-        opacity: 1 !important;
+    .product-form-page {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
     }
-    
-    /* Ensure placeholder text is visible but lighter */
-    .form-table input::placeholder,
-    .form-control-custom::placeholder,
-    .inputs::placeholder {
-        color: #999999 !important;
-        opacity: 1 !important;
+
+    .product-form-alert {
+        font-weight: var(--font-weight-semibold);
+        text-align: center;
+        padding: var(--space-3);
+        font-size: var(--font-size-sm);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-4);
+        border: 1px solid transparent;
     }
-    
-    /* Ensure dropdown options are visible */
-    .form-table select option,
-    select.form-control-custom option,
-    select.inputs option {
-        color: #000000 !important;
-        background-color: #ffffff !important;
+
+    .product-form-alert.error {
+        background: var(--error-light);
+        color: var(--error-dark);
+        border-color: #fecaca;
     }
-    
-    /* Ensure disabled inputs are visible */
-    .form-table input:disabled,
-    .form-table select:disabled,
-    input.form-control-custom:disabled,
-    select.form-control-custom:disabled {
-        color: #666666 !important;
-        background-color: #f5f5f5 !important;
-        -webkit-text-fill-color: #666666 !important;
+
+    .product-form-alert.success {
+        background: var(--success-light);
+        color: var(--success-dark);
+        border-color: #bbf7d0;
     }
-    
-    /* Modern Card Design for Product Form */
+
     .product-form-header {
-        background: linear-gradient(135deg, #417690 0%, #2c5d7a 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: var(--white);
+        color: var(--text-primary);
+        padding: var(--space-6);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--space-6);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
     }
     
     .product-form-header h1 {
         margin: 0;
-        font-size: 2rem;
-        font-weight: 700;
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .product-form-header p {
+        margin: var(--space-1) 0 0;
+        color: var(--text-secondary);
     }
     
     .form-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
-        margin-bottom: 2rem;
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        padding: var(--space-6);
+        margin-bottom: var(--space-6);
     }
     
     .form-table {
@@ -86,12 +78,11 @@
     }
     
     .form-table td:first-child {
-        font-weight: 600;
-        color: #333;
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
         width: 200px;
     }
     
- 
     .inputs,
     .form-table input[type="text"],
     .form-table input[type="number"],
@@ -100,11 +91,13 @@
     .form-table textarea {
         width: 100%;
         padding: 0.5rem 0.65rem;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
         font-size: 0.9rem;
         font-weight: 500;
-        transition: all 0.3s;
+        transition: var(--transition-base);
+        color: var(--text-primary);
+        background-color: var(--white);
     }
     
     .form-control-custom:focus,
@@ -113,8 +106,8 @@
     .form-table select:focus,
     .form-table textarea:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
     }
     
     /* Checkbox Styling */
@@ -126,13 +119,35 @@
     
     /* Category Add Button Styling */
     #addCategoryBtn {
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        padding: 0;
     }
-    
-    #addCategoryBtn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+
+    .category-select-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    .category-select-row select {
+        flex: 1;
+    }
+
+    .add-category-symbol {
+        font-size: 18px;
+        color: var(--text-inverse);
+    }
+
+    .product-form-actions {
+        text-align: right;
+        padding-top: var(--space-6) !important;
+    }
+
+    #form_submit_btn {
+        min-width: 170px;
+        cursor: pointer;
     }
     
     /* Modal Styling */
@@ -156,21 +171,137 @@
     #categoryModal select:focus,
     #categoryModal textarea:focus {
         outline: none;
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        border-color: var(--brand-primary) !important;
+        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12) !important;
+    }
+
+    .category-modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgb(15 23 42 / 0.45);
+        z-index: 1000;
+        backdrop-filter: blur(2px);
+    }
+
+    .category-modal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        width: 90%;
+        max-width: 500px;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--border-color);
+    }
+
+    .category-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-5);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--space-4);
+    }
+
+    .category-modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .category-modal-close {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        border-radius: var(--radius-md);
+        background: transparent;
+        border: none;
+        color: var(--text-tertiary);
+        font-size: 24px;
+    }
+
+    .category-modal-close:hover {
+        color: var(--error-dark);
+        background: var(--error-light);
+    }
+
+    .category-field {
+        margin-bottom: var(--space-5);
+    }
+
+    .category-field label {
+        display: block;
+        margin-bottom: var(--space-2);
+    }
+
+    .category-error {
+        color: var(--error-dark);
+        font-size: var(--font-size-xs);
+        margin-top: var(--space-1);
+        display: none;
+    }
+
+    .is-hidden {
+        display: none;
+    }
+
+    .category-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-2);
+        margin-top: var(--space-6);
+        padding-top: var(--space-4);
+        border-top: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .product-form-page {
+            padding: var(--space-3);
+        }
+
+        .product-form-header,
+        .form-card {
+            padding: var(--space-4);
+        }
+
+        .form-table,
+        .form-table tbody,
+        .form-table tr,
+        .form-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .form-table td {
+            padding: var(--space-2) 0;
+        }
+
+        .form-table td:first-child {
+            width: 100%;
+            padding-bottom: 0;
+        }
+
+        .category-modal-actions {
+            flex-direction: column-reverse;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container universal-compact-ui" style="max-width: 1200px; margin: 20px auto; padding: 20px;">
+<div class="product-form-page universal-compact-ui">
     
     {% if messages %}
         {% for message in messages %}
             {% if message.tags == "error" %}
-                <div class='alert alert-danger' style="background-color:#f8d7da;color:#721c24;font-weight:600;text-align:center;padding:12px;font-size:15px;border-radius:8px;margin-bottom:1rem;">
+                <div class="product-form-alert error">
             {% else %}
-                <div class='alert alert-success' style="background-color:#d4edda;color:#155724;font-weight:600;text-align:center;padding:12px;font-size:15px;border-radius:8px;margin-bottom:1rem;">
+                <div class="product-form-alert success">
             {% endif %}
                 {{ message }}
             </div>
@@ -179,14 +310,17 @@
 
     <!-- Page Header -->
     <div class="product-form-header">
-        <h1>{% if product %}✏️ Update Product{% else %}➕ Add Product{% endif %}</h1>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Fill in the product information below</p>
+        <h1>{% if product %}Update Product{% else %}Add Product{% endif %}</h1>
+        <p>Fill in the product information below</p>
     </div>
 
     <!-- Form Card -->
     <div class="form-card">
-        <form method="post" id="product_form" action='{{request.META.HTTP_NAME}}/product/product_form/create/{{id}}' enctype="multipart/form-data">                  
+        <form method="post" id="product_form" action="{% if id %}{% url 'product_form_update' id %}{% else %}{% url 'product_form_create' %}{% endif %}" enctype="multipart/form-data">
             {% csrf_token %}  
+            <input type="hidden" name="id" id="id" value="{{ product.id|default:'' }}">
+            <input type="hidden" name="is_service" id="is_service" value="on">
+            <input type="hidden" name="current_amount" id="current_amount" value="{{ current_amount|default:0 }}">
             
             <table class="form-table">
                 {% comment %} <tr>
@@ -214,15 +348,15 @@
                 <tr>
                     <td>Category</td>
                     <td colspan="2">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <select name="category" class="form-control-custom" id="category" style="flex: 1;">
+                        <div class="category-select-row">
+                            <select name="category" class="form-control-custom" id="category">
                                 <option value="">Select Category</option>
                                 {% for category in categories %}
                                     <option {% if product and product.category and product.category.id == category.id %} selected {% endif %} value='{{category.id}}'>{{category}}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" id="addCategoryBtn" class="btn btn-primary" style="min-width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: #667eea; border: none; border-radius: 8px; cursor: pointer;" title="Add new category">
-                                <strong style="font-size: 18px; color: white;">+</strong>
+                            <button type="button" id="addCategoryBtn" class="btn btn-primary" title="Add new category">
+                                <strong class="add-category-symbol">+</strong>
                             </button>
                         </div>
                     </td>
@@ -231,7 +365,12 @@
                 <tr>
                     <td>Organization</td>
                     <td colspan="2">
-                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations_list selected_org=selected_org %}
+                        <select name="organization" id="organization" class="form-control-custom organization-select" required>
+                            <option value="">Select Organization</option>
+                            {% for org in organizations_list %}
+                                <option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                            {% endfor %}
+                        </select>
                     </td>
                 </tr>
                 
@@ -298,8 +437,8 @@
                 
                 <tr>
                     <td></td>
-                    <td colspan="2" style="text-align: right; padding-top: 2rem;">
-                        <input type="submit" id='form_submit_btn' {% if product %} value="✓ Update Product" {% else %} value="➕ Add Product" {% endif %} class="btn-success-gradient" name="save" style="min-width: 170px; cursor: pointer;">
+                    <td colspan="2" class="product-form-actions">
+                        <input type="submit" id='form_submit_btn' {% if product %} value="Update Product" {% else %} value="Add Product" {% endif %} class="btn btn-success" name="save">
                     </td>
                 </tr>
             </table>
@@ -312,41 +451,41 @@
 {{ block.super }}
 
 <!-- Category Popup Modal -->
-<div id="categoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; backdrop-filter: blur(2px);">
-    <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
-            <h3 style="margin: 0; color: #333; font-weight: 700;">✨ Add New Category</h3>
-            <button type="button" id="closeCategoryModal" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999; transition: color 0.3s; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">&times;</button>
+<div id="categoryModal" class="category-modal-backdrop">
+    <div class="modal-content category-modal">
+        <div class="category-modal-header">
+            <h3>Add New Category</h3>
+            <button type="button" id="closeCategoryModal" class="category-modal-close">&times;</button>
         </div>
         
         <form id="categoryForm">
             {% csrf_token %}
-            <div style="margin-bottom: 20px;">
-                <label for="categoryName" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Category Name *</label>
-                <input type="text" id="categoryName" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: border-color 0.3s;" placeholder="Enter category name">
-                <div id="categoryNameError" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;"></div>
+            <div class="category-field">
+                <label for="categoryName">Category Name *</label>
+                <input type="text" id="categoryName" required placeholder="Enter category name">
+                <div id="categoryNameError" class="category-error"></div>
             </div>
             
-            <div style="margin-bottom: 20px;">
-                <label for="categoryParent" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Parent Category</label>
-                <select id="categoryParent" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: border-color 0.3s;">
-                    <option value="">📁 No parent (Top level)</option>
+            <div class="category-field">
+                <label for="categoryParent">Parent Category</label>
+                <select id="categoryParent">
+                    <option value="">No parent (Top level)</option>
                     {% for category in categories %}
-                        <option value="{{category.id}}">📂 {{category}}</option>
+                        <option value="{{category.id}}">{{category}}</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div style="margin-bottom: 20px;">
-                <label for="categoryDescription" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Description</label>
-                <textarea id="categoryDescription" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; resize: vertical; min-height: 80px; transition: border-color 0.3s;" placeholder="Enter category description (optional)"></textarea>
+            <div class="category-field">
+                <label for="categoryDescription">Description</label>
+                <textarea id="categoryDescription" placeholder="Enter category description (optional)"></textarea>
             </div>
             
-            <div style="text-align: right; margin-top: 30px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                <button type="button" id="cancelCategoryBtn" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; margin-right: 10px; cursor: pointer; font-size: 16px; transition: background 0.3s;">Cancel</button>
-                <button type="submit" id="saveCategoryBtn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                    <span id="saveCategoryText">💾 Save Category</span>
-                    <span id="saveCategorySpinner" style="display: none;">⏳ Saving...</span>
+            <div class="category-modal-actions">
+                <button type="button" id="cancelCategoryBtn" class="btn btn-secondary">Cancel</button>
+                <button type="submit" id="saveCategoryBtn" class="btn btn-primary">
+                    <span id="saveCategoryText">Save Category</span>
+                    <span id="saveCategorySpinner" class="is-hidden">Saving...</span>
                 </button>
             </div>
         </form>
@@ -483,36 +622,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Add some nice styling to the buttons on hover
-    addCategoryBtn.addEventListener('mouseenter', function() {
-        this.style.background = '#5a6fd8';
-        this.style.transform = 'scale(1.05)';
-    });
-    
-    addCategoryBtn.addEventListener('mouseleave', function() {
-        this.style.background = '#667eea';
-        this.style.transform = 'scale(1)';
-    });
-    
-    // Add hover effects for modal buttons
-    cancelCategoryBtn.addEventListener('mouseenter', function() {
-        this.style.background = '#5a6268';
-    });
-    
-    cancelCategoryBtn.addEventListener('mouseleave', function() {
-        this.style.background = '#6c757d';
-    });
-    
-    closeCategoryModal.addEventListener('mouseenter', function() {
-        this.style.color = '#dc3545';
-        this.style.background = '#f8d7da';
-    });
-    
-    closeCategoryModal.addEventListener('mouseleave', function() {
-        this.style.color = '#999';
-        this.style.background = 'none';
-    });
-    
     // Close popup with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && categoryModal.style.display === 'block') {
@@ -521,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-// Embedded all branches JSON (used as fallback by JS when needed)
+<!-- Embedded all branches JSON (used as fallback by JS when needed) -->
 {% if all_branches_data %}
     {{ all_branches_data|json_script:"all_branches_data" }}
 {% endif %}
@@ -627,7 +736,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     data.branches.forEach(branch => {
                         const option = document.createElement('option');
                         option.value = branch.id;
-                        option.textContent = branch.name;
+                        const orgName = branch.organization && branch.organization.name ? branch.organization.name : '';
+                        option.textContent = branch.name + (orgName ? ' (' + orgName + ')' : '');
                         if (preferredBranchId && String(branch.id) === String(preferredBranchId)) {
                             option.selected = true;
                         }
@@ -661,90 +771,129 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 async function get_products()
  {
-    url='/products/'+"all"+"/";
-    let response=await call_shirkat(url,'GET');
-    localStorage.setItem("product_data",JSON.stringify(response.data));
-    let product_data=JSON.parse(localStorage.getItem("product_data"));
-    let selling_price_obj={};   
-    let purchasing_price_obj={};
-    for (const key in product_data) {
-        let product = product_data[key];
-        if (product.product_detail) {
-            selling_price_obj[product.id] = product.product_detail.selling_price;
-            purchasing_price_obj[product.id] = product.product_detail.purchased_price;
-        } else {
-            product_data[key]['product_detail'] = { selling_price: 0, purchased_price: 0, minimum_requirement: 0 };
-            selling_price_obj[product.id] = 0;
-            purchasing_price_obj[product.id] = 0;
+    try {
+        const response = await call_shirkat('/products/', 'POST', {
+            item_name: '',
+            is_paginate: 0
+        });
+        const product_data = Array.isArray(response.data) ? response.data : [];
+        localStorage.setItem("product_data", JSON.stringify(product_data));
+
+        const selling_price_obj = {};
+        const purchasing_price_obj = {};
+        for (const product of product_data) {
+            if (product.product_detail) {
+                selling_price_obj[product.id] = product.product_detail.selling_price;
+                purchasing_price_obj[product.id] = product.product_detail.purchased_price;
+            } else {
+                selling_price_obj[product.id] = 0;
+                purchasing_price_obj[product.id] = 0;
+            }
         }
+
+        localStorage.setItem("selling_price_obj", JSON.stringify(selling_price_obj));
+        localStorage.setItem("purchasing_price_obj", JSON.stringify(purchasing_price_obj));
+    } catch (error) {
+        console.error('Unable to refresh product cache:', error);
     }
-    localStorage.setItem("selling_price_obj",JSON.stringify(selling_price_obj));
-    localStorage.setItem("purchasing_price_obj",JSON.stringify(purchasing_price_obj));
  }
  get_products();
-var product_form=document.getElementById('product_form');
+
+function showProductFormMessage(message, type = 'info') {
+    if (typeof showToast === 'function') {
+        showToast(message, type);
+    } else if (window.apiManager && typeof window.apiManager.showToast === 'function') {
+        window.apiManager.showToast(message, type);
+    } else if (typeof show_message === 'function') {
+        show_message(message, type === 'error' ? 'error' : 'success');
+    } else {
+        alert(message);
+    }
+}
+
+const product_form=document.getElementById('product_form');
+const productSubmitButton=document.getElementById('form_submit_btn');
 product_form.addEventListener("submit",async function(e){
     e.preventDefault();
-    id=document.getElementById("id");
-    console.log("product_form ",product_form.action) 
-    if(id.value=="")
-    {
-        id.value=null;
+
+    const id = document.getElementById("id");
+    const item_name = document.getElementById('item_name');
+    const category = document.getElementById("category");
+    const organization = document.getElementById("organization");
+    const model = document.getElementById("model");
+    const purchased_price = document.getElementById("purchased_price");
+    const selling_price = document.getElementById("selling_price");
+
+    if (!item_name.value.trim()) {
+        showProductFormMessage("Item name is required", "warning");
+        item_name.focus();
+        return false;
     }
-    item_name=document.getElementById('item_name');
-    category=document.getElementById("category");
-    organization=document.getElementById("organization");
-    branch=document.getElementById("branch");
-    img=document.getElementById("img");
-    console.log("img ",img.files[0])
-    model=document.getElementById("model");
-    minimum_requirement=document.getElementById("minimum_requirement");
-    is_service=document.getElementById("is_service");
-    current_amount=document.getElementById("current_amount");    
-    purchased_price=document.getElementById("purchased_price");
-    // prev_purchased_price=document.getElementById("prev_purchased_price");
-    selling_price=document.getElementById("selling_price");
-    // prev_selling_price=document.getElementById("prev_selling_price");
-    // const product = new FormData();
-    const formData=new FormData();
-    formData.append("id",id.value);
-    formData.append("item_name",item_name.value);
-    formData.append("category",category.value);
-    formData.append("organization",organization.value);
-    formData.append("branch", branch ? branch.value : "");
-    formData.append("img",img.files[0]);
-    formData.append("is_service",is_service.value);
-    formData.append("model",model.value);
-    formData.append("minimum_requirement",minimum_requirement.value);
-    formData.append("current_amount",current_amount.value);
-    formData.append("purchased_price",purchased_price.value);
-    // formData.append("prev_purchased_price",prev_purchased_price.value);
-    formData.append("selling_price",selling_price.value);
-    // formData.append("prev_selling_price",prev_selling_price.value);
-    url=product_form.action;
-    headers={'Content-Type': 'multipart/form-data','X-CSRFToken':getCookie('csrftoken')} 
-    const response=await call_shirkat(url,'POST',formData,headers);
-    console.log('res ',response)
-     if(response.status==200 || response.status==201){
-        if(response.data.ok)
-        { 
-            alert("Product Saved");
-             // console.log("Fetching product data...");
-            const postData={'organization_id':organization.value}
-            let response = await call_shirkat(url, 'POST',postData);
-            product_data = response.data;
-            localStorage.setItem("product_data", JSON.stringify(product_data)); 
-            id.value=response.data.id;
-            window.location.href="/products/product/add/"+id.value;
+
+    if (!category.value) {
+        showProductFormMessage("Please select a category", "warning");
+        category.focus();
+        return false;
+    }
+
+    if (!organization || !organization.value) {
+        showProductFormMessage("Please select an organization", "warning");
+        organization?.focus();
+        return false;
+    }
+
+    if (!model.value.trim()) {
+        showProductFormMessage("Model is required", "warning");
+        model.focus();
+        return false;
+    }
+
+    if (!purchased_price.value || !selling_price.value) {
+        showProductFormMessage("Purchase and selling prices are required", "warning");
+        (!purchased_price.value ? purchased_price : selling_price).focus();
+        return false;
+    }
+
+    if (id && id.value === "null") {
+        id.value = "";
+    }
+
+    const originalButtonText = productSubmitButton.value;
+    productSubmitButton.disabled = true;
+    productSubmitButton.value = "Saving...";
+
+    try {
+        const formData = new FormData(product_form);
+        const response = await fetch(product_form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            throw new Error(data.message || "Product was not saved");
         }
-        else
-        {
-            show_message(response.data.message,"error");   
+
+        showProductFormMessage(data.message || "Product saved", "success");
+        if (id) {
+            id.value = data.id || "";
         }
+        await get_products();
+        window.location.href = `/products/product/add/${data.id}`;
+    } catch (error) {
+        console.error('Product save error:', error);
+        showProductFormMessage(error.message || "Product was not saved", "error");
+    } finally {
+        productSubmitButton.disabled = false;
+        productSubmitButton.value = originalButtonText;
     }
-    else{
-        show_message("bill Not Created ","error")
-    }
+
     return false;
 });
 </script>
@@ -766,11 +915,4 @@ document.getElementById("purchased_price").addEventListener("change",(e)=>{
     })
 </script>
 
-<script>
-const search_by_org=true;
-    search_product(null,search_by_org);
-     item_name.addEventListener("input",(e)=>{
-         search_product(null,search_by_org);
-     });
-</script>
 {% endblock %}

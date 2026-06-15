@@ -5,10 +5,11 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from common.date import current_shamsi_date
 from django.dispatch import receiver
-from product.models import Stock,Product_Detail
+from product.models import Product_Detail
 from asset.models import AssetBillSummary,AssetWholeBillSummary
 from decimal import Decimal
 from django.db.models.signals import pre_save, post_save, post_delete
+from product.stock_utils import get_stock_for_scope
 
 STATUS=((0,"CANCELLED"),(1,"CREATED"))
 bill_types=(("PURCHASE","PURCHASE"),("SELLING","SELLING"),("PAYMENT","PAYMENT"),("RECEIVEMENT","RECEIVEMENT"),("LOSSDEGRADE","LOSSDEGRADE"),("EXPENSE","EXPENSE"))
@@ -405,11 +406,12 @@ def revert_old_stock_before_update(sender, instance, **kwargs):
     net_qty = _bill_detail_net_qty(old_instance)
     
     # Get or create stock record
-    stock, _ = Stock.objects.get_or_create(
+    stock = get_stock_for_scope(
         product=product,
         organization=organization,
         branch=old_instance.bill.branch,
         defaults={"current_amount": Decimal(0)},
+        align_branch=True,
     )
     
     # Revert stock based on bill type
@@ -440,11 +442,12 @@ def rollback_stock_on_delete(sender, instance, **kwargs):
     net_qty = _bill_detail_net_qty(instance)
     
     # Get or create stock record
-    stock, _ = Stock.objects.get_or_create(
+    stock = get_stock_for_scope(
         product=product,
         organization=organization,
         branch=instance.bill.branch,
         defaults={"current_amount": Decimal(0)},
+        align_branch=True,
     )
     
     # Rollback stock based on bill type
@@ -494,11 +497,12 @@ def update_stock_and_price(sender, instance, created, **kwargs):
     pd_obj.save()
 
     # Update Stock levels
-    stock, _ = Stock.objects.get_or_create(
+    stock = get_stock_for_scope(
         product=product,
         organization=organization,
         branch=instance.bill.branch,
         defaults={"current_amount": Decimal(0)},
+        align_branch=True,
     )
     
     if bill_type == "PURCHASE":

@@ -77,14 +77,19 @@ input[name="date"]:focus {
                     <!-- Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">Organization <span class="text-danger">*</span></label>
-                        {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations selected_org=bill.organization css_class='form-select' %}
+                        <select name="organization" id="organization" class="form-select organization-select" required>
+                            <option value="">Select Organization</option>
+                            {% for org in organizations %}
+                                <option value="{{ org.id }}" {% if bill and bill.organization and bill.organization.id == org.id %}selected{% elif organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                            {% endfor %}
+                        </select>
                         <input type="hidden" id="initial_branch_id" value="{% if bill and bill.branch %}{{ bill.branch.id }}{% endif %}">
                     </div>
                     <!-- Branch -->
                     <div class="col-md-6">
-                        <label class="form-label form-label-bold">Branch</label>
-                        <select name="branch" id="branch" class="form-select">
-                            <option value="">— Select Branch (Optional) —</option>
+                        <label class="form-label form-label-bold">Branch <span class="text-danger">*</span></label>
+                        <select name="branch" id="branch" class="form-select" required aria-required="true">
+                            <option value="">— Select Branch —</option>
                             {% if branches %}
                                 {% for branch in branches %}
                                 <option value="{{ branch.id }}" data-organization-id="{{ branch.organization.id }}"
@@ -193,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!orgEl || !branchEl) return;
 
     async function loadBranches(orgId) {
-        branchEl.innerHTML = '<option value="">— Select Branch (Optional) —</option>';
+        branchEl.innerHTML = '<option value="">— Select Branch —</option>';
         if (!orgId) return;
         try {
             branchEl.disabled = true;
@@ -209,7 +214,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 var opt = document.createElement('option');
                 opt.value = b.id;
                 opt.setAttribute('data-organization-id', orgId);
-                opt.textContent = b.name;
+                var orgName = b.organization && b.organization.name ? b.organization.name : '';
+                opt.textContent = b.name + (orgName ? ' - ' + orgName : '');
                 branchEl.appendChild(opt);
             });
             if (initialId) { branchEl.value = initialId; initialId = ''; }

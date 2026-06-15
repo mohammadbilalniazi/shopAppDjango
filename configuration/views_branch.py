@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -133,7 +132,6 @@ def branch_management(request, org_id):
 
 
 @login_required
-@csrf_exempt
 def branch_create(request):
     """Create a new branch via AJAX"""
     if request.method == 'POST':
@@ -153,11 +151,11 @@ def branch_create(request):
             form_data = {
                 'name': data.get('name'),
                 'code': data.get('code'),
-                'location': data.get('location'),
+                'location': data.get('location') or None,
                 'address': data.get('address'),
                 'phone': data.get('phone'),
                 'email': data.get('email'),
-                'manager': data.get('manager'),
+                'manager': data.get('manager') or None,
                 'description': data.get('description'),
             }
             
@@ -202,7 +200,6 @@ def branch_create(request):
 
 
 @login_required
-@csrf_exempt
 def branch_update(request, branch_id):
     """Update branch via AJAX"""
     if request.method == 'POST':
@@ -264,7 +261,6 @@ def branch_update(request, branch_id):
 
 
 @login_required
-@csrf_exempt
 def branch_delete(request, branch_id):
     """Delete branch via AJAX"""
     if request.method == 'DELETE':
@@ -296,7 +292,6 @@ def branch_delete(request, branch_id):
 
 
 @login_required
-@csrf_exempt
 def branch_toggle_status(request, branch_id):
     """Toggle branch active/inactive status via AJAX"""
     if request.method == 'POST':

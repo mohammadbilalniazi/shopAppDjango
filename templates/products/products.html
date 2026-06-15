@@ -12,35 +12,80 @@
 {% block head_extra %}
 <link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
 <style>
-    /* Product-specific styles using design system */
-    .products-header {
-        background: var(--gradient-primary);
-        color: var(--white);
-        padding: var(--space-8);
+    .products-page {
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .products-alert {
+        font-weight: var(--font-weight-semibold);
+        text-align: center;
+        padding: var(--space-3);
+        font-size: var(--font-size-sm);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-4);
+        border: 1px solid transparent;
+    }
+
+    .products-alert.error {
+        background: var(--error-light);
+        color: var(--error-dark);
+        border-color: #fecaca;
+    }
+
+    .products-alert.success {
+        background: var(--success-light);
+        color: var(--success-dark);
+        border-color: #bbf7d0;
+    }
+
+    .products-header,
+    .filters-section,
+    .products-table-container {
+        background: var(--white);
+        border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .products-header {
+        padding: var(--space-6);
         margin-bottom: var(--space-6);
-        box-shadow: var(--shadow-lg);
+    }
+
+    .products-header h1 {
+        margin: 0;
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+    }
+
+    .products-header p {
+        margin: var(--space-1) 0 0;
+        color: var(--text-secondary);
     }
     
     .filters-section {
-        background: var(--white);
         padding: var(--space-6);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
         margin-bottom: var(--space-6);
-        border: 1px solid var(--border-color);
     }
     
     .filter-row {
         display: flex;
         gap: var(--space-4);
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-end;
     }
     
     .filter-group {
         flex: 1;
         min-width: 200px;
+    }
+
+    .filter-action {
+        display: flex;
+        align-items: flex-end;
     }
     
     .filter-group label {
@@ -55,7 +100,7 @@
     .filter-group select {
         width: 100%;
         padding: 0.45rem 0.65rem;
-        border: 2px solid var(--border-color);
+        border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         font-size: 0.9rem;
         transition: var(--transition-base);
@@ -63,19 +108,15 @@
     }
     
     .filter-group input:focus,
-    .filter-group select:focus {
+    .filter-group select:focus,
+    .products-table .form-control:focus {
         outline: none;
-        border-color: var(--color-primary);
-        box-shadow: var(--shadow-focus);
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
     }
 
-    /* Products Table Container */
     .products-table-container {
-        background: var(--white);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
         overflow: hidden;
-        border: 1px solid var(--border-color);
     }
     
     .products-table {
@@ -85,8 +126,7 @@
     }
     
     .products-table thead {
-        background: var(--gradient-primary);
-        color: var(--white);
+        background: var(--gray-50);
     }
     
     .products-table th {
@@ -95,15 +135,17 @@
         font-weight: var(--font-weight-semibold);
         white-space: nowrap;
         font-size: var(--font-size-sm);
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
     }
     
     .products-table tbody tr {
-        border-bottom: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-color);
         transition: var(--transition-base);
     }
     
     .products-table tbody tr:hover {
-        background-color: var(--surface-hover);
+        background-color: var(--gray-50);
     }
     
     .products-table td {
@@ -112,7 +154,6 @@
         font-size: var(--font-size-sm);
     }
     
-    /* Product Image */
     .product-image {
         width: 50px;
         height: 50px;
@@ -121,7 +162,6 @@
         box-shadow: var(--shadow-sm);
     }
     
-    /* Action Buttons - Using Design System */
     .action-buttons {
         display: flex;
         gap: var(--space-2);
@@ -139,29 +179,40 @@
     .products-table .form-control {
         min-height: 34px;
         padding: var(--space-2);
-        border: 2px solid var(--border-color);
+        border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         font-size: 0.85rem;
         transition: var(--transition-base);
     }
     
-    .products-table .form-control:focus {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: var(--shadow-focus);
-    }
-    
-    /* Pagination */
     .pagination-info {
         padding: var(--space-4) var(--space-6);
-        background: var(--surface-secondary);
+        background: var(--gray-50);
         border-top: 1px solid var(--border-color);
         font-weight: var(--font-weight-semibold);
         color: var(--text-secondary);
         font-size: var(--font-size-sm);
     }
+
+    #pagination_id {
+        display: inline-flex;
+        gap: var(--space-2);
+        margin-right: var(--space-3);
+        vertical-align: middle;
+    }
+
+    .stock-update-message {
+        display: none;
+        background: var(--success-light);
+        color: var(--success-dark);
+        border: 1px solid #bbf7d0;
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        margin-top: var(--space-4);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+    }
     
-    /* Responsive Design - Using design system breakpoints */
     @media (max-width: 1200px) {
         .products-table {
             font-size: var(--font-size-xs);
@@ -174,8 +225,13 @@
     }
     
     @media (max-width: 768px) {
+        .products-page {
+            padding: var(--space-3);
+        }
+
         .filter-row {
             flex-direction: column;
+            align-items: stretch;
         }
         
         .filter-group {
@@ -190,69 +246,17 @@
             min-width: 1000px;
         }
         
-        .products-header {
-            padding: var(--space-6) var(--space-4);
-        }
-        
+        .products-header,
         .filters-section {
             padding: var(--space-4);
         }
     }
     
-    @media (max-width: 576px) {
-        .container {
-            padding: var(--space-2) !important;
-        }
-        
-        .products-header h1 {
-            font-size: var(--font-size-lg);
-        }
-        
-        /* Mobile table layout */
-        .products-table thead {
-            display: none;
-        }
-        
-        .products-table,
-        .products-table tbody,
-        .products-table tr,
-        .products-table td {
-            display: block;
-            width: 100%;
-        }
-        
-        .products-table tr {
-            margin-bottom: var(--space-4);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: var(--space-4);
-            background: var(--white);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .products-table td {
-            padding: var(--space-2) 0;
-            border: none;
-            position: relative;
-            padding-left: 50%;
-        }
-        
-        .products-table td:before {
-            content: attr(data-label);
-            position: absolute;
-            left: 0;
-            width: 45%;
-            padding-right: var(--space-2);
-            font-weight: var(--font-weight-semibold);
-            color: var(--text-primary);
-        }
-    }
-    
-    /* Loading and Empty States */
-    .loading {
+    .loading,
+    .empty-state {
         text-align: center;
         padding: var(--space-12);
-        color: var(--color-primary);
+        color: var(--text-tertiary);
     }
     
     .loading::after {
@@ -260,8 +264,8 @@
         display: inline-block;
         width: 40px;
         height: 40px;
-        border: 4px solid var(--border-light);
-        border-top: 4px solid var(--color-primary);
+        border: 4px solid var(--gray-200);
+        border-top: 4px solid var(--brand-primary);
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
@@ -270,30 +274,18 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-    
-    .empty-state {
-        text-align: center;
-        padding: var(--space-12);
-        color: var(--text-tertiary);
-    }
-    
-    .empty-state i {
-        font-size: var(--font-size-4xl);
-        margin-bottom: var(--space-4);
-        color: var(--text-muted);
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container universal-compact-ui" style="max-width: 1400px; margin: 20px auto; padding: 20px;">
+<div class="products-page universal-compact-ui">
     
     {% if messages %}
         {% for message in messages %}
             {% if message.tags == "error" %}
-                <div class='alert alert-danger' style="background-color:rgb(176, 122, 122);font-weight:bolder;text-align:center;padding:12px;font-size:15px">
+                <div class="products-alert error">
             {% else %}
-                <div class='alert alert-success' style="background-color:lightgreen;font-weight:bolder;text-align:center;padding:12px;font-size:15px">
+                <div class="products-alert success">
             {% endif %}
                 {{ message }}
             </div>
@@ -301,39 +293,44 @@
     {% endif %}
 
     <!-- Page Header -->
-    <div class="products-header" style="background-color: white;color:black;">
-        <h1>📦 Products Management</h1>
-        <p style="margin: 0; opacity: 0.9;">Manage your inventory and product catalog</p>
+    <div class="products-header">
+        <h1>Products Management</h1>
+        <p>Manage your inventory and product catalog</p>
     </div>
 
     <!-- Search and Filters -->
     <div class="filters-section">
         <div class="filter-row">
             <div class="filter-group">
-                <label for="item_name">🔍 Search Product</label>
+                <label for="item_name">Search Product</label>
                 <input type="text" name='item_name' id='item_name' placeholder="Search by product name...">
             </div>
             
             <div class="filter-group">
-                <label for="organization">🏢 Organization</label>
-                {% include 'includes/organization_select.html' with field_name='organization' field_id='organization' organizations_list=organizations %}
+                <label for="organization">Organization</label>
+                <select name="organization" id="organization" class="organization-select">
+                    <option value="">Select Organization</option>
+                    {% for org in organizations %}
+                        <option value="{{ org.id }}">{{ org.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             
-            <div class="filter-group" style="display: flex; align-items: flex-end;">
+            <div class="filter-group filter-action">
                 <a href="{% url 'product_form' %}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add Product
                 </a>
             </div>
         </div>
         
-        <span id="update_stock_message" style="display: none; background-color: lightgreen; padding: 10px; border-radius: 5px; margin-top: 1rem; display: none;"></span>
+        <span id="update_stock_message" class="stock-update-message"></span>
     </div>
 
     <!-- Products Table -->
     <div class="products-table-container">
         {% csrf_token %}
         <table class="products-table" id="result_list">
-            <thead style="color:black; font-weight:bolder; font-size:20px">
+            <thead>
                 <tr>
                     <th>Item Name</th>
                     <th>Model</th>

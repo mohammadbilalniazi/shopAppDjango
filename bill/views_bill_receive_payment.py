@@ -17,8 +17,13 @@ from rest_framework.decorators import api_view
 from .forms import Bill_Form
 from django.db.models import Q
 from .models_stripe import TransactionLog
-from .views_bill import getBillNo
-from common.branch_utils import get_valid_branch_for_organization
+from .views_bill import (
+    can_user_access_bill,
+    getBillNo,
+    get_bill_form_scope,
+    get_bill_organization_for_user,
+)
+from common.branch_utils import get_required_branch_for_user_organization
 # from .views_bill import get_opposit_bill
 
 
@@ -56,48 +61,23 @@ def bill_form(request):
     template=loader.get_template('bill/bill_form_receive_payment.html')
     date = date2jalali(datetime.now())
     # year=date.strftime('%Y')
-    self_organization,user_orgs = find_userorganization(request)
     form=Bill_Form()
     form.fields['date'].initial=date
-    
-    # Handle organizations and rcvr_orgs
-    if self_organization is None:
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            rcvr_orgs = Organization.objects.all()
-            self_organization = None
-        else:
-            if user_orgs and user_orgs.count() > 0:
-                self_organization = user_orgs.first()
-                organizations = user_orgs
-                rcvr_orgs = Organization.objects.all()
-            else:
-                from django.contrib import messages
-                messages.error(request, "No organizations assigned to your account. Please contact administrator.")
-                organizations = Organization.objects.none()
-                rcvr_orgs = Organization.objects.none()
-    else:
-        if request.user.is_superuser:
-            organizations = Organization.objects.all()
-            rcvr_orgs = Organization.objects.all()
-        else:
-            organizations = Organization.objects.filter(id=self_organization.id)
-            rcvr_orgs = Organization.objects.all()
+    organizations, organization, branches = get_bill_form_scope(request)
+    rcvr_orgs = Organization.objects.exclude(id=organization.id) if organization else Organization.objects.all()
+
+    if not organizations.exists():
+        messages.error(request, "No organizations assigned to your account. Please contact administrator.")
     
     context={
         'form':form,
-        'organization':self_organization,
+        'organization':organization,
         'organizations':organizations,
         'rcvr_orgs':rcvr_orgs,
         'date':date,
         'currencies': Currency.objects.all(),
-    } 
-    # Add branches for the selected organization(s)
-    from configuration.models import Branch
-    if self_organization is not None:
-        context['branches'] = Branch.objects.filter(organization=self_organization, is_active=True).order_by('name')
-    else:
-        context['branches'] = Branch.objects.filter(organization__in=user_orgs, is_active=True).order_by('organization__name', 'name')
+        'branches': branches,
+    }
     return HttpResponse(template.render(context,request))
 
 @login_required(login_url='/admin')
@@ -113,11 +93,19 @@ def bill_insert(request):
     year = date.split("-")[0]
     status = int(request.data.get("status",0))
     ############before request.data  and request.data.getlist
-    organization_id = request.data.get("organization",0)
-    organization = Organization.objects.get(id=int(organization_id))
-    self_organization, user_orgs = find_userorganization(request,organization_id)
+    organization_id = request.data.get("organization")
     try:
-        branch = get_valid_branch_for_organization(organization, request.data.get("branch"))
+        organization = get_bill_organization_for_user(request, organization_id)
+    except ValueError as exc:
+        return Response({"message": str(exc), "ok": False, "data": None, "bill_id": None})
+
+    self_organization, user_orgs = find_userorganization(request, organization_id)
+    try:
+        branch = get_required_branch_for_user_organization(
+            request.user,
+            organization,
+            request.data.get("branch"),
+        )
     except ValueError as exc:
         return Response({"message": str(exc), "ok": False, "data": None, "bill_id": None})
     bill_type = request.data.get("bill_type",None)
@@ -184,6 +172,8 @@ def bill_insert(request):
             message="The Bill with Id {} not exist ".format(id)
             return Response({"message":message,"ok":ok})
         bill_obj=bill_query[0] 
+        if not can_user_access_bill(request, bill_obj):
+            return Response({"message": "You do not have access to this bill.", "ok": False})
 
         query_new_bill=Bill.objects.filter(
             Q(bill_no=int(bill_no)),

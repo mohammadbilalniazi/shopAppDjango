@@ -53,6 +53,7 @@ urlpatterns = [
     path('configuration/organization/<int:org_id>/users/', views_branch.get_organization_users, name='get_organization_users'),
 
     # Branch API endpoints
+    path('api/branches/by-organization/', views_branch_api.get_branches_by_organization, name='get_branches_by_organization_query'),
     path('api/branches/by-organization/<int:organization_id>/', views_branch_api.get_branches_by_organization, name='get_branches_by_organization'),
     path('api/branches/user-accessible/', views_branch_api.get_all_user_branches, name='get_all_user_branches'),
 
