@@ -7,20 +7,24 @@ class OrganizationUserCreateSerializer(serializers.ModelSerializer):
         model = OrganizationUser
         fields = '__all__'
     
-    def validate_user(self, value):
+    def validate(self, attrs):
         """
-        Ensure that a user can only belong to one organization.
+        Allow a user to belong to multiple organizations, but only once per
+        organization.
         """
-        # Skip validation if we're updating an existing instance
-        if self.instance:
-            return value
-        
-        # Check if the user already belongs to an organization
-        if OrganizationUser.objects.filter(user=value).exists():
-            raise serializers.ValidationError(
-                "This user already belongs to an organization. One user can only belong to one organization."
-            )
-        return value    
+        user = attrs.get("user", getattr(self.instance, "user", None))
+        organization = attrs.get("organization", getattr(self.instance, "organization", None))
+
+        if user and organization:
+            duplicate = OrganizationUser.objects.filter(user=user, organization=organization)
+            if self.instance:
+                duplicate = duplicate.exclude(pk=self.instance.pk)
+            if duplicate.exists():
+                raise serializers.ValidationError(
+                    "This user is already assigned to this organization."
+                )
+
+        return attrs    
 
 class OrganizationUserSerializer(serializers.ModelSerializer):
     img = serializers.SerializerMethodField()
@@ -28,6 +32,7 @@ class OrganizationUserSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     username= serializers.CharField(source='user.username',read_only=True)
     organization=serializers.CharField(source='organization.name',read_only=True)
+    branch_name = serializers.CharField(source='branch.name', read_only=True, default=None)
     class Meta:
         model = OrganizationUser
         fields = '__all__'

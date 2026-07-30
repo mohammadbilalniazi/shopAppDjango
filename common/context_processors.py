@@ -19,8 +19,8 @@ def organizations_processor(request):
             # Get user's organizations using the existing helper
             self_organization, user_orgs = find_userorganization(request)
             
-            # For superusers, show all organizations
-            if request.user.is_superuser or request.user.is_staff:
+            # Only real superusers can see every organization.
+            if request.user.is_superuser:
                 all_organizations = Organization.objects.filter(is_active=True).order_by('name')
             else:
                 # For regular users, show only their assigned organizations
@@ -66,8 +66,8 @@ def branch_context(request):
                 context['current_branch'] = current_branch
                 context['user_branches_count'] = user_branches.count()
                 
-                # For superusers, add all branches in organization
-                if request.user.is_superuser or request.user.is_staff:
+                # Only real superusers can see every branch in the organization.
+                if request.user.is_superuser:
                     all_branches = Branch.objects.filter(
                         organization=self_organization, 
                         is_active=True

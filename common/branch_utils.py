@@ -29,6 +29,10 @@ class BranchManager:
             if organization:
                 branches = branches.filter(organization=organization)
             return branches
+
+        owned_organizations = Organization.objects.filter(owner=user, is_active=True)
+        if organization:
+            owned_organizations = owned_organizations.filter(id=organization.id)
         
         # Get user's organization assignments
         org_users = OrganizationUser.objects.filter(user=user, is_active=True)
@@ -50,7 +54,10 @@ class BranchManager:
                 ).values_list('id', flat=True)
                 branch_ids.extend(org_branches)
         
-        return Branch.objects.filter(id__in=branch_ids, is_active=True).distinct()
+        return Branch.objects.filter(
+            Q(id__in=branch_ids) | Q(organization__in=owned_organizations),
+            is_active=True,
+        ).distinct()
     
     @staticmethod
     def can_user_access_branch(user, branch):

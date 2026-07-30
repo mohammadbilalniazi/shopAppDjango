@@ -1,0 +1,15 @@
+export const fieldTypes = {
+  INPUT: "input",
+  SELECT: "select",
+  RADIO: "radio",
+  CHECK_BOX: "checkBox",
+  CODING_BLOCK: "codingBlock",
+  DATE: "date",
+  EDITOR: "editor",
+  FILE: "file",
+  INPUT_MASK: "inputMask",
+  TEXT_AREA: "textArea",
+  TRANSFER_LIST: "transferList",
+  LOOKUP_INPUT: "lookupInput",
+  MODAL_INPUT: "modalInput",
+};

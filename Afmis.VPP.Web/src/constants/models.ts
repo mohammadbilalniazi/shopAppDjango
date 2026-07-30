@@ -1,0 +1,178 @@
+// Gengeral Leger
+
+const FISCAL_YEARS = "FiscalYears";
+const FISCAL_PERIODS = "FiscalPeriods";
+
+const USERS = "ApplicationUsers";
+const USER_DETAIL = "ApplicationUsers-GetById";
+// const PASSWORD_RESET_ = "RemunirationEmployeeRemainReport";
+
+const USER_ROLE_INSTITUTION_ASSIGNMENT = "ApplicationUsers/ManageUser";
+const USER_INSTITUTION_ASSIGNMENT = "UserInstitutions";
+
+const ROLE_PERMISSION_ASSIGNMENT = "ApplicationRoles/ManageRolePermission";
+const MODULE_PERMISSIONS="MODULE_PERMISSIONS";
+const PASSWORD_RESET_FORM = "PasswordReset";
+const RESET_USER_PASSWORD_BY_ADMIN = "ResetUserPasswordByAdmin";
+
+const ACCOUNT_NUMBERS = "AccountNumbers";
+const PAYMENT_EXTARCT_PAYMENTS = "PaymentExtractPayments";
+
+const INSTITUTIONS = "Institutions";
+const MOE_INSTITUTIONS = "MoEInstitutions";
+const DEPARTMENTS = "Departments";
+const REGIONS = "Regions";
+const CODING_BLOCKS = "CodingBlocks";
+const APIN_NUMBERS = "ApinNumbers";
+const FILINGS = "Filing";
+
+//ara
+const EMPLOYEES = "Employees";
+const MARTYREDISABLELAWYER = "MartyrDisables";
+const EMPLOYEES_INSTITUTION_AND_BASTH_UPDATE = "EmployeesInsert";
+const NTA_CFNUMBER_BY_INSTITUTION= "NtaCFNumberByInstitution";
+const DOWNLOAD_EMP_BANK_MAKTOOB = "Employees-GetById";
+const EMPLOYEE_ACCOUNTNUMBER_INSERT = "EmployeeAccountNumber";
+
+const HEAD_COUNT_DETAILS = "HeadCountDetails";
+const HEAD_COUNT_DETAIL_COMPLETE_SEARCH_LOOKUP =
+  "HeadCountDetailsCompleteSearchLookup";
+
+//CBA
+const RECONCILIATIONS = "Reconciliation";
+const TAZKIRAVERIFICATION="ETazkiras";
+const TAZKIRA_UPDATE_AND_NESTED_FORM="Employees-Put";
+const DELETE_EMPLOYEE_ATTENDANCE = "EmployeeAttendance";
+const EMPLOYEE_ATTENDANCE_REPORT_SEARCH_RESULT =
+  "EmployeeAttendanceReportSearchResult";
+// const AGGREGATED_ATTENDANCE_REPORT = "AggregatedAttendanceReportSearchResult";
+const EMPLOYEE_LEAVE_LIST_SEARCH_RESULT = "Leaves";
+const EMPLOYEE_LEAVE_UPDATE = "LeavesUpdate";
+const EMPLOYEE_ATTENDANCE_REPORT = "EmployeeAttendanceResult";
+const EMPLOYEE_LEAVE_REPORT = "EmployeeLeaveReport";
+const EMPLOYEE_ATTENDANCE_LIST_SEARCH_RESULT = "EmployeeAttendanceList";
+const EMPLOYEE_UPDATE_DESCRIPTION_ATTENDANCE =
+  "EmployeeAttendance-UpdateDescription";
+//Remuniration 
+const REMUNIRATION_DETAIL_PAYMENT_REPORT = "RemunirationDetailPaymentReport";
+const SUSP_EMP_REMU_DET_PAYM_RPRT =
+  "SuspendedEmpRemunirationDetailPaymentReport";
+
+const REMUNIRATION_PAYMENT_DELETE = "remunirationpaymentdelete";
+const REMUNIRATION_DETAIL_PAYMENT_INDIVIDUAL_EMPLOYEE_REPORT =
+  "RemunirationDetailPaymentIndividualEmployeeReport";
+const SALARY_ATTACHMENT="SalaryAttachments-Post";
+const BANK_REPORT_M16_RECONCILIATION= "M16Report-ReconcileBankReport";
+
+const REMU_DET_PAYM_EMP_YRLY_RPRT =
+  "M16Report-M40Download";
+const SAVE_M16_CHECKNO="M16Report-PostM16ChequeNumber";
+const REMU_REMAIN_EMP_RPRT = "RemunirationEmployeeRemainReport";
+const REM_REMAIN_INSERT = "RemunirationEmployeeRemainInsert";
+const REMU_REMAIN_RPRT = "RemunirationRemainReport";
+const REMU_REMAIN_DETAIL = "RemunirationRemainDetail";
+const REMU_PAYMENT_DETAIL = "RemunirationPayment-Put";
+const TEACHER_LOAN_M41_EMPLOYEES = "TeacherLoanM41Employees";
+const TEACHER_LOAN_M41_REMAIN_EMPLOYEES = "TeacherLoanM41RemainEmployees";
+const TEACHER_LOAN_M16 = "TeacherLoan-CreateM16";
+const TEACHER_LOAN_UPDATE = "TeacherLoan-Put";
+const IKRAMIA_DETALL = "Ikramias";
+const IKRAMIA_INSERT = "Ikramias-Post";
+// Deduction
+const DEDUCTION_DETAIL_PAYMENT_REPORT = "DeductionDetailPaymentReport";
+const DEDUCTION_REMAIN_RPRT = "DeductionRemainReport";
+const DED_REMAIN_INSERT = "DeductionRemainInsert";
+const HEAD_COUNT_TASHKILCODE="TashkilCodes";
+const DEDUCTION_REMAIN_DELETE_ON= "DeductionRemainDeleteOn";
+
+const PERMISSIONS_BY_USER = "ApplicationUsers-GetPermissionsByUserId";
+const LOGOUT_USER_POPUP = "ApplicationUsers-Logout";
+const LOGGEDIN_USERS_LIST = "ApplicationUsers-GetLoggedInUsers";
+//wage
+const WAGE_REPORT = "Istiqaq-WageReport";
+export const models = {
+  FISCAL_YEARS,
+  FISCAL_PERIODS,
+  CODING_BLOCKS,
+  REGIONS,
+  INSTITUTIONS,
+  MOE_INSTITUTIONS,
+  DEPARTMENTS,
+  ACCOUNT_NUMBERS,
+  USERS,
+  USER_DETAIL,
+  USER_ROLE_INSTITUTION_ASSIGNMENT,
+  USER_INSTITUTION_ASSIGNMENT,
+  ROLE_PERMISSION_ASSIGNMENT,
+  MODULE_PERMISSIONS,
+  PASSWORD_RESET_FORM,
+  RESET_USER_PASSWORD_BY_ADMIN,
+  PAYMENT_EXTARCT_PAYMENTS,
+  APIN_NUMBERS,
+  FILINGS,
+
+  //ARA
+  HEAD_COUNT_DETAILS,
+  HEAD_COUNT_TASHKILCODE,
+  HEAD_COUNT_DETAIL_COMPLETE_SEARCH_LOOKUP,
+  EMPLOYEES,
+  MARTYREDISABLELAWYER,
+  EMPLOYEES_INSTITUTION_AND_BASTH_UPDATE,
+  NTA_CFNUMBER_BY_INSTITUTION,
+  DOWNLOAD_EMP_BANK_MAKTOOB,
+  EMPLOYEE_ACCOUNTNUMBER_INSERT,
+  TAZKIRAVERIFICATION,
+  TAZKIRA_UPDATE_AND_NESTED_FORM,
+  //CBA
+  RECONCILIATIONS,
+
+  // Attendance
+  DELETE_EMPLOYEE_ATTENDANCE,
+  EMPLOYEE_ATTENDANCE_REPORT_SEARCH_RESULT,
+  // AGGREGATED_ATTENDANCE_REPORT,
+
+  EMPLOYEE_ATTENDANCE_LIST_SEARCH_RESULT,
+  EMPLOYEE_UPDATE_DESCRIPTION_ATTENDANCE,
+  EMPLOYEE_ATTENDANCE_REPORT,
+
+  // deduction remain 
+  DEDUCTION_REMAIN_DELETE_ON,
+  
+  // Leave
+  EMPLOYEE_LEAVE_LIST_SEARCH_RESULT,
+  EMPLOYEE_LEAVE_REPORT,
+  EMPLOYEE_LEAVE_UPDATE,
+
+  // SA
+  PERMISSIONS_BY_USER,
+  LOGOUT_USER_POPUP,
+  LOGGEDIN_USERS_LIST,
+  //Remuniration
+  REMUNIRATION_DETAIL_PAYMENT_REPORT,
+  REMUNIRATION_DETAIL_PAYMENT_INDIVIDUAL_EMPLOYEE_REPORT,
+  SUSP_EMP_REMU_DET_PAYM_RPRT,
+  REMUNIRATION_PAYMENT_DELETE,
+  REMU_DET_PAYM_EMP_YRLY_RPRT,
+  REMU_REMAIN_EMP_RPRT,
+  REM_REMAIN_INSERT,
+  REMU_REMAIN_RPRT,
+  REMU_REMAIN_DETAIL,
+  REMU_PAYMENT_DETAIL,
+  // Teacher Loan
+  TEACHER_LOAN_M41_EMPLOYEES,
+  TEACHER_LOAN_M41_REMAIN_EMPLOYEES,
+  TEACHER_LOAN_M16,
+  IKRAMIA_DETALL,
+  IKRAMIA_INSERT,
+  SALARY_ATTACHMENT,
+  BANK_REPORT_M16_RECONCILIATION,
+  SAVE_M16_CHECKNO,
+  TEACHER_LOAN_UPDATE,
+  //Deduction
+  DEDUCTION_DETAIL_PAYMENT_REPORT,
+  DEDUCTION_REMAIN_RPRT,
+  DED_REMAIN_INSERT,
+
+  //Wage
+  WAGE_REPORT,
+};

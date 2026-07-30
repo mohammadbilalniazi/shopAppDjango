@@ -338,6 +338,7 @@ def branch_detail(request, branch_id):
         
         return JsonResponse({
             'success': True,
+            'message': 'Branch details loaded successfully',
             'branch': {
                 'id': branch.id,
                 'name': branch.name,

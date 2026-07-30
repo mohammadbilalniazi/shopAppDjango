@@ -5,6 +5,7 @@ from jalali_date import date2jalali
 from django.template import loader  
 from django.contrib.auth.decorators import login_required
 from product.models import Product, Unit, Category
+from user.models import OrganizationUser
 from common.organization import find_userorganization
 from common.date import handle_day_out_of_range
 from configuration.models import *
@@ -28,23 +29,56 @@ from common.branch_utils import (
 )
 
 
+APPROVAL_ROLES = ("admin", "superuser", "owner")
+
+
+def is_organization_admin(user, organization):
+    """Return True when user can approve bills for this organization."""
+    if not user or not user.is_authenticated or organization is None:
+        return False
+    if user.is_superuser:
+        return True
+    return OrganizationUser.objects.filter(
+        user=user,
+        organization=organization,
+        is_active=True,
+        role__in=APPROVAL_ROLES,
+    ).exists()
+
+
+def can_user_approve_bill(user, bill):
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    if is_organization_admin(user, bill.organization):
+        return True
+    receiver_org = getattr(getattr(bill, "bill_receiver2", None), "bill_rcvr_org", None)
+    return is_organization_admin(user, receiver_org)
+
+
 def get_bill_form_scope(request):
     """Return the organizations, selected organization, and branches a user can use."""
     if request.user.is_superuser:
         organizations = Organization.objects.all().order_by("name")
+        branches = Branch.objects.filter(
+            organization__in=organizations,
+            is_active=True,
+        ).select_related("organization").order_by("organization__name", "name")
     else:
         organizations = Organization.objects.filter(
-            organizationuser__user=request.user,
-            organizationuser__is_active=True,
+            Q(organizationuser__user=request.user, organizationuser__is_active=True) |
+            Q(owner=request.user),
             is_active=True,
         ).distinct().order_by("name")
+        user_branch_ids = BranchManager.get_user_branches(request.user).values_list("id", flat=True)
+        branches = Branch.objects.filter(
+            Q(id__in=user_branch_ids) | Q(organization__owner=request.user),
+            organization__in=organizations,
+            is_active=True,
+        ).distinct().select_related("organization").order_by("organization__name", "name")
 
     organization = organizations.first()
-    branches = BranchManager.get_user_branches(request.user).filter(
-        organization__in=organizations,
-        is_active=True,
-    ).select_related("organization").order_by("organization__name", "name")
-
     return organizations, organization, branches
 
 
@@ -58,8 +92,8 @@ def get_bill_organization_for_user(request, organization_id):
     organizations = Organization.objects.filter(id=organization_id, is_active=True)
     if not request.user.is_superuser:
         organizations = organizations.filter(
-            organizationuser__user=request.user,
-            organizationuser__is_active=True,
+            Q(organizationuser__user=request.user, organizationuser__is_active=True) |
+            Q(owner=request.user)
         )
 
     organization = organizations.first()
@@ -76,8 +110,9 @@ def can_user_access_bill(request, bill):
 
     organization_allowed = Organization.objects.filter(
         id=bill.organization_id,
-        organizationuser__user=request.user,
-        organizationuser__is_active=True,
+    ).filter(
+        Q(organizationuser__user=request.user, organizationuser__is_active=True) |
+        Q(owner=request.user)
     ).exists()
     if not organization_allowed:
         return False
@@ -94,7 +129,7 @@ def getBillNo(request,organization_id,bill_rcvr_org_id,bill_type=None):
     organization = None
     if organization_id not in (None, '', 'all'):
         try:
-            organization = Organization.objects.get(id=int(organization_id))
+            organization = get_bill_organization_for_user(request, organization_id)
         except (ValueError, Organization.DoesNotExist):
             organization = None
 
@@ -131,16 +166,10 @@ def bill_show(request,bill_id=None):
     form.set_start_date()
     print(f"############ start_date {form.fields["start_date"].initial}")
     context['form']=form
-    self_organization,user_orgs = find_userorganization(request)
+    organizations, organization, branches = get_bill_form_scope(request)
+    user_orgs = organizations
+    self_organization = organization
     
-    branches = BranchManager.get_user_branches(
-        request.user,
-        organization=self_organization,
-    ).select_related("organization").order_by("organization__name", "name")
-    
-    organizations=Organization.objects.all()
-    organization=self_organization
-
     # Handle case when self_organization is None
     if self_organization is None:
         if request.user.is_superuser:
@@ -164,7 +193,7 @@ def bill_show(request,bill_id=None):
         if request.user.is_superuser:
             organizations = Organization.objects.all()
         else:
-            organizations = Organization.objects.filter(id=self_organization.id)
+            organizations = user_orgs
     # Receiver organizations: if a current organization is set, exclude it from receiver list
     if organization:
         rcvr_orgs = Organization.objects.exclude(id=organization.id)
@@ -194,7 +223,7 @@ def bill_show(request,bill_id=None):
             if request.user.is_superuser:
                 organizations = Organization.objects.all()
             else:
-                organizations = Organization.objects.filter(id=bill.organization.id)
+                organizations = user_orgs
             branches = BranchManager.get_user_branches(
                 request.user,
                 organization=bill.organization,
@@ -221,7 +250,7 @@ def bill_show(request,bill_id=None):
             if request.user.is_superuser:
                 organizations=Organization.objects.all() 
             else:
-                organizations=Organization.objects.filter(id=self_organization.id)
+                organizations=user_orgs
         elif hasattr(bill,'bill_receiver2') and self_organization:
             if bill.bill_receiver2.bill_rcvr_org==self_organization:
                 #  bill_obj.bill_receiver2:
@@ -232,6 +261,7 @@ def bill_show(request,bill_id=None):
     context['branches'] = branches
     context['rcvr_orgs']=rcvr_orgs
     context['currencies'] = Currency.objects.all()
+    context['can_approve_bill'] = is_organization_admin(request.user, organization)
     
     # Set initial values for organization and branch
     if bill_id == None:
@@ -350,6 +380,7 @@ def bill_form_sell_purchase(request):
         'categories':Category.objects.all(),
         'currencies': Currency.objects.all(),
         'is_loss_degrade': False,
+        'can_approve_bill': is_organization_admin(request.user, organization),
     } 
     # print("EEEEEEEEEEEEEEEEEEEE")
     # print("context=",context)
@@ -379,6 +410,7 @@ def bill_form_loss_degrade_product(request):
         'date':date,
         'currencies': Currency.objects.all(),
         'is_loss_degrade': True,
+        'can_approve_bill': is_organization_admin(request.user, organization),
     } 
     # print("context=",context)
     return HttpResponse(template.render(context,request))
@@ -468,6 +500,10 @@ def bill_insert(request):
             bill_rcvr_org = Organization.objects.get(id=int(data.get("bill_rcvr_org")))
         except Organization.DoesNotExist:
             return Response({"ok": False, "message": "Invalid receiver organization"})
+        except (TypeError, ValueError):
+            return Response({"ok": False, "message": "Invalid receiver organization"})
+        if bill_rcvr_org.id == organization.id:
+            return Response({"ok": False, "message": "Receiver organization cannot be the same as bill creator organization."})
 
     # -----------------------------
     # Approval logic
@@ -475,16 +511,17 @@ def bill_insert(request):
     is_approved = str(data.get("is_approved")).lower() in ["1", "true", "on"]
     approval_user = None
     approval_date = None
+    can_approve = is_organization_admin(user, organization)
 
-    if bill_rcvr_org == self_org:
-        if is_approved or status == 1:
-            status = 1
-            is_approved = True
-            approval_user = user
-            approval_date = datetime.now()
+    if is_approved or status == 1:
+        if not can_approve:
+            return Response({"ok": False, "message": "Only organization admins can approve bills."})
+        status = 1
+        is_approved = True
+        approval_user = user
+        approval_date = datetime.now().date()
     else:
         status = 0
-        is_approved = False
 
     # -----------------------------
     # Detail arrays
@@ -521,6 +558,7 @@ def bill_insert(request):
             bill.branch = branch
             if data.get('currency'):
                 bill.currency = data.get('currency')
+            bill.status = status
 
         else:
             if Bill.objects.filter(
@@ -543,6 +581,7 @@ def bill_insert(request):
                 payment=payment,
                 branch=branch,
                 currency=data.get('currency', 'afg') or 'afg',
+                status=status,
             )
 
         bill.save()
@@ -622,6 +661,33 @@ def bill_insert(request):
         "bill_id": bill.id,
         "data": model_to_dict(bill)
     })
+
+
+@login_required(login_url='/admin')
+@api_view(['POST'])
+@transaction.atomic
+def approve_bill(request, bill_id):
+    bill = get_object_or_404(Bill, id=int(bill_id))
+    if not can_user_access_bill(request, bill):
+        return Response({"ok": False, "message": "You do not have access to this bill."})
+    if not can_user_approve_bill(request.user, bill):
+        return Response({"ok": False, "message": "Only organization admins can approve bills."})
+    if not hasattr(bill, 'bill_receiver2'):
+        return Response({"ok": False, "message": "This bill type cannot be approved from this button."})
+
+    receiver = bill.bill_receiver2
+    if receiver.is_approved:
+        return Response({"ok": True, "message": "Bill is already approved."})
+
+    receiver.is_approved = True
+    receiver.approval_user = request.user
+    receiver.approval_date = datetime.now().date()
+    receiver.save()
+
+    bill.status = 1
+    bill.save(update_fields=["status"])
+
+    return Response({"ok": True, "message": f"Bill {bill.bill_no} approved successfully."})
 
 
 def get_statistics_bill(query):
@@ -740,10 +806,19 @@ def search(request, page=None):
     
     # Filter by organization
     if self_organization is not None:
-        # Specific organization or user's organization
+        # Specific organization selected by an authorized user.
         query = query.filter(
             Q(organization=self_organization) | 
             Q(bill_receiver2__bill_rcvr_org=self_organization)
+        )
+    elif not request.user.is_superuser:
+        # No single organization selected: keep regular users scoped to
+        # every organization they belong to, never all organizations.
+        if user_orgs is None:
+            _, user_orgs = find_userorganization(request)
+        query = query.filter(
+            Q(organization__in=user_orgs) |
+            Q(bill_receiver2__bill_rcvr_org__in=user_orgs)
         )
     # else: superuser viewing all organizations - no filter needed
     
@@ -778,7 +853,7 @@ def search(request, page=None):
     query_set = paginator.paginate_queryset(query.order_by("-pk"), request)
     
     # Serialize results
-    serializer = BillSearchSerializer(query_set, many=True)
+    serializer = BillSearchSerializer(query_set, many=True, context={"request": request})
     statistics = get_statistics_bill(query)
     
     serializer_context = {

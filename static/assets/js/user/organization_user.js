@@ -142,6 +142,19 @@ async function search(pageOrUrl = 1) {
       );
     }
     console.log("serializer_data", serializer_data);
+    // Build a clean initials avatar when the user has no profile image
+    // (avoids a broken /static/default.png request).
+    const avatarFor = (user) => {
+      if (user.img) {
+        return `<img src="${user.img}" class="user-avatar" alt="${user.username || ''}"/>`;
+      }
+      const src = (user.first_name || '') + ' ' + (user.last_name || '');
+      const initials = src.trim()
+        ? src.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()
+        : (user.username || '?').slice(0, 2).toUpperCase();
+      return `<span class="user-avatar user-avatar--fallback">${initials}</span>`;
+    };
+
     // render rows
     for (const user of serializer_data) {
       const roleBadge = user.is_assigned
@@ -166,6 +179,7 @@ async function search(pageOrUrl = 1) {
       const row = `
         <tr>
           <td>${user.organization}</td>
+          <td>${user.branch_name ? user.branch_name : '<span class="text-muted">—</span>'}</td>
           <td><i class="bi bi-person-circle"></i> ${user.username}</td>
           <td>${user.first_name}</td>
           <td>${user.last_name}</td>
@@ -175,9 +189,7 @@ async function search(pageOrUrl = 1) {
               ${user.is_active ? '<i class="bi bi-check"></i> Active' : '<i class="bi bi-x"></i> Inactive'}
             </span>
           </td>
-          <td>
-            <img src="${user.img || "/static/default.png"}" class="user-avatar" alt="${user.username}"/>
-          </td>
+          <td>${avatarFor(user)}</td>
           <td>
             <div class="action-buttons">${actionButtons}</div>
           </td>

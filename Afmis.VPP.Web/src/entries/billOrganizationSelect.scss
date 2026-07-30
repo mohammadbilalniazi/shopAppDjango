@@ -1,0 +1,36 @@
+.afmis-native-select-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.afmis-react-select-mount {
+  width: 100%;
+}
+
+.afmis-bill-select {
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.afmis-bill-select__error {
+  color: #f06548;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.35rem;
+}
+
+.afmis__single-value {
+  color: #212529 !important;
+  font-weight: 500;
+}
+
+.afmis__placeholder {
+  color: #878a99 !important;
+}

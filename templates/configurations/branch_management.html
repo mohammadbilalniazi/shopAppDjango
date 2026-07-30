@@ -3,7 +3,7 @@
 
 {% block title %}Branch Management - {{ organization.name }}{% endblock %}
 
-{% block extra_css %}
+{% block head_extra %}
 <link rel="stylesheet" href="{% static 'assets/css/universal_compact_ui.css' %}">
 <style>
     /* Branch Management using Design System */
@@ -71,6 +71,7 @@
     /* Page header styling */
     .page-header {
         margin-bottom: var(--space-6);
+        gap: 1rem;
     }
     
     .page-header h2 {
@@ -84,6 +85,10 @@
         font-size: var(--font-size-sm);
     }
 
+    .page-header .btn {
+        white-space: nowrap;
+    }
+
     .search-container .btn {
         min-height: 34px;
         font-size: 0.84rem;
@@ -94,6 +99,76 @@
     #branchModal select {
         min-height: 34px;
         font-size: 0.88rem;
+    }
+
+    .simple-modal .modal-content {
+        border: 0;
+        border-radius: 10px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+    }
+
+    .simple-modal .modal-header {
+        background: #fff;
+        color: #111827;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem 1.25rem;
+    }
+
+    .simple-modal .modal-title {
+        font-weight: 700;
+    }
+
+    .simple-modal .modal-body {
+        padding: 1.25rem;
+    }
+
+    .simple-modal .form-label {
+        color: #374151;
+        font-size: 0.85rem;
+        font-weight: 650;
+        margin-bottom: 0.35rem;
+    }
+
+    .simple-modal .form-control,
+    .simple-modal .form-select {
+        border-radius: 8px;
+        border-color: #d1d5db;
+        min-height: 40px;
+    }
+
+    .simple-modal .required-fields {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .simple-modal .optional-toggle {
+        color: #2563eb;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .simple-modal .optional-panel {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .simple-modal .modal-footer {
+        padding: 1rem 1.25rem;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    @media (max-width: 576px) {
+        .page-header {
+            align-items: stretch !important;
+        }
+
+        .page-header .btn,
+        .search-container .btn {
+            width: 100%;
+        }
     }
 </style>
 {% endblock %}
@@ -111,7 +186,7 @@
                         <span class="badge bg-info ms-2">{{ user_access_level }}</span>
                     </p>
                 </div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#branchModal">
+                <button type="button" class="btn btn-primary" id="addBranchBtn">
                     <i class="fas fa-plus me-2"></i>Add New Branch
                 </button>
             </div>
@@ -267,7 +342,7 @@
                     {% endif %}
                 </p>
                 {% if not search_query %}
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#branchModal">
+                <button type="button" class="btn btn-primary" id="addFirstBranchBtn">
                     <i class="fas fa-plus me-2"></i>Add First Branch
                 </button>
                 {% endif %}
@@ -278,58 +353,67 @@
 </div>
 
 <!-- Branch Modal -->
-<div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="branchModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade simple-modal" id="branchModal" tabindex="-1" aria-labelledby="branchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="branchModalLabel">Add New Branch</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="branchForm">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">Branch Name *</label>
+                    <div class="required-fields">
+                        <div>
+                            <label for="name" class="form-label">Branch name *</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="code" class="form-label">Branch Code *</label>
+                        <div>
+                            <label for="code" class="form-label">Code *</label>
                             <input type="text" class="form-control" id="code" name="code" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div>
                             <label for="location" class="form-label">Location</label>
-                            <select class="form-control" id="location" name="location">
+                            <select class="form-select" id="location" name="location">
                                 <option value="">Select Location</option>
                                 {% for location in form.location.field.queryset %}
                                 <option value="{{ location.id }}">{{ location }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div>
                             <label for="manager" class="form-label">Manager</label>
-                            <select class="form-control" id="manager" name="manager">
+                            <select class="form-select" id="manager" name="manager">
                                 <option value="">Select Manager</option>
                                 {% for manager in form.manager.field.queryset %}
                                 <option value="{{ manager.id }}">{{ manager.get_full_name|default:manager.username }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" name="phone">
+                        <div>
+                            <a class="optional-toggle" data-bs-toggle="collapse" href="#branchMoreDetails" role="button" aria-expanded="false" aria-controls="branchMoreDetails">
+                                More details
+                            </a>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email">
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label for="address" class="form-label">Address</label>
-                            <textarea class="form-control" id="address" name="address" rows="3"></textarea>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <div class="collapse" id="branchMoreDetails">
+                            <div class="optional-panel">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                                </div>
+                                <div>
+                                    <label for="description" class="form-label">Notes</label>
+                                    <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -364,7 +448,8 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
+{{ block.super }}
 <script>
 let currentBranchId = null;
 let isEditMode = false;
@@ -386,6 +471,53 @@ function getCookie(name) {
 }
 
 const csrftoken = getCookie('csrftoken');
+
+function responseMessage(data, fallback) {
+    if (!data) {
+        return fallback;
+    }
+    if (data.message || data.error) {
+        return data.message || data.error;
+    }
+    if (data.errors) {
+        return Object.entries(data.errors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join(' | ');
+    }
+    return fallback;
+}
+
+async function readJsonResponse(response) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch (err) {
+        return {
+            success: response.ok,
+            message: text || (response.ok ? 'Request completed successfully.' : 'Request failed.')
+        };
+    }
+}
+
+function openBranchModal() {
+    const branchModal = document.getElementById('branchModal');
+    if (!branchModal || typeof bootstrap === 'undefined') {
+        return;
+    }
+    bootstrap.Modal.getOrCreateInstance(branchModal).show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    ['addBranchBtn', 'addFirstBranchBtn'].forEach(function(id) {
+        const button = document.getElementById(id);
+        if (button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                openBranchModal();
+            });
+        }
+    });
+});
 
 // Create/Update Branch
 const branchFormEl = document.getElementById('branchForm');
@@ -419,25 +551,20 @@ if (branchFormEl) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': csrftoken
             },
             body: JSON.stringify(formData)
         })
         .then(async (response) => {
-            const text = await response.text();
-            try {
-                const data = JSON.parse(text || '{}');
-                return { ok: response.ok, status: response.status, data };
-            } catch (err) {
-                console.error('Failed to parse JSON response for branch create:', err, 'raw:', text);
-                return { ok: response.ok, status: response.status, data: null, raw: text };
-            }
+            const data = await readJsonResponse(response);
+            return { ok: response.ok, status: response.status, data };
         })
-        .then(({ ok, status, data, raw }) => {
-            console.debug('Branch create response status', status, data || raw);
+        .then(({ ok, status, data }) => {
+            console.debug('Branch create response status', status, data);
             if (!ok) {
-                const msg = data && data.error ? data.error : (raw || 'Unknown error');
-                showAlert(msg, 'danger');
+                showAlert(responseMessage(data, 'Unknown error'), 'danger');
                 return;
             }
             if (data && data.success) {
@@ -445,8 +572,7 @@ if (branchFormEl) {
                 bootstrap.Modal.getInstance(document.getElementById('branchModal')).hide();
                 location.reload(); // Reload to show updated data
             } else {
-                const msg = data && data.error ? data.error : 'Unexpected response from server';
-                showAlert(msg, 'danger');
+                showAlert(responseMessage(data, 'Unexpected response from server'), 'danger');
             }
         })
         .catch(error => {
@@ -465,11 +591,17 @@ if (branchFormEl) {
 
 // Edit Branch
 function editBranch(branchId) {
-    fetch(`/configuration/branch/${branchId}/detail/`)
+    fetch(`/configuration/branch/${branchId}/detail/`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             const branch = data.branch;
+            showAlert(data.message || 'Branch details loaded successfully', 'info');
             
             // Set form values
             document.getElementById('name').value = branch.name;
@@ -480,6 +612,10 @@ function editBranch(branchId) {
             document.getElementById('email').value = branch.email;
             document.getElementById('address').value = branch.address;
             document.getElementById('description').value = branch.description;
+            const branchMoreDetails = document.getElementById('branchMoreDetails');
+            if (branchMoreDetails && (branch.phone || branch.email || branch.address || branch.description)) {
+                bootstrap.Collapse.getOrCreateInstance(branchMoreDetails, { toggle: false }).show();
+            }
             
             // Set modal state
             currentBranchId = branchId;
@@ -500,11 +636,17 @@ function editBranch(branchId) {
 
 // View Branch
 function viewBranch(branchId) {
-    fetch(`/configuration/branch/${branchId}/detail/`)
+    fetch(`/configuration/branch/${branchId}/detail/`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             const branch = data.branch;
+            showAlert(data.message || 'Branch details loaded successfully', 'info');
             document.getElementById('viewBranchContent').innerHTML = `
                 <div class="row">
                     <div class="col-sm-4"><strong>Name:</strong></div>
@@ -576,6 +718,8 @@ function toggleBranchStatus(branchId) {
         fetch(`/configuration/branch/${branchId}/toggle-status/`, {
             method: 'POST',
             headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': csrftoken
             }
         })
@@ -600,6 +744,8 @@ function deleteBranch(branchId, branchName) {
         fetch(`/configuration/branch/${branchId}/delete/`, {
             method: 'DELETE',
             headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': csrftoken
             }
         })
@@ -625,6 +771,10 @@ document.getElementById('branchModal').addEventListener('show.bs.modal', functio
         document.getElementById('branchModalLabel').textContent = 'Add New Branch';
         document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2 d-none" id="submitSpinner"></span>Save Branch';
         currentBranchId = null;
+        const branchMoreDetails = document.getElementById('branchMoreDetails');
+        if (branchMoreDetails) {
+            bootstrap.Collapse.getOrCreateInstance(branchMoreDetails, { toggle: false }).hide();
+        }
     }
 });
 
@@ -635,6 +785,15 @@ document.getElementById('branchModal').addEventListener('hidden.bs.modal', funct
 
 // Show alert function
 function showAlert(message, type) {
+    const toastType = type === 'danger' ? 'error' : type;
+    if (typeof showToast === 'function') {
+        showToast(message, toastType);
+    } else if (typeof toastr !== 'undefined') {
+        toastr[toastType] ? toastr[toastType](message) : toastr.info(message);
+    } else {
+        alert(message);
+    }
+
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show" role="alert">
             ${message}

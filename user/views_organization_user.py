@@ -18,7 +18,7 @@ def _get_requester_context(request):
     """Returns (is_superuser, own_org_user) for the logged-in user."""
     own_org_user = OrganizationUser.objects.filter(user=request.user).first()
     is_su = request.user.is_superuser or (
-        own_org_user is not None and own_org_user.role in ('superuser', 'owner')
+        own_org_user is not None and own_org_user.role in ('admin', 'superuser', 'owner')
     )
     return is_su, own_org_user
 
@@ -79,6 +79,7 @@ def insert(request):
     password = request.data.get("password")
     role = request.data.get("role")
     organization = request.data.get("organization")
+    is_privileged_role = role in ('admin', 'superuser', 'owner')
     # Enforce non-superusers can only operate within their own organization
     if not is_su:
         if organization and str(own_org_user.organization_id) != str(organization):
@@ -122,6 +123,7 @@ def insert(request):
                 user.first_name = first_name
                 user.last_name = last_name
                 user.is_active = is_active
+                user.is_staff = is_privileged_role
                 if password:
                     user.set_password(password)
                 user.save()
@@ -158,14 +160,14 @@ def insert(request):
                     except User.DoesNotExist:
                         return Response({"error": "Selected user not found."}, status=404)
 
-                    if OrganizationUser.objects.filter(user=user).exists():
-                        return Response({"error": "User already belongs to an organization. One user can only belong to one organization."}, status=400)
+                    if OrganizationUser.objects.filter(user=user, organization_id=organization).exists():
+                        return Response({"error": "User is already assigned to this organization."}, status=400)
 
                     user.username = username
                     user.first_name = first_name
                     user.last_name = last_name
                     user.is_active = is_active
-                    user.is_staff = True
+                    user.is_staff = is_privileged_role
                     if password:
                         user.set_password(password)
                     user.save()
@@ -179,17 +181,17 @@ def insert(request):
                         first_name=first_name,
                         last_name=last_name,
                         is_active=is_active,
-                        is_staff=True
+                        is_staff=is_privileged_role
                     )
                     if password:
                         user.set_password(password)
                     user.save()
                     created_new_user = True
 
-                    # Safety check for one user, one organization rule
-                    if OrganizationUser.objects.filter(user=user).exists():
+                    # Safety check for unique user per organization rule
+                    if OrganizationUser.objects.filter(user=user, organization_id=organization).exists():
                         user.delete()
-                        return Response({"error": "User already belongs to an organization. One user can only belong to one organization."}, status=400)
+                        return Response({"error": "User is already assigned to this organization."}, status=400)
 
                 # Add groups to user
                 user.groups.clear()
@@ -316,8 +318,19 @@ def search(request):
         row['is_assigned'] = True
         assigned_rows.append(row)
 
-    # Also return Django users that do not have OrganizationUser yet
-    assigned_user_ids = OrganizationUser.objects.values_list('user_id', flat=True)
+    # Also return Django users that are not assigned to the selected organization.
+    # They may already belong to another organization and can still be assigned here.
+    target_organization_id = selected_organization_id
+    if target_organization_id is None and not is_superuser and current_org_user:
+        target_organization_id = current_org_user.organization_id
+
+    if target_organization_id:
+        assigned_user_ids = OrganizationUser.objects.filter(
+            organization_id=target_organization_id
+        ).values_list('user_id', flat=True)
+    else:
+        assigned_user_ids = OrganizationUser.objects.values_list('user_id', flat=True)
+
     unassigned_users = User.objects.exclude(id__in=assigned_user_ids)
 
     if not is_superuser:
@@ -352,7 +365,8 @@ def search(request):
             'org_user_id': None,
             'user': u.id,
             'user_id': u.id,
-            'organization': 'Not Assigned',
+            'organization': 'Not Assigned to Selected Organization',
+            'branch_name': None,
             'username': u.username,
             'first_name': u.first_name,
             'last_name': u.last_name,

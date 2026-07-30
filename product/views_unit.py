@@ -25,7 +25,12 @@ def show(request, id="all"):
         else:
             query_set = Unit.objects.filter(id=int(id))
         serializer = UnitSerializer(query_set, many=True)
-        if request.GET.get('json'):
+        wants_json = (
+            request.GET.get('json')
+            or 'application/json' in request.headers.get('Accept', '')
+            or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        )
+        if wants_json:
             return JsonResponse(serializer.data, safe=False)
         return render(request, 'configurations/unit_show.html', {'units': query_set})
 

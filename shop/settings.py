@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'common.middleware.EmbedFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'shop.urls'
@@ -116,7 +117,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'supermarket',
         'USER': 'postgres',
-        'PASSWORD': 'Allahisone',
+        'PASSWORD': 'Allahisone1^',
         'HOST': 'localhost',    # or IP if remote
         'PORT': '5432',         # default port
     }

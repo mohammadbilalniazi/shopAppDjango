@@ -16,6 +16,7 @@ def assign_all_organizations_to_admin(sender, instance, created, **kwargs):
     For superusers, no specific branch is assigned (they have access to all branches).
     """
     if instance.is_superuser or instance.is_staff:
+        admin_role = 'superuser' if instance.is_superuser else 'admin'
         # Get all organizations
         all_orgs = Organization.objects.filter(is_active=True)
         
@@ -27,15 +28,15 @@ def assign_all_organizations_to_admin(sender, instance, created, **kwargs):
                 user=instance,
                 organization=org,
                 defaults={
-                    'role': 'superuser',
+                    'role': admin_role,
                     'is_active': True,
                     'branch': None  # Superusers have access to all branches
                 }
             )
             
             # Update existing org_user to ensure superuser status and no branch restriction
-            if not was_created and instance.is_superuser:
-                org_user.role = 'superuser'
+            if not was_created:
+                org_user.role = admin_role
                 org_user.branch = None  # Remove branch restriction for superusers
                 org_user.is_active = True
                 org_user.save()
@@ -63,13 +64,14 @@ def assign_organization_to_all_admins(sender, instance, created, **kwargs):
         
         assigned_count = 0
         for admin_user in admin_users:
+            admin_role = 'superuser' if admin_user.is_superuser else 'admin'
             # Create OrganizationUser entry if it doesn't exist
             # Superusers get no branch restriction (access to all branches)
             org_user, was_created = OrganizationUser.objects.get_or_create(
                 user=admin_user,
                 organization=instance,
                 defaults={
-                    'role': 'superuser',
+                    'role': admin_role,
                     'is_active': True,
                     'branch': None  # No branch restriction for superusers
                 }

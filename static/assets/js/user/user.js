@@ -16,25 +16,27 @@ function getCookie(name) {
 
 async function submit_login()
 {
-    username = document.getElementById("username").value;
-    password = document.getElementById("password").value;
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const submitButton = document.querySelector('#login_form button[type="submit"]');
 
     // Clear previous error
     document.getElementById("error").innerHTML = "";
 
-    form = {
+    const form = {
         "username": username,
         "password": password
     }
 
-    url = "/login_form/submit/"
+    const url = "/login_form/submit/"
     try {
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
         const response = await call_shirkat(url, 'POST', form);
-        let new_url = response['data']['base_url'];
-        let status = response['data']['status'];
-        let message = response['data']['message'];
-        console.log("response['data']['base_url']=", new_url);
-        console.log("response['data']['status']=", status);
+        const new_url = response?.data?.base_url;
+        const status = response?.data?.status;
+        const message = response?.data?.message || "Login failed";
         if (status == 200) {
             window.location.replace(new_url);
         } else {
@@ -55,6 +57,10 @@ async function submit_login()
             show_message(msg, "error");
         } else {
             alert(msg);
+        }
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
         }
     }
     return;

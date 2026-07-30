@@ -65,176 +65,105 @@ class Bill_Receiver2(models.Model):
     approval_user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,default=None)
 
 # ---------------------------------------------------
-# Bill_Receiver2 Signal: Update summaries for approved bills
+# Summary recompute helper (single source of truth)
+# ---------------------------------------------------
+def _recompute_bill_summaries(organization, bill_type):
+    """
+    Rebuild AssetBillSummary and AssetWholeBillSummary for (organization,
+    bill_type) directly from the Bill table.
+
+    Recomputing from source (instead of incremental +=/set updates) keeps the
+    Financial Summary and Organization Ledger correct no matter how bills are
+    created, edited, approved, re-typed or deleted. The previous incremental
+    logic overwrote aggregates with a single bill's value on update/approval,
+    silently dropping every other bill's contribution.
+    """
+    if organization is None:
+        return
+
+    from django.db.models import Sum
+
+    bills = Bill.objects.filter(organization=organization, bill_type=bill_type)
+
+    # --- Aggregate summary across all years and receivers ---
+    agg = bills.aggregate(total=Sum('total'), payment=Sum('payment'), profit=Sum('profit'))
+    whole, _ = AssetWholeBillSummary.objects.get_or_create(
+        organization=organization,
+        bill_type=bill_type,
+        defaults={'total': Decimal(0), 'payment': Decimal(0), 'profit': 0},
+    )
+    whole.total = _to_decimal(agg['total'])
+    whole.payment = _to_decimal(agg['payment'])
+    whole.profit = int(agg['profit'] or 0)
+    whole.save()
+
+    # --- Detail summary per (receiver org, year) ---
+    groups = bills.values('year', 'bill_receiver2__bill_rcvr_org').annotate(
+        total=Sum('total'), payment=Sum('payment'), profit=Sum('profit'),
+    )
+    live_keys = set()
+    for g in groups:
+        year = g['year']
+        rcvr_id = g['bill_receiver2__bill_rcvr_org']
+        live_keys.add((rcvr_id, year))
+        detail, _ = AssetBillSummary.objects.get_or_create(
+            organization=organization,
+            bill_rcvr_org_id=rcvr_id,
+            bill_type=bill_type,
+            year=year,
+            branch=None,
+            defaults={'total': Decimal(0), 'payment': Decimal(0), 'profit': 0},
+        )
+        detail.total = _to_decimal(g['total'])
+        detail.payment = _to_decimal(g['payment'])
+        detail.profit = int(g['profit'] or 0)
+        detail.save()
+
+    # --- Zero out detail rows that no longer have any bills ---
+    for stale in AssetBillSummary.objects.filter(organization=organization, bill_type=bill_type):
+        if (stale.bill_rcvr_org_id, stale.year) not in live_keys:
+            if stale.total or stale.payment or stale.profit:
+                stale.total = Decimal(0)
+                stale.payment = Decimal(0)
+                stale.profit = 0
+                stale.save()
+
+
+# ---------------------------------------------------
+# Bill_Receiver2 Signals: keep inter-org summaries in sync
 # ---------------------------------------------------
 @receiver(post_save, sender=Bill_Receiver2)
 def handle_bill_receiver(sender, instance, created, **kwargs):
-    """
-    Update asset summaries when Bill_Receiver2 is saved.
-    Only processes bills of types: PURCHASE, SELLING, PAYMENT, RECEIVEMENT.
-    
-    This handles bills that involve two organizations (creator and receiver).
-    Updates AssetBillSummary and AssetWholeBillSummary to track transactions
-    between organizations.
-    """
+    """Recompute summaries when an inter-org bill's receiver record changes."""
     bill = instance.bill
-    bill_type = bill.bill_type
-    
-    # Only handle inter-organization bill types
-    if bill_type not in bill_types_update_with_bill_receiver2:
-        return
-    
-    # Skip if receiver organization is not set
-    if not instance.bill_rcvr_org:
-        return
-    
-    organization = bill.organization
-    bill_rcvr_org = instance.bill_rcvr_org
-    year = bill.year
-    
-    # For updates, handle receiver organization changes
-    if not created:
-        try:
-            # Check if receiver org was changed
-            old_receiver = Bill_Receiver2.objects.filter(pk=instance.pk).first()
-            if old_receiver and old_receiver.bill_rcvr_org and old_receiver.bill_rcvr_org != bill_rcvr_org:
-                # Remove from old receiver org summaries
-                _rollback_receiver_summaries(
-                    organization=organization,
-                    bill_rcvr_org=old_receiver.bill_rcvr_org,
-                    bill_type=bill_type,
-                    year=year,
-                    total=bill.total,
-                    payment=bill.payment,
-                    profit=bill.profit
-                )
-        except Exception:
-            pass
-    
-    # Update summaries for current receiver organization
-    _update_receiver_summaries(
-        organization=organization,
-        bill_rcvr_org=bill_rcvr_org,
-        bill_type=bill_type,
-        year=year,
-        total=bill.total,
-        payment=bill.payment,
-        profit=bill.profit,
-        is_create=created
-    )
-
-
-def _update_receiver_summaries(organization, bill_rcvr_org, bill_type, year, 
-                                total, payment, profit, is_create=True):
-    """
-    Helper function to update AssetBillSummary and AssetWholeBillSummary
-    for bills with receiver organizations.
-    """
-    # Update AssetBillSummary (per organization, receiver, bill_type, year)
-    abs_obj, abs_created = AssetBillSummary.objects.get_or_create(
-        organization=organization,
-        bill_rcvr_org=bill_rcvr_org,
-        bill_type=bill_type,
-        year=year,
-        defaults={
-            'total': Decimal(0),
-            'payment': Decimal(0),
-            'profit': Decimal(0)
-        }
-    )
-    
-    if is_create or abs_created:
-        abs_obj.total += _to_decimal(total)
-        abs_obj.payment += _to_decimal(payment)
-        abs_obj.profit += Decimal(profit)
-    else:
-        # For updates, set to current values (assuming bill was updated)
-        abs_obj.total = _to_decimal(total)
-        abs_obj.payment = _to_decimal(payment)
-        abs_obj.profit = Decimal(profit)
-    
-    abs_obj.save()
-    
-    # Update AssetWholeBillSummary (aggregate across all years)
-    awbs_obj, awbs_created = AssetWholeBillSummary.objects.get_or_create(
-        organization=organization,
-        bill_type=bill_type,
-        defaults={
-            'total': Decimal(0),
-            'payment': Decimal(0),
-            'profit': Decimal(0)
-        }
-    )
-    
-    if is_create or awbs_created:
-        awbs_obj.total += _to_decimal(total)
-        awbs_obj.payment += _to_decimal(payment)
-        awbs_obj.profit += Decimal(profit)
-    else:
-        awbs_obj.total = _to_decimal(total)
-        awbs_obj.payment = _to_decimal(payment)
-        awbs_obj.profit = Decimal(profit)
-    
-    awbs_obj.save()
-
-
-def _rollback_receiver_summaries(organization, bill_rcvr_org, bill_type, year,
-                                   total, payment, profit):
-    """
-    Helper function to rollback summaries when receiver org changes or is deleted.
-    """
-    # Rollback AssetBillSummary
-    try:
-        abs_obj = AssetBillSummary.objects.get(
-            organization=organization,
-            bill_rcvr_org=bill_rcvr_org,
-            bill_type=bill_type,
-            year=year
-        )
-        abs_obj.total -= _to_decimal(total)
-        abs_obj.payment -= _to_decimal(payment)
-        abs_obj.profit -= Decimal(profit)
-        abs_obj.save()
-    except AssetBillSummary.DoesNotExist:
-        pass
-    
-    # Rollback AssetWholeBillSummary
-    try:
-        awbs_obj = AssetWholeBillSummary.objects.get(
-            organization=organization,
-            bill_type=bill_type
-        )
-        awbs_obj.total -= Decimal(total)
-        awbs_obj.payment -= Decimal(payment)
-        awbs_obj.profit -= Decimal(profit)
-        awbs_obj.save()
-    except AssetWholeBillSummary.DoesNotExist:
-        pass
+    if bill is not None:
+        _recompute_bill_summaries(bill.organization, bill.bill_type)
 
 
 @receiver(post_delete, sender=Bill_Receiver2)
 def rollback_bill_receiver(sender, instance, **kwargs):
-    """
-    Rollback asset summaries when Bill_Receiver2 is deleted.
-    """
-    bill = instance.bill
-    bill_type = bill.bill_type
-    
-    if bill_type not in bill_types_update_with_bill_receiver2:
-        return
-    
-    if not instance.bill_rcvr_org:
-        return
-    
-    _rollback_receiver_summaries(
-        organization=bill.organization,
-        bill_rcvr_org=instance.bill_rcvr_org,
-        bill_type=bill_type,
-        year=bill.year,
-        total=bill.total,
-        payment=bill.payment,
-        profit=bill.profit
-    )
+    """Recompute summaries when an inter-org bill's receiver record is removed."""
+    bill = getattr(instance, 'bill', None)
+    if bill is not None:
+        try:
+            _recompute_bill_summaries(bill.organization, bill.bill_type)
+        except Exception:
+            pass
+
+
+# ---------------------------------------------------
+# Bill Signals: recompute summaries whenever a Bill changes
+# ---------------------------------------------------
+@receiver(post_save, sender=Bill)
+def update_asset_bill_summary(sender, instance, created, **kwargs):
+    """Recompute summaries for the saved bill's (organization, type)."""
+    _recompute_bill_summaries(instance.organization, instance.bill_type)
+
+
+@receiver(post_delete, sender=Bill)
+def rollback_asset_bill_summary(sender, instance, **kwargs):
+    """Recompute summaries after a Bill is deleted."""
+    _recompute_bill_summaries(instance.organization, instance.bill_type)
 
 
 class Bill_detail(models.Model):
@@ -243,138 +172,14 @@ class Bill_detail(models.Model):
     unit=models.ForeignKey(Unit,on_delete=models.PROTECT,null=True, blank=True)
     item_amount =models.DecimalField(default=Decimal(0),max_digits=15,decimal_places=5)
     item_price=models.DecimalField(default=Decimal(0),max_digits=15,decimal_places=5)
-    return_qty=models.IntegerField(null=True,blank=True)      
+    return_qty=models.IntegerField(null=True,blank=True)
     discount=models.IntegerField(default=0)
-    profit=models.IntegerField(default=None,null=True)  
+    profit=models.IntegerField(default=None,null=True)
     def __str__(self):
         return f"{self.id}"
     class Meta:
         # unique_together =("bill","product",)
-        verbose_name_plural = "Bill detail" 
-
-
-# ---------------------------------------------------
-# Bill Signal: Cache old values before save
-# ---------------------------------------------------
-@receiver(pre_save, sender=Bill)
-def cache_old_bill_values(sender, instance, **kwargs):
-    """
-    Cache old bill values before save for delta calculation.
-    Only applies to LOSSDEGRADE and EXPENSE bill types.
-    """
-    if instance.pk and instance.bill_type in ["LOSSDEGRADE", "EXPENSE"]:
-        try:
-            old_bill = Bill.objects.get(pk=instance.pk)
-            instance._old_total = old_bill.total
-            instance._old_payment = old_bill.payment
-            instance._old_profit = old_bill.profit
-        except Bill.DoesNotExist:
-            pass
-
-
-# ---------------------------------------------------
-# Bill Signal: Update Asset Summaries on Save
-# ---------------------------------------------------
-@receiver(post_save, sender=Bill)
-def update_asset_bill_summary(sender, instance, created, **kwargs):
-    """
-    Update AssetBillSummary and AssetWholeBillSummary when a Bill is saved.
-    Handles: LOSSDEGRADE and EXPENSE bill types only.
-    For PURCHASE/SELLING/PAYMENT/RECEIVEMENT, see asset/models.py signals.
-    """
-    bill = instance
-    bill_type = bill.bill_type
-
-    # Only handle specific bill types here
-    if bill_type not in ["LOSSDEGRADE", "EXPENSE"]:
-        return
-    
-    organization = bill.organization
-    year = bill.year
-    
-    # Calculate deltas for update operations
-    if not created:
-        # For updates, use cached old values from pre_save signal
-        total_delta = _to_decimal(bill.total) - _to_decimal(getattr(bill, '_old_total', 0))
-        payment_delta = _to_decimal(bill.payment) - _to_decimal(getattr(bill, '_old_payment', 0))
-        profit_delta = bill.profit - getattr(bill, '_old_profit', 0)
-    else:
-        # For new bills, the delta is the full amount
-        total_delta = _to_decimal(bill.total)
-        payment_delta = _to_decimal(bill.payment)
-        profit_delta = bill.profit
-
-    # Update AssetBillSummary (per organization, bill_type, year)
-    abs_obj, _ = AssetBillSummary.objects.get_or_create(
-        organization=organization,
-        bill_rcvr_org=None,  # Direct bills have no receiver org
-        bill_type=bill_type,
-        year=year
-    )
-    abs_obj.total = Decimal(str(abs_obj.total)) + Decimal(str(total_delta))
-    abs_obj.payment = Decimal(str(abs_obj.payment)) + Decimal(str(payment_delta))
-    abs_obj.profit += profit_delta
-    abs_obj.save()
-
-    # Update AssetWholeBillSummary (aggregate across all years)
-    awbs_obj, _ = AssetWholeBillSummary.objects.get_or_create(
-        organization=organization,
-        bill_type=bill_type
-    )
-    awbs_obj.total = Decimal(str(awbs_obj.total)) + Decimal(str(total_delta))
-    awbs_obj.payment = Decimal(str(awbs_obj.payment)) + Decimal(str(payment_delta))
-    awbs_obj.profit += profit_delta
-    awbs_obj.save()
-
-
-# ---------------------------------------------------
-# Bill Signal: Rollback Asset Summaries on Delete
-# ---------------------------------------------------
-@receiver(post_delete, sender=Bill)
-def rollback_asset_bill_summary(sender, instance, **kwargs):
-    """
-    Rollback AssetBillSummary and AssetWholeBillSummary when a Bill is deleted.
-    Handles: LOSSDEGRADE and EXPENSE bill types.
-    """
-    bill = instance
-    bill_type = bill.bill_type
-    
-    # Only handle specific bill types
-    if bill_type not in ["LOSSDEGRADE", "EXPENSE"]:
-        return
-    
-    organization = bill.organization
-    year = bill.year
-
-    # Rollback AssetBillSummary
-    try:
-        abs_obj = AssetBillSummary.objects.get(
-            organization=organization,
-            bill_rcvr_org=None,
-            bill_type=bill_type,
-            year=year,
-        )
-        abs_obj.total -= Decimal(bill.total)
-        abs_obj.payment -= Decimal(bill.payment)
-        abs_obj.profit -= Decimal(bill.profit)
-        abs_obj.save()
-    except AssetBillSummary.DoesNotExist:
-        # Log or handle missing summary gracefully
-        pass
-
-    # Rollback AssetWholeBillSummary
-    try:
-        awbs_obj = AssetWholeBillSummary.objects.get(
-            organization=organization,
-            bill_type=bill_type,
-        )
-        awbs_obj.total -= Decimal(bill.total)
-        awbs_obj.payment -= Decimal(bill.payment)
-        awbs_obj.profit -= Decimal(bill.profit)
-        awbs_obj.save()
-    except AssetWholeBillSummary.DoesNotExist:
-        # Log or handle missing summary gracefully
-        pass
+        verbose_name_plural = "Bill detail"
 
 
 # ---------------------------------------------------

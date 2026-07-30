@@ -65,6 +65,7 @@ def insert(request):
     username = data.get("username")
     password = data.get("password")
     role = data.get("role")
+    is_privileged_role = role in ('admin', 'superuser', 'owner')
 
     organization = data.get("organization")
     img = request.FILES.get('img')
@@ -77,6 +78,7 @@ def insert(request):
                 user.username = username
                 user.first_name = first_name
                 user.last_name = last_name
+                user.is_staff = is_privileged_role
                 if password:
                     user.set_password(password)
                 user.save()
@@ -97,7 +99,7 @@ def insert(request):
                     first_name=first_name,
                     last_name=last_name,
                     is_active=True,
-                    is_staff=True
+                    is_staff=is_privileged_role
                 )
                 if password:
                     user.set_password(password)
@@ -118,9 +120,6 @@ def insert(request):
 
             transaction.set_rollback(True)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            transaction.set_rollback(True)
-            return Response({"error": "Integrity error: possibly duplicate user + organization."}, status=400)
         except OrganizationUser.DoesNotExist:
             return Response({"error": "OrganizationUser not found."}, status=404)
         except Exception as e:

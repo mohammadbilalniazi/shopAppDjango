@@ -1,0 +1,103 @@
+//
+// toast.scss
+//
+
+// toast
+.toast {
+  &:not(:last-child) {
+    margin-bottom: $toast-padding-x;
+  }
+}
+
+@mixin toast-border-variant($bg) {
+  .toast-body {
+    color: $bg;
+    border-bottom: 3px solid $bg;
+  }
+}
+
+@each $color, $value in $theme-colors {
+  .toast-border-#{$color} {
+    @include toast-border-variant($value);
+  }
+}
+
+// Dark mode toast styles
+[data-layout-mode="dark"] {
+  .toast {
+    background-color: var(--#{$prefix}gray-200);
+    border-color: var(--#{$prefix}border-color);
+    box-shadow: $box-shadow-lg;
+  }
+  
+  .toast-header {
+    background-color: var(--#{$prefix}gray-300);
+    border-bottom-color: var(--#{$prefix}border-color);
+    color: var(--#{$prefix}body-color);
+  }
+  
+  .toast-body {
+    color: var(--#{$prefix}body-color);
+  }
+  
+  .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+  }
+  
+  // Toast variants in dark mode
+  .toast-border-primary {
+    .toast-body {
+      color: var(--#{$prefix}primary);
+      border-bottom-color: var(--#{$prefix}primary);
+    }
+  }
+  
+  .toast-border-secondary {
+    .toast-body {
+      color: var(--#{$prefix}secondary);
+      border-bottom-color: var(--#{$prefix}secondary);
+    }
+  }
+  
+  .toast-border-success {
+    .toast-body {
+      color: var(--#{$prefix}success);
+      border-bottom-color: var(--#{$prefix}success);
+    }
+  }
+  
+  .toast-border-danger {
+    .toast-body {
+      color: var(--#{$prefix}danger);
+      border-bottom-color: var(--#{$prefix}danger);
+    }
+  }
+  
+  .toast-border-warning {
+    .toast-body {
+      color: var(--#{$prefix}warning);
+      border-bottom-color: var(--#{$prefix}warning);
+    }
+  }
+  
+  .toast-border-info {
+    .toast-body {
+      color: var(--#{$prefix}info);
+      border-bottom-color: var(--#{$prefix}info);
+    }
+  }
+  
+  .toast-border-light {
+    .toast-body {
+      color: var(--#{$prefix}light);
+      border-bottom-color: var(--#{$prefix}light);
+    }
+  }
+  
+  .toast-border-dark {
+    .toast-body {
+      color: var(--#{$prefix}gray-400);
+      border-bottom-color: var(--#{$prefix}gray-400);
+    }
+  }
+}

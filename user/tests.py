@@ -64,8 +64,8 @@ class OrganizationUserModelTestCase(TestCase):
         self.assertTrue(org_user.is_active)
         self.assertEqual(str(org_user), f"{self.user.username} - {self.organization.name}")
     
-    def test_organization_user_one_to_one(self):
-        """Test that one user can only belong to one organization (OneToOne relationship)"""
+    def test_organization_user_unique_per_organization(self):
+        """Test that a user can belong to multiple organizations, but not the same one twice"""
         # Create first organization user
         OrganizationUser.objects.create(
             user=self.user,
@@ -83,11 +83,19 @@ class OrganizationUserModelTestCase(TestCase):
             created_date=date.today()
         )
         
-        # Try to add same user to second organization (should fail due to OneToOne)
+        # Same user can be assigned to a second organization.
+        second_org_user = OrganizationUser.objects.create(
+            user=self.user,
+            organization=org2,
+            role='admin'
+        )
+        self.assertEqual(second_org_user.organization, org2)
+
+        # Same user cannot be assigned twice to the same organization.
         with self.assertRaises(IntegrityError):
             OrganizationUser.objects.create(
                 user=self.user,
-                organization=org2,
+                organization=self.organization,
                 role='admin'
             )
     
@@ -303,8 +311,8 @@ class UserTransactionTestCase(TransactionTestCase):
         self.assertEqual(User.objects.count(), initial_user_count)
         self.assertFalse(User.objects.filter(username='rollbacktest').exists())
     
-    def test_one_user_one_organization_validation(self):
-        """Test validation that prevents user from belonging to multiple organizations"""
+    def test_one_user_once_per_organization_validation(self):
+        """Test validation that prevents duplicate user membership in the same organization"""
         # Create user in first organization
         user = User.objects.create_user(username='singleorg', password='pass')
         OrganizationUser.objects.create(
@@ -323,11 +331,18 @@ class UserTransactionTestCase(TransactionTestCase):
             created_date=date.today()
         )
         
-        # Try to add user to second organization
+        # Adding the same user to a second organization is allowed.
+        OrganizationUser.objects.create(
+            user=user,
+            organization=org2,
+            role='admin'
+        )
+
+        # Adding the same user to the same organization twice is blocked.
         with self.assertRaises(IntegrityError):
             OrganizationUser.objects.create(
                 user=user,
-                organization=org2,
+                organization=self.organization,
                 role='admin'
             )
 

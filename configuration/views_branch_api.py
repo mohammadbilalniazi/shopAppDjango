@@ -29,7 +29,7 @@ def get_branches_by_organization(request, organization_id=None):
         org_id = int(org_id_str)
 
         # Determine access
-        if request.user.is_superuser or request.user.is_staff:
+        if request.user.is_superuser:
             branches = Branch.objects.filter(organization_id=org_id, is_active=True).order_by('name')
         elif OrganizationUser.objects.filter(
             user=request.user,

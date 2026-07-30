@@ -9,16 +9,20 @@ let purchased_price;
  */
 async function get_units() {
     const id = "all";
-    const unit_url = `/units/${id}/`;
+    const unit_url = `/units/${id}/?json=1`;
     let unit_data = localStorage.getItem("unit_data");
 
     if (!unit_data ) {
         // console.log("Fetching unit data...");
         let response = await call_shirkat(unit_url, 'GET');
-        unit_data = response.data;
+        unit_data = Array.isArray(response.data) ? response.data : [];
         localStorage.setItem("unit_data", JSON.stringify(unit_data));
     } else {
         unit_data = JSON.parse(unit_data);
+        if (!Array.isArray(unit_data)) {
+            localStorage.removeItem("unit_data");
+            return get_units();
+        }
     }
 }
 
@@ -213,7 +217,7 @@ async function add_row() {
     }
     // Unit select
     const selectUnit = createElement("select", {
-        className: "unit form-control",
+        className: "unit form-select",
         name: "unit",
         required: true
     });
@@ -236,8 +240,9 @@ async function add_row() {
 
     // Build the row - only selectItemName, no search input
     row.appendChild(createElement("td", {}, [selectItemName]));
-    const amountInput = createElement("input", { type: "number", className: "item_amount form-control", required: true });
-    row.appendChild(createElement("td", {}, [amountInput, selectUnit]));
+    const amountInput = createElement("input", { type: "number", className: "item_amount form-control", step: "any", required: true });
+    const amountUnitGroup = createElement("div", { className: "amount-unit-group" }, [amountInput, selectUnit]);
+    row.appendChild(createElement("td", {}, [amountUnitGroup]));
     const priceInput = createElement("input", { type: "number", className: "item_price form-control", min: "0", step: ".001", required: true });
     row.appendChild(createElement("td", {}, [priceInput]));
     const returnQtyInput = createElement("input", { type: "number", className: "return_qty form-control", value: 0, required: true });
@@ -310,8 +315,8 @@ async function init() {
 
         await get_products(organization_id, false);
 
-        let response = await call_shirkat(`/units/all/`, 'GET');
-        unit_data = response.data;
+        let response = await call_shirkat(`/units/all/?json=1`, 'GET');
+        unit_data = Array.isArray(response.data) ? response.data : [];
         localStorage.setItem("unit_data", JSON.stringify(unit_data));
 
         if (organizationEl) {
@@ -446,7 +451,7 @@ try{
         "bill_no":bill_no.value,
         "bill_type":bill_type.value,
         "bill_rcvr_org":bill_rcvr_org.value,
-        "is_approved":is_approved.value,
+        "is_approved":is_approved ? is_approved.checked : false,
         "status":status_bill.value,
         "approval_date":approval_date.value,
         "approval_user":approval_user.value,
@@ -509,10 +514,14 @@ async function select_rcvr_orgs() {
     selectRcvrOrg.name = "bill_rcvr_org";
     selectRcvrOrg.required = true;
 
+    const selectedOrganizationId = getElement("organization")?.value || "";
     const response = await fetch("/organizations/all/");
     const data = await response.json();
 
     data.forEach(org => {
+      if (String(org.id) === String(selectedOrganizationId)) {
+        return;
+      }
       const option = document.createElement("option");
       option.value = org.id;
       option.innerText = org.name;
@@ -576,6 +585,10 @@ try {
 } catch (e) {
   console.log("Error handling bill_type change", e);
 }
+
+getElement("organization")?.addEventListener("change", () => {
+  select_rcvr_orgs().then(() => select_bill_no());
+});
 
 /**
  * Keyboard shortcuts for bill form

@@ -35,6 +35,7 @@ urlpatterns = [
     path('configuration/organization/form/<id>', views_organization.form, name='organization_form'),
     path('configuration/organization/form/create/', views_organization.create, name='organization_form_save'),
     path('configuration/organization/form/create/<id>', views_organization.create, name='organization_form'),
+    path('configuration/organization/delete/<id>/', views_organization.delete, name='organization_delete'),
     path('admin/configuration/organization/', views_organization.show, name='organization_show'),
     path('configuration/organization/', views_organization.show, name='organization_show'),
     # Location
@@ -61,6 +62,7 @@ urlpatterns = [
     path('bill/delete/<id>/', views_bill.bill_delete),
     path('bill/select_bill_no/<organization_id>/<bill_rcvr_org_id>/<bill_type>', views_bill.select_bill_no),
     path('bill/search/', views_bill.search),
+    path('bill/approve/<int:bill_id>/', views_bill.approve_bill, name='bill_approve'),
 
     path('receive_payment/bill/save/', views_bill_receive_payment.bill_insert),
     path('receive_payment/bill/', views_bill_receive_payment.bill_form, name="bill_form_receive_payment"),

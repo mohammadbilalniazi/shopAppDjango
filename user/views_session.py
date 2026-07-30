@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.core.paginator import Paginator
@@ -81,7 +80,6 @@ def session_management(request):
 
 
 @login_required(login_url='/')
-@csrf_exempt
 def delete_session(request, session_key):
     """Delete a specific session"""
     if not request.user.is_superuser:
@@ -99,7 +97,6 @@ def delete_session(request, session_key):
 
 
 @login_required(login_url='/')
-@csrf_exempt
 def clear_expired_sessions(request):
     """Clear all expired sessions"""
     if not request.user.is_superuser:

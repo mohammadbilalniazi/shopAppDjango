@@ -10,7 +10,7 @@ Parameters accepted (all optional):
     - organizations_list (custom queryset/list to render)
 
 Behavior:
-    - Superusers/staff: render full select populated from `organizations_list` or `organizations` or `global_organizations`.
+    - Superusers: render full select populated from `organizations_list` or `organizations` or `global_organizations`.
     - Non-superusers: if `global_parent_organization` exists render a non-editable display and hidden input with that org id;
         otherwise render a disabled select populated from `global_organizations` (user's allowed orgs).
 Note: This intentionally does not affect selects named `bill_rcvr_org` which should remain full selects in bill templates.
@@ -19,7 +19,7 @@ Note: This intentionally does not affect selects named `bill_rcvr_org` which sho
 {% load static %}
 
 {% with name=field_name|default:'organization' id=field_id|default:field_name %}
-    {% if request.user.is_superuser or request.user.is_staff %}
+    {% if request.user.is_superuser %}
         <select style="border: 1px solid #cfd8e3;" name="{{ name }}" id="{{ id }}" class="organization-select {{ css_class|default:'form-control-custom' }}" {% if required %}required{% endif %}>
             {% if not required %}
                 <option value="">{{ placeholder|default:'Select Organization' }}</option>

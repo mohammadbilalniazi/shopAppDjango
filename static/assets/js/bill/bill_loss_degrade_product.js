@@ -8,16 +8,20 @@ let purchased_price;
  */
 async function get_units() {
     const id = "all";
-    const unit_url = `/units/${id}/`;
+    const unit_url = `/units/${id}/?json=1`;
     let unit_data = localStorage.getItem("unit_data");
 
     if (!unit_data) {
         console.log("Fetching unit data...");
         let response = await call_shirkat(unit_url, 'GET');
-        unit_data = response.data;
+        unit_data = Array.isArray(response.data) ? response.data : [];
         localStorage.setItem("unit_data", JSON.stringify(unit_data));
     } else {
         unit_data = JSON.parse(unit_data);
+        if (!Array.isArray(unit_data)) {
+            localStorage.removeItem("unit_data");
+            return get_units();
+        }
     }
 }
 
@@ -178,7 +182,7 @@ async function add_row() {
     populateOptions(); // initial full list
     // Unit select
     const selectUnit = createElement("select", {
-        className: "unit form-control",
+        className: "unit form-select",
         name: "unit",
         required: true
     });
@@ -201,8 +205,9 @@ async function add_row() {
 
     // Build the row
     row.appendChild(createElement("td", {}, [itemSearchInput, selectItemName]));
-    const amountInput = createElement("input", { type: "number", className: "item_amount form-control", required: true });
-    row.appendChild(createElement("td", {}, [amountInput, selectUnit]));
+    const amountInput = createElement("input", { type: "number", className: "item_amount form-control", step: "any", required: true });
+    const amountUnitGroup = createElement("div", { className: "amount-unit-group" }, [amountInput, selectUnit]);
+    row.appendChild(createElement("td", {}, [amountUnitGroup]));
     const priceInput = createElement("input", { type: "number", className: "item_price form-control", min: "0", step: ".001", required: true });
     row.appendChild(createElement("td", {}, [priceInput]));
     const returnQtyInput = createElement("input", { type: "number", className: "return_qty form-control", value: 0, required: true });

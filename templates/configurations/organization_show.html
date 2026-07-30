@@ -104,6 +104,63 @@
         background-color: #f8d7da;
         color: #721c24;
     }
+
+    .simple-modal .modal-content {
+        border: 0;
+        border-radius: 10px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+    }
+
+    .simple-modal .modal-header {
+        background: #fff;
+        color: #111827;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem 1.25rem;
+    }
+
+    .simple-modal .modal-title {
+        font-weight: 700;
+    }
+
+    .simple-modal .modal-body {
+        padding: 1.25rem;
+    }
+
+    .simple-modal .form-label-custom {
+        color: #374151;
+        font-size: 0.85rem;
+        font-weight: 650;
+        margin-bottom: 0.35rem;
+    }
+
+    .simple-modal .form-control,
+    .simple-modal .form-select {
+        border-radius: 8px;
+        border-color: #d1d5db;
+        min-height: 40px;
+    }
+
+    .simple-modal .simple-fields {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .simple-modal .optional-toggle {
+        color: #2563eb;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .simple-modal .optional-panel {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .simple-modal .modal-footer {
+        padding: 1rem 0 0;
+    }
 </style>
 {% endblock %}
 
@@ -120,7 +177,7 @@
                 <span class="breadcrumb-item active">Organizations</span>
             </nav>
         </div>
-        <button class="btn btn-create text-white" data-bs-toggle="modal" data-bs-target="#organizationModal" onclick="resetForm()">
+        <button type="button" class="btn btn-create text-white" id="addOrganizationBtn">
             <i class="bi bi-plus-circle me-2"></i>Add Organization
         </button>
     </div>
@@ -252,7 +309,7 @@
                             </button>
                             {% if request.user.is_superuser %}
                                 <button class="btn btn-sm btn-outline-danger table-action-btn" 
-                                        onclick="deleteOrganization({{ org.id }}, '{{ org.name }}')">
+                                        onclick="deleteOrganization({{ org.id }}, '{{ org.name|escapejs }}')">
                                     <i class="bi bi-trash me-1"></i>Delete
                                 </button>
                             {% endif %}
@@ -326,103 +383,74 @@
 </div>
 
 <!-- Organization Form Modal -->
-<div class="modal fade" id="organizationModal" tabindex="-1" aria-labelledby="organizationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+<div class="modal fade simple-modal" id="organizationModal" tabindex="-1" aria-labelledby="organizationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="organizationModalLabel">
-                    <i class="bi bi-building me-2"></i><span id="modalTitle">Add Organization</span>
+                    <span id="modalTitle">Add Organization</span>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="post" id="organizationForm" action="" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" id="organization_id" name="id" value="">
+                    <input type="hidden" name="parent" id="parent" value="None">
                     
-                    <div class="row g-3">
-                        <!-- Organization Type -->
-                        <div class="col-md-6">
-                            <label for="parent" class="form-label form-label-custom">
-                                <i class="bi bi-diagram-3 me-1"></i>Organization Type
-                            </label>
-                            <select name="parent" id="parent" class="form-select" required>
-                                <option value="None">Customer (Main Organization)</option>
-                                <!-- Parent options will be loaded dynamically -->
-                            </select>
-                        </div>
-
-                        <!-- Organization Name -->
-                        <div class="col-md-6">
-                            <label for="name" class="form-label form-label-custom">
-                                <i class="bi bi-building me-1"></i>Organization Name *
-                            </label>
+                    <div class="simple-fields">
+                        <div>
+                            <label for="name" class="form-label form-label-custom">Organization name *</label>
                             <input type="text" name="name" id="name" class="form-control" maxlength="20" required>
                         </div>
 
-                        <!-- Owner Username -->
-                        <div class="col-md-6">
-                            <label for="owner" class="form-label form-label-custom">
-                                <i class="bi bi-person me-1"></i>Owner Username *
-                            </label>
-                            <input type="text" name="owner" id="owner" class="form-control" maxlength="10" required>
-                        </div>
-
-                        <!-- Organization Type (Last Name) -->
-                        <div class="col-md-6">
-                            <label for="type" class="form-label form-label-custom">
-                                <i class="bi bi-tag me-1"></i>Organization Category *
-                            </label>
-                            <select name="type" id="type" class="form-select" required>
-                                <option value="SHIRKAT">SHIRKAT</option>
-                                <option value="SHOP">SHOP</option>
-                                <option value="NONE">NONE</option>
-                            </select>
-                        </div>
-
-                        <!-- Email -->
-                        <div class="col-md-6">
-                            <label for="email" class="form-label form-label-custom">
-                                <i class="bi bi-envelope me-1"></i>Email *
-                            </label>
-                            <input type="email" name="email" id="email" class="form-control" required>
-                        </div>
-
-                        <!-- Password -->
-                        <div class="col-md-6">
-                            <label for="password" class="form-label form-label-custom">
-                                <i class="bi bi-lock me-1"></i>Password *
-                            </label>
-                            <input type="password" name="password" id="password" class="form-control" value="Afghan123" required>
-                        </div>
-
-                        <!-- Location -->
-                        <div class="col-md-6">
-                            <label for="location" class="form-label form-label-custom">
-                                <i class="bi bi-geo-alt me-1"></i>Location *
-                            </label>
+                        <div>
+                            <label for="location" class="form-label form-label-custom">Location *</label>
+                            <input type="hidden" id="update_location_id" value="">
                             <select name="location" id="location" class="form-select" required>
                                 <option value="">Select Location</option>
                             </select>
                         </div>
 
-                        <!-- Is Active -->
-                        <div class="col-md-6 d-flex align-items-end">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
-                                <label class="form-check-label form-label-custom" for="is_active">
-                                    <i class="bi bi-toggle-on me-1"></i>Active Organization
-                                </label>
-                            </div>
+                        <div>
+                            <label for="owner" class="form-label form-label-custom">Owner username *</label>
+                            <input type="text" name="owner" id="owner" class="form-control" maxlength="10" required>
                         </div>
 
-                        <!-- Image Upload -->
-                        <div class="col-12">
-                            <label for="img" class="form-label form-label-custom">
-                                <i class="bi bi-image me-1"></i>Organization Image
-                            </label>
-                            <input type="file" name="img" id="img" class="form-control" accept="image/*">
-                            <div class="form-text">Optional: Upload organization logo or image</div>
+                        <div>
+                            <label for="password" class="form-label form-label-custom">Password *</label>
+                            <input type="password" name="password" id="password" class="form-control" value="Afghan123" required>
+                        </div>
+
+                        <div>
+                            <a class="optional-toggle" data-bs-toggle="collapse" href="#organizationMoreOptions" role="button" aria-expanded="false" aria-controls="organizationMoreOptions">
+                                More options
+                            </a>
+                        </div>
+
+                        <div class="collapse" id="organizationMoreOptions">
+                            <div class="optional-panel">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label form-label-custom">Email</label>
+                                    <input type="email" name="email" id="email" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="type" class="form-label form-label-custom">Category</label>
+                                    <select name="type" id="type" class="form-select" required>
+                                        <option value="SHOP">SHOP</option>
+                                        <option value="SHIRKAT">SHIRKAT</option>
+                                        <option value="NONE">NONE</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="img" class="form-label form-label-custom">Logo or image</label>
+                                    <input type="file" name="img" id="img" class="form-control" accept="image/*">
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
+                                    <label class="form-check-label form-label-custom" for="is_active">Active</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -443,7 +471,6 @@
 
 {% block scripts %}
 {{ block.super }}
-<script src="{% static 'assets/js/toastr.min.js' %}"></script>
 <script src="{% static 'assets/js/axios.min.js' %}"></script>
 <script src="{% static 'assets/js/cookie.js' %}"></script>
 <script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
@@ -451,67 +478,158 @@
 <script src="{% static 'assets/js/configuration/organization.js' %}"></script>
 
 <script>
+    function notify(message, type = 'info') {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+            return;
+        }
+        if (typeof toastr !== 'undefined') {
+            toastr[type === 'error' ? 'error' : type](message);
+            return;
+        }
+        alert(message);
+    }
+
+    async function readApiResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            return response.json();
+        }
+        const text = await response.text();
+        return {
+            success: response.ok,
+            message: text || (response.ok ? 'Request completed successfully.' : 'Request failed.')
+        };
+    }
+
+    function hasBootstrapJs() {
+        return typeof window.bootstrap !== 'undefined';
+    }
+
+    function showModalElement(modalEl) {
+        if (!modalEl) return;
+        if (hasBootstrapJs() && window.bootstrap.Modal) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            return;
+        }
+        modalEl.classList.add('show');
+        modalEl.style.display = 'block';
+        modalEl.removeAttribute('aria-hidden');
+        modalEl.setAttribute('aria-modal', 'true');
+        document.body.classList.add('modal-open');
+    }
+
+    function hideModalElement(modalEl) {
+        if (!modalEl) return;
+        if (hasBootstrapJs() && window.bootstrap.Modal) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+            return;
+        }
+        modalEl.classList.remove('show');
+        modalEl.style.display = 'none';
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.removeAttribute('aria-modal');
+        document.body.classList.remove('modal-open');
+    }
+
+    function setCollapseElement(collapseEl, shouldShow) {
+        if (!collapseEl) return;
+        if (hasBootstrapJs() && window.bootstrap.Collapse) {
+            const collapse = window.bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+            if (shouldShow) {
+                collapse.show();
+            } else {
+                collapse.hide();
+            }
+            return;
+        }
+        collapseEl.classList.toggle('show', shouldShow);
+    }
+
     // Reset form when opening modal for new organization
     function resetForm() {
         document.getElementById('organizationForm').reset();
         document.getElementById('organization_id').value = '';
+        document.getElementById('update_location_id').value = '';
         document.getElementById('modalTitle').textContent = 'Add Organization';
         document.getElementById('submitBtnText').textContent = 'Save Organization';
         document.getElementById('password').value = 'Afghan123';
         document.getElementById('is_active').checked = true;
+        document.getElementById('type').value = 'SHOP';
+        const organizationMoreOptions = document.getElementById('organizationMoreOptions');
+        setCollapseElement(organizationMoreOptions, false);
         
         // Reset form action to create
         document.getElementById('organizationForm').action = '/configuration/organization/form/create/';
     }
 
+    function openOrganizationManagementModal() {
+        try {
+            resetForm();
+            const modalEl = document.getElementById('organizationModal');
+            showModalElement(modalEl);
+        } catch (error) {
+            console.error('Unable to open organization modal:', error);
+            notify('Unable to open organization form.', 'error');
+        }
+    }
+
     // Edit organization
     async function editOrganization(id) {
-        window.location.href=`/configuration/organization/form/${id}`
         try {
             // Fetch organization data (request JSON) and populate form
             const response = await fetch(`/configuration/organization/form/${id}`, {
-                headers: { 'Accept': 'application/json' }
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
             if (!response.ok) {
                 throw new Error('Failed to fetch organization data');
             }
 
             const payload = await response.json();
+            if (!payload.success || !payload.data) {
+                throw new Error(payload.message || payload.error || 'Failed to load organization data');
+            }
+            const data = payload.data;
 
             // Open modal
-            const modal = new bootstrap.Modal(document.getElementById('organizationModal'));
-            modal.show();
+            const modalEl = document.getElementById('organizationModal');
+            showModalElement(modalEl);
 
             // Update modal title
             document.getElementById('modalTitle').textContent = 'Update Organization';
             document.getElementById('submitBtnText').textContent = 'Update Organization';
             document.getElementById('organization_id').value = id;
+            const organizationMoreOptions = document.getElementById('organizationMoreOptions');
+            setCollapseElement(organizationMoreOptions, true);
             
             // Update form action
             document.getElementById('organizationForm').action = `/configuration/organization/form/create/${id}`;
 
             // Populate form fields if backend provided data
-            if (payload && payload.success && payload.data) {
-                const data = payload.data;
-                if (document.getElementById('name')) document.getElementById('name').value = data.name || '';
-                if (document.getElementById('owner')) document.getElementById('owner').value = data.owner || '';
-                if (document.getElementById('email')) document.getElementById('email').value = data.email || '';
-                if (document.getElementById('type')) document.getElementById('type').value = data.type || 'NONE';
-                if (document.getElementById('location') && data.location) {
-                    // Try to select the location if the option exists
-                    const locSelect = document.getElementById('location');
-                    const opt = locSelect.querySelector(`option[value="${data.location}"]`);
-                    if (opt) {
-                        locSelect.value = data.location;
-                    }
+            if (document.getElementById('name')) document.getElementById('name').value = data.name || '';
+            if (document.getElementById('owner')) document.getElementById('owner').value = data.owner || '';
+            if (document.getElementById('email')) document.getElementById('email').value = data.email || '';
+            if (document.getElementById('type')) document.getElementById('type').value = data.type || 'SHOP';
+            if (document.getElementById('update_location_id')) document.getElementById('update_location_id').value = data.location || '';
+            if (document.getElementById('location') && data.location) {
+                const locSelect = document.getElementById('location');
+                const opt = locSelect.querySelector(`option[value="${data.location}"]`);
+                if (opt) {
+                    locSelect.value = data.location;
+                } else if (typeof locations === 'function') {
+                    await locations();
+                    locSelect.value = data.location;
                 }
-                if (document.getElementById('is_active')) document.getElementById('is_active').checked = !!data.is_active;
             }
+            if (document.getElementById('is_active')) document.getElementById('is_active').checked = !!data.is_active;
 
-            toastr.info('Loading organization data...');
+            notify('Organization form is ready.', 'info');
         } catch (error) {
             console.error('Error loading organization:', error);
-            toastr.error('Failed to load organization data');
+            notify(error.message || 'Failed to load organization data', 'error');
         }
     }
 
@@ -522,24 +640,27 @@
         }
 
         try {
-            const response = await call_shirkat(
-                `/configuration/organization/delete/${id}`,
-                'DELETE',
-                {},
-                { 'X-CSRFToken': getCookie('csrftoken') }
-            );
+            const response = await fetch(`/configuration/organization/delete/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            const payload = await readApiResponse(response);
 
-            if (response.status === 200 || response.status === 204) {
-                toastr.success(`Organization "${name}" deleted successfully`);
+            if (response.ok && payload.success) {
+                notify(payload.message || `Organization "${name}" deleted successfully`, 'success');
                 setTimeout(() => {
                     window.location.reload();
-                }, 1500);
+                }, 900);
             } else {
-                toastr.error('Failed to delete organization');
+                notify(payload.message || payload.error || 'Failed to delete organization', 'error');
             }
         } catch (error) {
             console.error('Error deleting organization:', error);
-            toastr.error('Error deleting organization: ' + error.message);
+            notify('Error deleting organization: ' + error.message, 'error');
         }
     }
 
@@ -562,27 +683,27 @@
                 method: 'POST',
                 body: formData,
                 headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             });
+            const payload = await readApiResponse(response);
 
-            if (response.ok || response.redirected) {
-                const orgId = document.getElementById('organization_id').value;
-                const action = orgId ? 'updated' : 'created';
-                toastr.success(`Organization ${action} successfully!`);
-                
+            if (response.ok && payload.success) {
+                notify(payload.message || 'Organization saved successfully.', 'success');
+                hideModalElement(document.getElementById('organizationModal'));
                 setTimeout(() => {
-                    window.location.href = response.url || '/configuration/organization/';
-                }, 1500);
+                    window.location.href = payload.redirect_url || '/configuration/organization/';
+                }, 900);
             } else {
-                const data = await response.json();
-                toastr.error(data.message || 'Failed to save organization');
+                notify(payload.message || payload.error || 'Failed to save organization', 'error');
                 submitBtn.disabled = false;
                 document.getElementById('submitBtnText').textContent = originalText;
             }
         } catch (error) {
             console.error('Error saving organization:', error);
-            toastr.error('Error saving organization: ' + error.message);
+            notify('Error saving organization: ' + error.message, 'error');
             submitBtn.disabled = false;
             document.getElementById('submitBtnText').textContent = originalText;
         }
@@ -597,26 +718,44 @@
     // Defensive: ensure Add Organization button opens modal and resetForm runs
     document.addEventListener('DOMContentLoaded', function() {
         try {
-            const addBtn = document.querySelector('button[data-bs-target="#organizationModal"]');
+            const addBtn = document.getElementById('addOrganizationBtn');
             if (addBtn) {
                 addBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
                     console.debug('Add Organization button clicked');
-                    try { if (typeof resetForm === 'function') resetForm(); } catch (err) { console.warn('resetForm error', err); }
-                    try {
-                        const modalEl = document.getElementById('organizationModal');
-                        if (modalEl) {
-                            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                            modal.show();
-                        }
-                    } catch (err) {
-                        console.warn('Modal show error', err);
-                    }
+                    openOrganizationManagementModal();
                 });
             } else {
                 console.warn('Add Organization button not found');
             }
         } catch (e) {
             console.error('Error attaching Add Organization handler', e);
+        }
+
+        document.querySelectorAll('#organizationModal [data-bs-dismiss="modal"], #organizationModal .btn-close').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                hideModalElement(document.getElementById('organizationModal'));
+            });
+        });
+
+        document.querySelectorAll('#organizationModal .optional-toggle').forEach(function(toggle) {
+            toggle.addEventListener('click', function(e) {
+                if (hasBootstrapJs()) {
+                    return;
+                }
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                setCollapseElement(target, !target.classList.contains('show'));
+            });
+        });
+
+        const organizationModal = document.getElementById('organizationModal');
+        if (organizationModal) {
+            organizationModal.addEventListener('click', function(e) {
+                if (!hasBootstrapJs() && e.target === organizationModal) {
+                    hideModalElement(organizationModal);
+                }
+            });
         }
     });
 </script>

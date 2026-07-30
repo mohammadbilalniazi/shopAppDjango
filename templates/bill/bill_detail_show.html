@@ -1,11 +1,12 @@
 {% extends "master.html" %}
-{% load static %}
 
 {% block title %}Bills | Shirkat{% endblock %}
-
+{% load static %}
 {% block head_extra %}
 {{ block.super }}
 {% if form %}{{ form.media.css }}{% endif %}
+<link rel="stylesheet" href="{% static 'assets/react/bill-organization-select.css' %}">
+
 <style>
     /* Bill Detail Page - Beautiful Modern Design */
     
@@ -332,8 +333,10 @@
     }
 
 </style>
+  
 {% endblock %}
-
+  {% load jalali_tags %}
+{% load static %}
 {% block content %}
 <!-- Page Header with Actions -->
 <div class="gradient-card mb-4">
@@ -393,7 +396,7 @@
                 <label for="organization" class="form-label-custom">
                     <i class="bi bi-building text-primary"></i> Organization
                 </label>
-                <select name="organization" id="organization" class="form-select-custom organization-select" required>
+                <select name="organization" id="organization" class="form-select-custom organization-select" data-react-organization-select="true" required>
                     {% for org in organizations %}
                         <option value="{{ org.id }}" {% if organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
                     {% endfor %}
@@ -666,7 +669,7 @@
                 </thead>
                 <tbody id="bill_tbody">
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted">
+                        <td colspan="10" class="text-center py-5 text-muted">
                             <div class="d-flex flex-column align-items-center gap-3">
                                 <i class="bi bi-search fs-1 text-secondary"></i>
                                 <div>
@@ -704,6 +707,8 @@
 <script src="/static/assets/js/common_entities/create_element.js"></script>
 <script src="/static/assets/js/configuration/organization.js"></script>
 <script src="/static/assets/js/vendor/show_vendor.js"></script>
+<script src="{% static 'assets/js/bill/organization_scope_guard.js' %}"></script>
+<script src="{% static 'assets/react/bill-organization-select.js' %}"></script>
 <script src="/static/assets/js/bill/bill_search.js"></script>
 <script src="/static/assets/js/bill/searchable_selects.js"></script>
 <script>

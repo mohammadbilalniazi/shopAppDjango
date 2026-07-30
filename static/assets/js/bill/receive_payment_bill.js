@@ -111,7 +111,7 @@ try{
                 "bill_type":bill_type.value,
                 "id":bill_id.value,    
                 "bill_rcvr_org":bill_rcvr_org.value,
-                "is_approved":is_approved.value,
+                "is_approved":is_approved ? is_approved.checked : false,
                 "status":status_bill.value,
                 "approval_date":approval_date.value,
                 "approval_user":approval_user.value,
@@ -164,6 +164,7 @@ async function select_rcvr_orgs(){
     select_rcvr_org_in_div.required=true;
     rcvr_org_id="all";
     url='/organizations/'+rcvr_org_id+'/';
+    const selectedOrganizationId = document.getElementById("organization")?.value || "";
     await fetch(url,{
         'method':'GET'
     }).then(response=>response.json()).then(data=>{
@@ -171,6 +172,9 @@ async function select_rcvr_orgs(){
         // console.log("key=",key," rcvr_orgs=",data)
         for(key in data){
             //console.log("key=",key," data[key]=",data[key])
+            if(String(data[key]['id']) === String(selectedOrganizationId)){
+                continue;
+            }
             var option_in_select=document.createElement("option");
             option_in_select.value=data[key]['id'];
             option_in_select.innerText=data[key]['name'];
@@ -189,6 +193,10 @@ async function select_rcvr_orgs(){
         select_bill_no();
     });
 }
+
+document.getElementById("organization")?.addEventListener("change", () => {
+    select_rcvr_orgs().then(() => select_bill_no());
+});
 
 
 

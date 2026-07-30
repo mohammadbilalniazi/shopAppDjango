@@ -142,49 +142,11 @@
         <div class="nav-section-title">Financial Reports</div>
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="{% url 'asset_dashboard' %}" class="nav-link {% if '/asset/dashboard' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-speedometer"></i>
-                    <span>Asset Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'financial_dashboard' %}" class="nav-link {% if '/asset/financial' in request.path %}active{% endif %}">
+                <a href="{% url 'financial_reports' %}" class="nav-link {% if '/asset/reports' in request.path %}active{% endif %}">
                     <i class="nav-icon bi bi-graph-up"></i>
-                    <span>Financial Summary</span>
+                    <span>Financial Reports</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{% url 'organization_ledger' %}" class="nav-link {% if '/asset/ledger' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-book"></i>
-                    <span>Organization Ledger</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'profit_loss' %}" class="nav-link {% if '/profit-loss' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-bar-chart"></i>
-                    <span>Profit & Loss</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'balance_sheet' %}" class="nav-link {% if '/balance-sheet' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-clipboard-data"></i>
-                    <span>Balance Sheet</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'cash_flow' %}" class="nav-link {% if '/cash-flow' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-cash-stack"></i>
-                    <span>Cash Flow</span>
-                </a>
-            </li>
-            {% if user.is_superuser or user.is_staff %}
-            <li class="nav-item">
-                <a href="{% url 'admin_adjust' %}" class="nav-link {% if '/asset/admin/adjust' in request.path %}active{% endif %}">
-                    <i class="nav-icon bi bi-sliders"></i>
-                    <span>Adjust Summary</span>
-                </a>
-            </li>
-            {% endif %}
         </ul>
     </div>
 

@@ -10,6 +10,7 @@
 <link href="{% static 'assets/css/select2.min.css' %}" rel="stylesheet" />
 <link rel="stylesheet" href="{% static 'assets/css/bill_form_sell_purchase.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
+<link rel="stylesheet" href="{% static 'assets/react/bill-organization-select.css' %}">
 {% if form %}{{ form.media.css }}{% endif %}
 <style>
 .bill-form-header {
@@ -123,7 +124,7 @@ input[name="date"]:focus {
                     <!-- Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">{% trans "Organization" %} <span class="text-danger">*</span></label>
-                        <select name="organization" id="organization" class="form-select organization-select" required>
+                        <select name="organization" id="organization" class="form-select organization-select" data-react-organization-select="true" required>
                             <option value="">{% trans "Select Organization" %}</option>
                             {% for org in organizations %}
                                 <option value="{{ org.id }}" {% if organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
@@ -225,8 +226,12 @@ input[name="date"]:focus {
                     <div class="col-md-4 d-flex align-items-end pb-2">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="is_approved" name="is_approved"
-                                   {% if bill.bill_receiver2.is_approved %}checked{% endif %}>
+                                   {% if bill.bill_receiver2.is_approved or not bill and can_approve_bill %}checked{% endif %}
+                                   {% if not can_approve_bill %}disabled{% endif %}>
                             <label class="form-check-label form-label-bold" for="is_approved">{% trans "Approved" %}</label>
+                            {% if not can_approve_bill %}
+                            <div class="form-text">{% trans "Only organization admins can approve bills." %}</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -307,12 +312,14 @@ input[name="date"]:focus {
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="number" value="{{ detail.item_amount }}" name="item_amount" step="any" class="item_amount form-control" style="margin-bottom:4px">
-                                        <select class="unit form-control" name="unit">
-                                            {% for row in units %}
-                                            <option value="{{ row.id }}" {% if detail.unit.id == row.id %}selected{% endif %}>{{ row.name }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        <div class="amount-unit-group">
+                                            <input type="number" value="{{ detail.item_amount }}" name="item_amount" step="any" class="item_amount form-control">
+                                            <select class="unit form-select" name="unit">
+                                                {% for row in units %}
+                                                <option value="{{ row.id }}" {% if detail.unit.id == row.id %}selected{% endif %}>{{ row.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="number" value="{{ detail.item_price }}" name="item_price" step="any" class="item_price form-control">
@@ -571,6 +578,8 @@ input[name="date"]:focus {
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
 <script src="{% static 'assets/js/common_entities/generate_ihsaya.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_location_modal.js' %}"></script>
+<script src="{% static 'assets/js/bill/organization_scope_guard.js' %}"></script>
+<script src="{% static 'assets/react/bill-organization-select.js' %}"></script>
 {% if is_loss_degrade %}
 <script src="{% static 'assets/js/bill/bill_loss_degrade_product.js' %}"></script>
 {% else %}
@@ -579,6 +588,7 @@ input[name="date"]:focus {
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <!-- Searchable Selects Module -->
 <script src="{% static 'assets/js/bill/searchable_selects.js' %}"></script>
+<script src="{% static 'assets/js/bill/branch_by_organization.js' %}"></script>
 
 <script>
 // Remove Django admin's auto-generated addlink that navigates to /admin/
@@ -675,99 +685,7 @@ input[name="date"]:focus {
     setInterval(ensureOrganizationButton, 2000);
 })();
 
-(function() {
-    let originalBranchOptions = [];
-
-    function getBranchSelectElements() {
-        return {
-            organizationSelect: document.getElementById('organization'),
-            branchSelect: document.getElementById('branch'),
-            initialBranchId: document.getElementById('initial_branch_id')?.value || ''
-        };
-    }
-
-    function resetBranchOptions(branchSelect) {
-        branchSelect.innerHTML = '<option value="">— Select Branch —</option>';
-    }
-
-    function renderBranchOptions(branchSelect, branches, selectedBranchId) {
-        resetBranchOptions(branchSelect);
-        branches.forEach(branch => {
-            const option = document.createElement('option');
-            option.value = branch.id;
-            const orgId = branch.organization_id || (branch.organization && branch.organization.id) || branch.organization;
-            const orgName = branch.organization_name || (branch.organization && branch.organization.name) || '';
-            if (orgId) {
-                option.dataset.organizationId = orgId;
-            }
-            option.textContent = branch.name + (orgName ? ' — ' + orgName : '');
-            if (String(branch.id) === String(selectedBranchId)) {
-                option.selected = true;
-            }
-            branchSelect.appendChild(option);
-        });
-    }
-
-    function renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId) {
-        const existingOptions = originalBranchOptions
-            .filter(option => String(option.dataset.organizationId) === String(organizationId));
-        resetBranchOptions(branchSelect);
-        if (!existingOptions.length) {
-            return false;
-        }
-        existingOptions.forEach(option => {
-            const clone = option.cloneNode(true);
-            clone.selected = String(clone.value) === String(selectedBranchId);
-            branchSelect.appendChild(clone);
-        });
-        return true;
-    }
-
-    async function loadBranchesForOrganization(organizationId, branchSelect, selectedBranchId) {
-        if (!organizationId) {
-            resetBranchOptions(branchSelect);
-            return;
-        }
-
-        const localRendered = renderBranchesFromExisting(branchSelect, organizationId, selectedBranchId);
-        if (localRendered) {
-            return;
-        }
-
-        try {
-            console.debug('Loading branches for org', organizationId);
-            const response = await fetch(`/api/branches/by-organization/${organizationId}/`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            console.debug('Branch API status', response.status);
-            if (!response.ok) {
-                return;
-            }
-            const data = await response.json();
-            console.debug('Branch API response', data);
-            if (Array.isArray(data.branches)) {
-                renderBranchOptions(branchSelect, data.branches, selectedBranchId);
-            }
-        } catch (error) {
-            console.error('Unable to load branches for organization:', error);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const { organizationSelect, branchSelect, initialBranchId } = getBranchSelectElements();
-        if (!organizationSelect || !branchSelect) {
-            return;
-        }
-        originalBranchOptions = Array.from(branchSelect.querySelectorAll('option[data-organization-id]')).map(option => option.cloneNode(true));
-
-        organizationSelect.addEventListener('change', function() {
-            loadBranchesForOrganization(this.value, branchSelect, '');
-        });
-
-        const initialOrganizationId = organizationSelect.value;
-        loadBranchesForOrganization(initialOrganizationId, branchSelect, initialBranchId);
-    });
-})();
+/* Branch/organization sync moved to assets/js/bill/branch_by_organization.js */
 </script>
 
 {% if detail %}

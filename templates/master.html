@@ -97,19 +97,32 @@
     </style>
 </head>
 
-<body>
+<body{% if request.GET.embed == '1' %} class="embed-mode"{% endif %}>
+    {% if request.GET.embed == '1' %}
+    <style>
+        /* Embed mode: page rendered inside a tab/iframe — drop the chrome. */
+        body.embed-mode .sidebar,
+        body.embed-mode .page-header,
+        body.embed-mode .sidebar-overlay { display: none !important; }
+        body.embed-mode .main-content { margin-left: 0 !important; width: 100% !important; }
+        body.embed-mode .page-container { display: block !important; }
+        body.embed-mode .p-6 { padding: 1rem !important; }
+    </style>
+    {% endif %}
     <div class="page-container">
         <!-- Sidebar -->
+        {% if request.GET.embed != '1' %}
         <aside class="sidebar" id="sidebar">
             <!-- Sidebar Brand -->
             <div class="sidebar-brand">
                 <img src="{% static 'assets/img/logo.png' %}" alt="Shirkat" onerror="this.style.display='none'">
                 <span class="sidebar-brand-text">Shirkat</span>
             </div>
-            
+
             <!-- Sidebar Navigation -->
             {% include 'configurations/nav_sidebar.html' %}
         </aside>
+        {% endif %}
 
         <!-- Main Content -->
         <main class="main-content">

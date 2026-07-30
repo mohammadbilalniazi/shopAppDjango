@@ -161,6 +161,8 @@ async function make_table(response_data)
         const total = parseFloat(bills[key]['total']) || 0;
         const payment = parseFloat(bills[key]['payment']) || 0;
         const balance = total - payment;
+        const isApproved = Boolean(bills[key]['is_approved']);
+        const canApprove = Boolean(bills[key]['can_approve']);
         
         // Badge color based on bill type
         const billTypeColors = {
@@ -175,6 +177,14 @@ async function make_table(response_data)
         
         // Balance styling
         const balanceClass = balance > 0 ? 'text-danger fw-bold' : balance < 0 ? 'text-success fw-bold' : 'text-muted';
+        const approvalBadge = isApproved
+            ? `<span class="badge bg-success mt-1"><i class="bi bi-check-circle"></i> Approved</span>`
+            : `<span class="badge bg-secondary mt-1"><i class="bi bi-clock"></i> Created</span>`;
+        const approveButton = canApprove
+            ? `<button type="button" class="btn btn-outline-success" onclick="approveBill(${bills[key]['id']}); return false;" title="Approve Bill">
+                    <i class="bi bi-check2-circle"></i>
+               </button>`
+            : '';
         
         let row=`
             <tr class="bill-row">
@@ -182,7 +192,8 @@ async function make_table(response_data)
                 <td><strong>${bills[key]['organization']}</strong></td>
                 <td class="text-center">
                     <span class="badge bg-${badgeColor} fs-6">#${bills[key]['bill_no']}</span><br>
-                    <small class="text-muted">${bills[key]['bill_type']}</small>
+                    <small class="text-muted">${bills[key]['bill_type']}</small><br>
+                    ${approvalBadge}
                 </td>
                 <td>${bill_rcvr_org}</td>
                 <td class="text-end fw-bold">${total.toLocaleString()}</td>
@@ -198,6 +209,7 @@ async function make_table(response_data)
                         <a href="/bill/payment/${bills[key]['id']}/" class="btn btn-outline-success" title="Pay with Card">
                             <i class="bi bi-credit-card"></i>
                         </a>
+                        ${approveButton}
                         <a href="/bill/delete/${bills[key]['id']}" 
                            onclick="return confirm('⚠️ Are you sure you want to delete this bill?');" 
                            class="btn btn-outline-danger" title="Delete">
@@ -211,6 +223,26 @@ async function make_table(response_data)
     
     console.log(`✓ Loaded ${Object.keys(bills).length} bills with modern styling`);
 }
+async function approveBill(billId) {
+    if (!confirm("Approve this bill?")) {
+        return;
+    }
+
+    try {
+        const response = await call_shirkat(`/bill/approve/${billId}/`, "POST", {});
+        const responseData = response?.data || {};
+        if (responseData.ok) {
+            show_message(responseData.message || "Bill approved successfully.", "success");
+            await search_bills();
+        } else {
+            show_message(responseData.message || "Bill was not approved.", "error");
+        }
+    } catch (e) {
+        const message = e?.response?.data?.message || e?.message || "Unable to approve bill.";
+        show_message(message, "error");
+    }
+}
+
 async function search_bills(url=null)
 {
     var start_date=document.getElementById("start_date_input").value;

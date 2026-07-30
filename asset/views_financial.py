@@ -651,3 +651,35 @@ def organization_user_summary(request):
     }
     
     return render(request, 'asset/user_financial_summary.html', context)
+
+
+@login_required
+def financial_reports(request):
+    """
+    Single consolidated Financial Reports page.
+
+    Instead of navigating between separate pages (dashboard, summary, ledger,
+    profit & loss, balance sheet, cash flow, adjustments), every report is
+    presented as a tab here. Each tab lazy-loads its existing view in embed
+    mode (?embed=1), so all report logic is reused untouched.
+    """
+    tabs = [
+        {'key': 'dashboard', 'label': 'Asset Dashboard', 'icon': 'bi-speedometer2', 'url_name': 'asset_dashboard'},
+        {'key': 'summary', 'label': 'Financial Summary', 'icon': 'bi-cash-coin', 'url_name': 'financial_dashboard'},
+        {'key': 'ledger', 'label': 'Organization Ledger', 'icon': 'bi-journal-text', 'url_name': 'organization_ledger'},
+        {'key': 'profit_loss', 'label': 'Profit & Loss', 'icon': 'bi-graph-up-arrow', 'url_name': 'profit_loss'},
+        {'key': 'balance_sheet', 'label': 'Balance Sheet', 'icon': 'bi-clipboard-data', 'url_name': 'balance_sheet'},
+        {'key': 'cash_flow', 'label': 'Cash Flow', 'icon': 'bi-cash-stack', 'url_name': 'cash_flow'},
+    ]
+
+    if request.user.is_staff or request.user.is_superuser:
+        tabs.append({'key': 'adjust', 'label': 'Adjust Summary', 'icon': 'bi-sliders', 'url_name': 'admin_adjust'})
+
+    active = request.GET.get('tab', tabs[0]['key'])
+    if active not in {t['key'] for t in tabs}:
+        active = tabs[0]['key']
+
+    return render(request, 'asset/financial_reports.html', {
+        'tabs': tabs,
+        'active_tab': active,
+    })

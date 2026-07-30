@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{% static 'assets/css/common.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
+<link rel="stylesheet" href="{% static 'assets/react/bill-organization-select.css' %}">
 <style>
 .bill-section-card {
     border: 0;
@@ -77,7 +78,7 @@ input[name="date"]:focus {
                     <!-- Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">Organization <span class="text-danger">*</span></label>
-                        <select name="organization" id="organization" class="form-select organization-select" required>
+                        <select name="organization" id="organization" class="form-select organization-select" data-react-organization-select="true" required>
                             <option value="">Select Organization</option>
                             {% for org in organizations %}
                                 <option value="{{ org.id }}" {% if bill and bill.organization and bill.organization.id == org.id %}selected{% elif organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
@@ -185,51 +186,14 @@ input[name="date"]:focus {
 <script src="{% static 'assets/js/common_entities/create_element.js' %}"></script>
 <script src="{% static 'assets/js/show_message.js' %}"></script>
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
+<script src="{% static 'assets/js/bill/organization_scope_guard.js' %}"></script>
+<script src="{% static 'assets/react/bill-organization-select.js' %}"></script>
 <script src="{% static 'assets/js/expenditure/expense.js' %}"></script>
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 
+<!-- Organisation → Branch dynamic filtering -->
+<script src="{% static 'assets/js/bill/branch_by_organization.js' %}"></script>
 <script>
-// Organisation → Branch dynamic filtering
-document.addEventListener('DOMContentLoaded', function () {
-    var orgEl = document.getElementById('organization');
-    var branchEl = document.getElementById('branch');
-    var initialId = (document.getElementById('initial_branch_id') || {}).value || '';
-
-    if (!orgEl || !branchEl) return;
-
-    async function loadBranches(orgId) {
-        branchEl.innerHTML = '<option value="">— Select Branch —</option>';
-        if (!orgId) return;
-        try {
-            branchEl.disabled = true;
-            console.debug('Loading branches for org', orgId);
-            var resp = await fetch('/api/branches/by-organization/' + orgId + '/', {
-                headers: { 'Accept': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
-            });
-            console.debug('Branch API status', resp.status);
-            if (!resp.ok) return;
-            var data = await resp.json();
-            console.debug('Branch API response', data);
-            (data.branches || []).forEach(function (b) {
-                var opt = document.createElement('option');
-                opt.value = b.id;
-                opt.setAttribute('data-organization-id', orgId);
-                var orgName = b.organization && b.organization.name ? b.organization.name : '';
-                opt.textContent = b.name + (orgName ? ' - ' + orgName : '');
-                branchEl.appendChild(opt);
-            });
-            if (initialId) { branchEl.value = initialId; initialId = ''; }
-        } catch (e) {
-            console.warn('Branch load error:', e);
-        } finally {
-            branchEl.disabled = false;
-        }
-    }
-
-    orgEl.addEventListener('change', function () { loadBranches(this.value); });
-    if (orgEl.value) loadBranches(orgEl.value);
-});
-
 add_event_to_total();
 </script>
 {% endblock %}

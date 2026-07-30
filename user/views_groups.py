@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, Permission
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.core.paginator import Paginator
@@ -86,7 +85,6 @@ def group_form(request, group_id=None):
 
 
 @login_required(login_url='/')
-@csrf_exempt
 @api_view(['POST'])
 def create_update_group(request):
     """Create or update a group"""
@@ -141,7 +139,6 @@ def create_update_group(request):
 
 
 @login_required(login_url='/')
-@csrf_exempt
 def delete_group(request, group_id):
     """Delete a group"""
     if not request.user.is_superuser:

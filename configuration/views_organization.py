@@ -19,35 +19,48 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
 from common.file_handle import delete_file
 from common.organization import find_userorganization
-import random
 from django.db.models import Sum, Q
 from django.template import loader
+
+
+def _wants_json(request):
+    accept = request.headers.get('Accept', '')
+    requested_with = request.headers.get('X-Requested-With', '')
+    return 'application/json' in accept or requested_with == 'XMLHttpRequest'
+
+
+def _api_success(request, message, redirect_url=None, data=None):
+    if _wants_json(request):
+        payload = {'success': True, 'message': message}
+        if redirect_url:
+            payload['redirect_url'] = redirect_url
+        if data:
+            payload.update(data)
+        return JsonResponse(payload)
+    messages.success(request, message)
+    return redirect(redirect_url or '/configuration/organization/')
+
+
+def _api_error(request, message, status_code=400, redirect_url=None, data=None):
+    if _wants_json(request):
+        payload = {'success': False, 'message': message, 'error': message}
+        if data:
+            payload.update(data)
+        return JsonResponse(payload, status=status_code)
+    messages.error(request, message)
+    return redirect(redirect_url or '/configuration/organization/form/')
 
 @login_required
 @api_view(('GET','DELETE'))
 def rcvr_org_show(request,id="all"):
     """
     API endpoint for bill_rcvr_org dropdown.
-    Returns:
-    - For superadmin: ALL organizations
-    - For regular users: ALL organizations EXCEPT their own organization
+    Returns all organizations for the receiver dropdown. The bill form filters
+    out the currently selected creator organization.
     """
     # if request.type=="DELETE":
     if id=="all":
-        self_organization,user_orgs = find_userorganization(request)
-        
-        # Superadmin sees all organizations
-        if request.user.is_superuser:
-            query_set = Organization.objects.all().order_by('-pk')
-        # Regular users see all organizations except their own
-        elif self_organization is not None:
-            query_set = Organization.objects.all().exclude(id=self_organization.id).order_by('-pk')
-        else:
-            # User with multiple orgs - exclude all their organizations
-            user_org_ids = user_orgs.values_list('id', flat=True)
-            query_set = Organization.objects.all().exclude(id__in=user_org_ids).order_by('-pk')
-        
-        print("rcvr_org_show query set ", query_set)
+        query_set = Organization.objects.all().order_by('-pk')
     else:
         query_set=Organization.objects.filter(name=str(id))
     serializer=OrganizationSerializer(query_set,many=True)
@@ -72,7 +85,6 @@ def user_organizations(request):
     else:
         query_set = user_orgs.order_by('-pk')
     
-    print("user_organizations query set ", query_set)
     serializer = OrganizationSerializer(query_set, many=True)
     return Response(serializer.data)
 
@@ -131,28 +143,31 @@ def show(request):
 
 @login_required()
 def delete(request,id=None):
-    print("delete is called ","id!=None ",id!=None," id ",id)
-    if id!=None:
-        query=Organization.objects.filter(id=int(id))
-        print("query ",query," request.user.is_superuser ",request.user.is_superuser)
-        if not request.user.is_superuser:
-            messages.error(request,"Admin Can only Delete The  Organization ")
-        elif query.count()>0:
-            ok,message=delete_file(query[0],'img')
-            messages.success(request,"Organization {} is deleted successfully ".format(id))
-            query.delete()
-        else:
-            messages.error(request,"No Organization With {} id ".format(id))
-    else:
-        messages.error(request,"No Organization specific organization is selected ")
-    return redirect("/conifgurations/organization/")
+    if request.method != 'DELETE':
+        return _api_error(request, 'Invalid request method.', status_code=405)
+    if id is None:
+        return _api_error(request, 'No organization was selected.', status_code=400)
+    if not request.user.is_superuser:
+        return _api_error(request, 'Only admin can delete an organization.', status_code=403)
+
+    query = Organization.objects.filter(id=int(id))
+    if not query.exists():
+        return _api_error(request, f'No organization with id {id} was found.', status_code=404)
+
+    organization = query.first()
+    organization_name = organization.name
+    delete_file(organization, 'img')
+    query.delete()
+    return _api_success(
+        request,
+        f'Organization "{organization_name}" deleted successfully.',
+        redirect_url='/configuration/organization/'
+    )
 @login_required(login_url='/admin')
 def form(request,id=None):
-    print("organization id ",id)
     context={}
     if id!=None:
         organization=Organization.objects.get(id=int(id))
-        print('organization is_active',organization.is_active)
         context['organization']=organization
         context['id']=int(id)
         # If the request expects JSON (called via fetch for edit), return organization data
@@ -194,18 +209,21 @@ def create(request,id=None):
     last_name = request.data.get('type', '')
     organization_type = request.data.get('type', '')
     email = request.data.get('email', '')
-    name = request.data.get('name')
+    name = (request.data.get('name') or '').strip()
     location_id = request.data.get('location')  # location id
 
     # Basic required-field validation: return 400 when required fields are missing
     if not name or not location_id:
-        return Response({'error': 'missing required fields'}, status=400)
+        return _api_error(request, 'Organization name and location are required.', status_code=400)
+    if not owner:
+        return _api_error(request, 'Owner username is required.', status_code=400)
+    if (id == '' or id == 'None' or id is None) and not password:
+        return _api_error(request, 'Password is required for a new organization owner.', status_code=400)
     try:
         location=Location.objects.get(id=int(location_id))
         # print("location ",location)
     except Exception as e:
-        messages.error(request,str(e))
-        return redirect('/configuration/organization/form/')
+        return _api_error(request, f'Invalid location: {e}', status_code=400)
     try:
         is_active=request.data.get('is_active',False)
         if is_active=='on':
@@ -228,49 +246,83 @@ def create(request,id=None):
     #############################################end data get#############################
     
     if id=='' or id=='None' or id==None: # 1 step create
-        org_query=Organization.objects.filter(name=name)
-        print(f"org_query {org_query}")
+        org_query=Organization.objects.filter(name__iexact=name)
         if org_query.count()==0:
             try:
-                # if owner_user_query.count()==0:
-                user_query= User.objects.filter(username=owner)
-                print(f"user_query {user_query}")
-                if user_query.count()==0:
-                    owner=owner+str(random.randint(2,1000))
-                    owner,created = User.objects.get_or_create(username=owner,first_name=name,last_name=last_name,email=email,is_staff=True,is_active=is_active) 
-                else:
-                    owner=user_query[0]
+                owner_user, created = User.objects.get_or_create(
+                    username=owner,
+                    defaults={
+                        'first_name': name,
+                        'last_name': last_name,
+                        'email': email,
+                        'is_staff': True,
+                        'is_active': is_active,
+                    }
+                )
+                existing_owner_org = Organization.objects.filter(owner=owner_user).first()
+                if existing_owner_org:
+                    return _api_error(
+                        request,
+                        f'Owner username "{owner}" is already assigned to organization "{existing_owner_org.name}".',
+                        status_code=400
+                    )
+                owner_user.first_name = name
+                owner_user.last_name = last_name
+                owner_user.email = email
+                owner_user.is_staff = True
+                owner_user.is_active = is_active
                 group_query=Group.objects.filter(name=group)   
                 if group_query.count()>0:
                     group_obj=group_query[0]
                 else:
                     group_obj=Group.objects.create(name=group)   
-                owner.groups.add(group_obj)
-                owner.set_password(password)
-                org=Organization(owner=owner,name=name,location=location,is_active=is_active,created_date=created_date,img=img,organization_type=organization_type )
+                owner_user.groups.add(group_obj)
+                owner_user.set_password(password)
+                owner_user.save()
+                org=Organization(owner=owner_user,name=name,location=location,is_active=is_active,created_date=created_date,img=img,organization_type=organization_type )
                 org.save()
                 
                 for admin in User.objects.filter(is_superuser=True):
                     adm_org_c,created=OrganizationUser.objects.get_or_create(user=admin, organization=org,role="superuser")
-                    print(f"adm_org_c {adm_org_c}")
                 stock_query=Stock.objects.filter(organization=org)
                 if stock_query.count()==0:
                     stock=Stock(organization=org,current_amount=0)
                     stock.save()
-                messages.success(request,'Organization {} successfully created '.format(org.name))
-                return redirect('/configuration/organization/form/'+str(org.id))
+                return _api_success(
+                    request,
+                    f'Organization "{org.name}" successfully created.',
+                    redirect_url='/configuration/organization/',
+                    data={'organization_id': org.id}
+                )
             except Exception as e:
-                messages.error(request,' we could not create organization '+str(e))
-                return redirect('/configuration/organization/form/')
+                return _api_error(request, 'We could not create organization: '+str(e), status_code=500)
         else:
             org=org_query[0]
-            messages.error(request,'we already have {} organization we cant create new'.format(org.name))
-            return redirect('/configuration/organization/form/'+str(org.id))
+            return _api_error(
+                request,
+                'We already have organization "{}"; a duplicate cannot be created.'.format(org.name),
+                status_code=400,
+                redirect_url='/configuration/organization/form/'+str(org.id)
+            )
     else: # step 2 update user and org
         org_query=Organization.objects.filter(id=int(id))  
         if org_query.count()>0:
             org=org_query[0]    
             owner_obj=org.owner 
+            duplicate_org = Organization.objects.filter(name__iexact=name).exclude(id=org.id).first()
+            if duplicate_org:
+                return _api_error(
+                    request,
+                    f'Organization name "{name}" is already used by another organization.',
+                    status_code=400
+                )
+            duplicate_user = User.objects.filter(username=owner).exclude(id=owner_obj.id).first()
+            if duplicate_user:
+                return _api_error(
+                    request,
+                    f'Username "{owner}" is already used by another user.',
+                    status_code=400
+                )
             owner_obj.first_name=name
             owner_obj.username=owner
             owner_obj.last_name=last_name
@@ -278,14 +330,28 @@ def create(request,id=None):
             owner_obj.is_active=is_active
             group_obj=Group.objects.get(name=group)   
             owner_obj.groups.add(group_obj)
-            owner_obj.set_password(password)
+            if password:
+                owner_obj.set_password(password)
             owner_obj.save() 
             
             if img!=None:
                 ok,message=delete_file(org_query[0],'img')
-            org_query.update(owner=owner_obj,name=name,location=location,organization_type=organization_type,img=img,is_active=is_active)
-            messages.success(request,'Organization {} successfully updated '.format(org.name))
-            return redirect('/configuration/organization/form/'+str(org_query[0].id)) 
+                org.img = img
+            org.owner = owner_obj
+            org.name = name
+            org.location = location
+            org.organization_type = organization_type
+            org.is_active = is_active
+            org.save()
+            return _api_success(
+                request,
+                f'Organization "{org.name}" successfully updated.',
+                redirect_url='/configuration/organization/',
+                data={'organization_id': org.id}
+            )
         else:
-            messages.error(request,' we do not have {} organization for updation so kindly create organization'.format(org.name))
-            return redirect('/configuration/organization/form/') 
+            return _api_error(
+                request,
+                'This organization was not found. Please create it first.',
+                status_code=404
+            )

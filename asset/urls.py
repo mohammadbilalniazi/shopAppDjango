@@ -21,6 +21,9 @@ urlpatterns = [
     path('ledger/adjustment/save/', views_financial.ledger_adjustment_save, name='ledger_adjustment_save'),
     path('opening-summary/', views_financial.opening_summary, name='opening_summary'),
     
+    # Consolidated tabbed Financial Reports page (all reports in one place)
+    path('reports/', views_financial.financial_reports, name='financial_reports'),
+
     # NEW: Financial Dashboard (uses AssetWholeBillSummary for performance)
     path('financial/', views_financial.financial_summary_dashboard, name='financial_dashboard'),
     

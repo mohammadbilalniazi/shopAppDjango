@@ -1,3 +1,4 @@
+from django.db.models import Q
 from configuration.models import Organization
 from user.models import OrganizationUser
 
@@ -11,24 +12,33 @@ def find_userorganization(request, organization_id=None):
     """
     # Handle empty string or None as None
     if organization_id is not None and organization_id != '' and organization_id != 'all':
-        user_orgs = OrganizationUser.objects.filter(organization_id=organization_id)
-        print("organization_id",user_orgs)
+        user_orgs = OrganizationUser.objects.filter(
+            organization_id=organization_id,
+            is_active=True,
+        )
+        if not request.user.is_superuser:
+            user_orgs = user_orgs.filter(user=request.user)
+        orgs = Organization.objects.filter(
+            Q(id__in=user_orgs.values_list("organization_id", flat=True)) |
+            Q(id=organization_id, owner=request.user),
+            is_active=True,
+        )
     elif request.user.is_superuser:
-        user_orgs = OrganizationUser.objects.all()
-        print("user.is_superuser ",user_orgs)
+        user_orgs = OrganizationUser.objects.filter(is_active=True)
+        orgs = Organization.objects.all()
 
     else:
-        user_orgs = OrganizationUser.objects.filter(user=request.user)
-        print("organizations of user=request.user ",user_orgs)
-        
-    orgs = Organization.objects.filter(id__in=user_orgs.values_list("organization_id", flat=True))
+        user_orgs = OrganizationUser.objects.filter(user=request.user, is_active=True)
+        orgs = Organization.objects.filter(
+            Q(id__in=user_orgs.values_list("organization_id", flat=True)) |
+            Q(owner=request.user),
+            is_active=True,
+        ).distinct()
+
     if orgs.count() == 1:
         organization = orgs.first()
     else:
         organization = None
-    if not organization_id and request.user.is_superuser:
-        orgs = Organization.objects.all()
-    print(f"%%%%%%%%organization: {organization}, orgs: {orgs}")
     return organization, orgs
 
 

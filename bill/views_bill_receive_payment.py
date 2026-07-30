@@ -22,6 +22,7 @@ from .views_bill import (
     getBillNo,
     get_bill_form_scope,
     get_bill_organization_for_user,
+    is_organization_admin,
 )
 from common.branch_utils import get_required_branch_for_user_organization
 # from .views_bill import get_opposit_bill
@@ -77,6 +78,7 @@ def bill_form(request):
         'date':date,
         'currencies': Currency.objects.all(),
         'branches': branches,
+        'can_approve_bill': is_organization_admin(request.user, organization),
     }
     return HttpResponse(template.render(context,request))
 
@@ -126,6 +128,13 @@ def bill_insert(request):
         bill_rcvr_org=Organization.objects.get(id=int(bill_rcvr_org))
     except Exception as e:
         return Response({"message":str(e),"ok":False,"data":None,"bill_id":None}) 
+    if bill_rcvr_org.id == organization.id:
+        return Response({
+            "message": "Receiver organization cannot be the same as bill creator organization.",
+            "ok": False,
+            "data": None,
+            "bill_id": None,
+        })
 
     is_approved=request.data.get("is_approved",False)
     if is_approved==1 or is_approved=="1" or is_approved=="on":
@@ -145,17 +154,13 @@ def bill_insert(request):
         
     # approval_user=request.data.get("approval_user")
     print("1status ",status," approval_date=",approval_date," is_approved= ",is_approved)
-    if bill_rcvr_org==self_organization:
-        if is_approved or int(status)==1:
-            status=1
-            approval_user=request.user
-            is_approved=True
-        elif status==0:
-            approval_user=None
-            is_approved=False
-        else:
-            approval_user=request.user
-            is_approved=False
+    can_approve = is_organization_admin(request.user, organization)
+    if is_approved or int(status)==1:
+        if not can_approve:
+            return Response({"message": "Only organization admins can approve bills.", "ok": False, "data": None, "bill_id": None})
+        status=1
+        approval_user=request.user
+        is_approved=True
     else:
         status=0
         approval_date=None

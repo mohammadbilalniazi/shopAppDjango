@@ -1,0 +1,119 @@
+{% extends 'master.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block page_title %}{% trans "Financial Reports" %}{% endblock %}
+{% block breadcrumb %}
+  <span>{% trans "Home" %}</span> / <span>{% trans "Financial Reports" %}</span>
+{% endblock %}
+
+{% block content %}
+<style>
+  .fin-reports-wrap { display: flex; flex-direction: column; height: calc(100vh - 160px); min-height: 520px; }
+  .fin-tabs {
+    display: flex; flex-wrap: wrap; gap: .25rem;
+    border-bottom: 2px solid var(--border-color, #e5e7eb);
+    margin-bottom: 0;
+  }
+  .fin-tab {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .6rem 1rem; cursor: pointer; user-select: none;
+    border: 1px solid transparent; border-bottom: none;
+    border-top-left-radius: .5rem; border-top-right-radius: .5rem;
+    color: var(--text-secondary, #6b7280); font-weight: 500;
+    background: transparent; white-space: nowrap;
+    transition: background .15s, color .15s;
+  }
+  .fin-tab:hover { background: var(--surface-hover, #f3f4f6); color: var(--text-primary, #111827); }
+  .fin-tab.active {
+    color: var(--primary, #2563eb);
+    background: var(--surface, #fff);
+    border-color: var(--border-color, #e5e7eb);
+    border-bottom: 2px solid var(--surface, #fff);
+    margin-bottom: -2px;
+  }
+  .fin-tab i { font-size: 1rem; }
+  .fin-panes { position: relative; flex: 1; border: 1px solid var(--border-color, #e5e7eb); border-top: none; border-radius: 0 0 .5rem .5rem; overflow: hidden; background: var(--surface, #fff); }
+  .fin-pane { position: absolute; inset: 0; display: none; }
+  .fin-pane.active { display: block; }
+  .fin-pane iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .fin-pane .fin-loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary, #6b7280); gap: .5rem; pointer-events: none;
+  }
+  @media (max-width: 640px) {
+    .fin-tab span { display: none; }
+    .fin-tab { padding: .6rem .75rem; }
+  }
+</style>
+
+<div class="fin-reports-wrap">
+  <div class="fin-tabs" role="tablist">
+    {% for tab in tabs %}
+      <button type="button"
+              class="fin-tab {% if tab.key == active_tab %}active{% endif %}"
+              role="tab"
+              data-tab="{{ tab.key }}"
+              data-src="{% url tab.url_name %}?embed=1">
+        <i class="bi {{ tab.icon }}"></i><span>{{ tab.label }}</span>
+      </button>
+    {% endfor %}
+  </div>
+
+  <div class="fin-panes">
+    {% for tab in tabs %}
+      <div class="fin-pane {% if tab.key == active_tab %}active{% endif %}" data-pane="{{ tab.key }}">
+        <div class="fin-loading"><i class="bi bi-arrow-repeat spin"></i> {% trans "Loading" %}…</div>
+        <iframe title="{{ tab.label }}" loading="lazy"></iframe>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+(function () {
+  var tabs  = Array.prototype.slice.call(document.querySelectorAll('.fin-tab'));
+  var panes = Array.prototype.slice.call(document.querySelectorAll('.fin-pane'));
+
+  function paneFor(key) {
+    return panes.filter(function (p) { return p.getAttribute('data-pane') === key; })[0];
+  }
+
+  // Load an iframe's src only the first time its tab is shown (lazy).
+  function ensureLoaded(tab) {
+    var key  = tab.getAttribute('data-tab');
+    var pane  = paneFor(key);
+    if (!pane) return;
+    var iframe = pane.querySelector('iframe');
+    if (iframe && !iframe.getAttribute('src')) {
+      iframe.addEventListener('load', function () {
+        var loader = pane.querySelector('.fin-loading');
+        if (loader) loader.style.display = 'none';
+      });
+      iframe.setAttribute('src', tab.getAttribute('data-src'));
+    }
+  }
+
+  function activate(key) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-tab') === key); });
+    panes.forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-pane') === key); });
+    var tab = tabs.filter(function (t) { return t.getAttribute('data-tab') === key; })[0];
+    if (tab) ensureLoaded(tab);
+    // Keep the URL shareable/bookmarkable without a reload.
+    try {
+      var u = new URL(window.location.href);
+      u.searchParams.set('tab', key);
+      window.history.replaceState({}, '', u);
+    } catch (e) { /* no-op */ }
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { activate(t.getAttribute('data-tab')); });
+  });
+
+  // Load the initially active tab.
+  var initial = document.querySelector('.fin-tab.active') || tabs[0];
+  if (initial) ensureLoaded(initial);
+})();
+</script>
+{% endblock %}

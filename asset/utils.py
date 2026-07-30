@@ -191,35 +191,45 @@ def calculate_loans_payable(organization):
 def calculate_profit_loss_items(organization):
     """
     Calculate profit & loss statement items.
-    Returns dict with revenue, COGS, expenses, losses, profit
+    Returns dict with revenue, COGS, expenses, losses, profit.
+
+    COGS is the cost of goods *actually sold*, not everything purchased.
+    Each SELLING bill already records its gross margin in ``profit``
+    (``(sell_price - purchase_price) * qty`` per line), so:
+        cost of goods sold = revenue - recorded gross profit
+    Purchases are inventory (an asset on the balance sheet), so they are
+    intentionally NOT expensed here — that is what makes Net Profit a real
+    margin instead of dropping every time stock is bought.
     """
-    # Revenue from sales
-    revenue = Bill.objects.filter(
+    selling = Bill.objects.filter(
         organization=organization,
         bill_type='SELLING'
-    ).aggregate(total=Sum('total'))['total'] or Decimal(0)
-    
-    # Cost of Goods Sold (purchases)
-    cogs = Bill.objects.filter(
-        organization=organization,
-        bill_type='PURCHASE'
-    ).aggregate(total=Sum('total'))['total'] or Decimal(0)
-    
+    ).aggregate(total=Sum('total'), profit=Sum('profit'))
+
+    # Revenue from sales
+    revenue = selling['total'] or Decimal(0)
+
+    # Gross profit recorded on the selling bills
+    gross_profit = Decimal(str(selling['profit'] or 0))
+
+    # Cost of Goods Sold = revenue - gross profit
+    cogs = revenue - gross_profit
+
     # Expenses
     expenses = Bill.objects.filter(
         organization=organization,
         bill_type='EXPENSE'
     ).aggregate(total=Sum('total'))['total'] or Decimal(0)
-    
+
     # Losses
     losses = Bill.objects.filter(
         organization=organization,
         bill_type='LOSSDEGRADE'
     ).aggregate(total=Sum('total'))['total'] or Decimal(0)
-    
-    # Net Profit
+
+    # Net Profit = gross profit - operating expenses - losses
     net_profit = revenue - cogs - expenses - losses
-    
+
     return {
         'revenue': revenue,
         'cogs': cogs,
@@ -277,13 +287,10 @@ def get_balance_sheet(organization):
     Get balance sheet for an organization.
     Returns dict with assets, liabilities, and equity.
     """
-    asset_summary = OrganizationAsset.objects.filter(
-        organization=organization
-    ).first()
-    
-    if not asset_summary:
-        asset_summary = update_organization_assets(organization)
-    
+    # Always recompute from bills so the balance sheet can never show stale
+    # numbers after a bill is created/edited/deleted.
+    asset_summary = update_organization_assets(organization)
+
     return {
         'assets': {
             'current_assets': {
@@ -324,13 +331,9 @@ def get_profit_loss_statement(organization):
     Get profit & loss statement for an organization.
     Returns dict with revenue, expenses, and profit.
     """
-    asset_summary = OrganizationAsset.objects.filter(
-        organization=organization
-    ).first()
-    
-    if not asset_summary:
-        asset_summary = update_organization_assets(organization)
-    
+    # Always recompute from bills so P&L can never show stale numbers.
+    asset_summary = update_organization_assets(organization)
+
     gross_profit = asset_summary.total_revenue - asset_summary.total_cost_of_goods_sold
     
     return {
