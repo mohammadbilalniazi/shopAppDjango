@@ -17,6 +17,10 @@ def find_userorganization(request, organization_id=None):
             is_active=True,
         )
         if not request.user.is_superuser:
+            owned_organizations = Organization.objects.filter(owner=request.user, is_active=True)
+            if owned_organizations.exists():
+                orgs = owned_organizations.filter(id=organization_id)
+                return (orgs.first() if orgs.count() == 1 else None), orgs
             user_orgs = user_orgs.filter(user=request.user)
         orgs = Organization.objects.filter(
             Q(id__in=user_orgs.values_list("organization_id", flat=True)) |
@@ -28,6 +32,11 @@ def find_userorganization(request, organization_id=None):
         orgs = Organization.objects.all()
 
     else:
+        owned_organizations = Organization.objects.filter(owner=request.user, is_active=True)
+        if owned_organizations.exists():
+            orgs = owned_organizations.distinct()
+            return (orgs.first() if orgs.count() == 1 else None), orgs
+
         user_orgs = OrganizationUser.objects.filter(user=request.user, is_active=True)
         orgs = Organization.objects.filter(
             Q(id__in=user_orgs.values_list("organization_id", flat=True)) |

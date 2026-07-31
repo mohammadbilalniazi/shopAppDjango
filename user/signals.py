@@ -11,12 +11,12 @@ from user.models import OrganizationUser
 @receiver(post_save, sender=User)
 def assign_all_organizations_to_admin(sender, instance, created, **kwargs):
     """
-    When a user is created or updated to be a superuser/admin,
-    automatically assign them to all organizations with 'superuser' role.
-    For superusers, no specific branch is assigned (they have access to all branches).
+    When a real Django superuser is created or updated, automatically assign
+    them to all organizations with 'superuser' role. Staff organization owners
+    are intentionally not global users.
     """
-    if instance.is_superuser or instance.is_staff:
-        admin_role = 'superuser' if instance.is_superuser else 'admin'
+    if instance.is_superuser:
+        admin_role = 'superuser'
         # Get all organizations
         all_orgs = Organization.objects.filter(is_active=True)
         
@@ -58,13 +58,12 @@ def assign_organization_to_all_admins(sender, instance, created, **kwargs):
     Superusers are not restricted to specific branches.
     """
     if created and instance.is_active:
-        # Get all admin/superuser users
-        admin_users = User.objects.filter(is_superuser=True) | User.objects.filter(is_staff=True)
-        admin_users = admin_users.distinct()
+        # Only real Django superusers receive automatic global access.
+        admin_users = User.objects.filter(is_superuser=True)
         
         assigned_count = 0
         for admin_user in admin_users:
-            admin_role = 'superuser' if admin_user.is_superuser else 'admin'
+            admin_role = 'superuser'
             # Create OrganizationUser entry if it doesn't exist
             # Superusers get no branch restriction (access to all branches)
             org_user, was_created = OrganizationUser.objects.get_or_create(

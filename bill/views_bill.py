@@ -66,11 +66,15 @@ def get_bill_form_scope(request):
             is_active=True,
         ).select_related("organization").order_by("organization__name", "name")
     else:
-        organizations = Organization.objects.filter(
-            Q(organizationuser__user=request.user, organizationuser__is_active=True) |
-            Q(owner=request.user),
-            is_active=True,
-        ).distinct().order_by("name")
+        owned_organizations = Organization.objects.filter(owner=request.user, is_active=True)
+        if owned_organizations.exists():
+            organizations = owned_organizations.distinct().order_by("name")
+        else:
+            organizations = Organization.objects.filter(
+                organizationuser__user=request.user,
+                organizationuser__is_active=True,
+                is_active=True,
+            ).distinct().order_by("name")
         user_branch_ids = BranchManager.get_user_branches(request.user).values_list("id", flat=True)
         branches = Branch.objects.filter(
             Q(id__in=user_branch_ids) | Q(organization__owner=request.user),
@@ -91,10 +95,14 @@ def get_bill_organization_for_user(request, organization_id):
 
     organizations = Organization.objects.filter(id=organization_id, is_active=True)
     if not request.user.is_superuser:
-        organizations = organizations.filter(
-            Q(organizationuser__user=request.user, organizationuser__is_active=True) |
-            Q(owner=request.user)
-        )
+        owned_organizations = Organization.objects.filter(owner=request.user, is_active=True)
+        if owned_organizations.exists():
+            organizations = organizations.filter(id__in=owned_organizations.values_list("id", flat=True))
+        else:
+            organizations = organizations.filter(
+                organizationuser__user=request.user,
+                organizationuser__is_active=True,
+            )
 
     organization = organizations.first()
     if organization is None:

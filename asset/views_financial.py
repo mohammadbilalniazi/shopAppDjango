@@ -168,24 +168,20 @@ def organization_ledger_summary(request):
     user = request.user
 
     # ── Dropdown 1: own organisations ─────────────────────────────────────
-    if user.is_superuser:
-        own_orgs = Organization.objects.all().order_by('name')
-    else:
-        own_orgs = Organization.objects.filter(
-            organizationuser__user=user
-        ).distinct().order_by('name')
+    _, own_orgs = find_userorganization(request)
+    own_orgs = own_orgs.order_by('name')
 
     selected_org_id = request.GET.get('organization')
     opposite_org_id = request.GET.get('opposite_org')
 
     selected_org = None
     if selected_org_id:
-        selected_org = Organization.objects.filter(id=selected_org_id).first()
+        selected_org = own_orgs.filter(id=selected_org_id).first()
     elif own_orgs.exists():
         selected_org = own_orgs.first()
 
     # ── Dropdown 2: opposite organisations ────────────────────────────────
-    if user.is_superuser or user.is_staff:
+    if user.is_superuser:
         opposite_orgs = Organization.objects.all().order_by('name')
     else:
         if selected_org:
@@ -217,7 +213,7 @@ def organization_ledger_summary(request):
         'detail_entries': detail_entries,
         'final_balance': final_balance,
         'summary_data': summary_data,
-        'is_admin': user.is_superuser or user.is_staff,
+        'is_admin': user.is_superuser,
     }
     return render(request, 'asset/organization_ledger.html', context)
 
@@ -246,12 +242,10 @@ def ledger_adjustment_save(request):
     org = get_object_or_404(Organization, id=org_id)
     opp = get_object_or_404(Organization, id=opp_id)
 
-    # Security: non-superusers may only adjust their own org's ledger
-    if not (request.user.is_superuser or request.user.is_staff):
-        is_member = OrganizationUser.objects.filter(
-            user=request.user, organization=org, is_active=True
-        ).exists()
-        if not is_member:
+    # Security: non-superusers may only adjust their scoped organization.
+    if not request.user.is_superuser:
+        _, user_orgs = find_userorganization(request)
+        if not user_orgs.filter(id=org.id).exists():
             return JsonResponse(
                 {'success': False, 'message': 'Permission denied.'}, status=403
             )
@@ -304,15 +298,9 @@ def opening_summary(request):
         asset_summary = update_organization_assets(selected_org)
 
     if request.method == 'POST' and selected_org:
-        if not (request.user.is_superuser or request.user.is_staff):
-            is_member = OrganizationUser.objects.filter(
-                user=request.user,
-                organization=selected_org,
-                is_active=True
-            ).exists()
-            if not is_member:
-                messages.error(request, _('Permission denied.'))
-                return redirect('opening_summary')
+        if not request.user.is_superuser and not user_orgs.filter(id=selected_org.id).exists():
+            messages.error(request, _('Permission denied.'))
+            return redirect('opening_summary')
 
         cash_on_hand = _parse_decimal(request.POST.get('cash_on_hand'))
         inventory_value = _parse_decimal(request.POST.get('inventory_value'))
@@ -383,18 +371,13 @@ def financial_summary_dashboard(request):
     """
     user = request.user
     
-    # Get user's organizations
-    if user.is_superuser or user.is_staff:
-        user_orgs = Organization.objects.all()
-    else:
-        user_orgs = Organization.objects.filter(
-            organizationuser__user=user
-        ).distinct()
+    # Get user's scoped organizations
+    _, user_orgs = find_userorganization(request)
     
     # Selected organization
     selected_org_id = request.GET.get('organization')
     if selected_org_id:
-        selected_org = get_object_or_404(Organization, id=selected_org_id)
+        selected_org = user_orgs.filter(id=selected_org_id).first() or user_orgs.first()
     elif user_orgs.exists():
         selected_org = user_orgs.first()
     else:
@@ -465,7 +448,7 @@ def financial_summary_dashboard(request):
             'loans_payable': loans_payable,
             'net_position': accounts_receivable - accounts_payable + loans_receivable - loans_payable,
             
-            'is_admin': user.is_superuser or user.is_staff,
+            'is_admin': user.is_superuser,
         }
     else:
         context = {
@@ -490,9 +473,8 @@ def admin_adjust_summary(request):
     if is_superuser:
         organizations = Organization.objects.all().order_by('name')
     else:
-        organizations = Organization.objects.filter(
-            organizationuser__user=user
-        ).distinct().order_by('name')
+        _, organizations = find_userorganization(request)
+        organizations = organizations.order_by('name')
 
     if not organizations.exists():
         return render(request, 'asset/no_organization.html', {
@@ -599,10 +581,8 @@ def organization_user_summary(request):
     """
     user = request.user
     
-    # Get user's organizations
-    user_orgs = Organization.objects.filter(
-        organizationuser__user=user
-    ).distinct()
+    # Get user's scoped organizations
+    _, user_orgs = find_userorganization(request)
     
     if not user_orgs.exists():
         return render(request, 'asset/no_organization.html', {
@@ -612,11 +592,7 @@ def organization_user_summary(request):
     # Selected organization
     selected_org_id = request.GET.get('organization')
     if selected_org_id:
-        selected_org = get_object_or_404(
-            Organization, 
-            id=selected_org_id,
-            organizationuser__user=user
-        )
+        selected_org = get_object_or_404(user_orgs, id=selected_org_id)
     else:
         selected_org = user_orgs.first()
     
@@ -647,7 +623,7 @@ def organization_user_summary(request):
         'selected_organization': selected_org,
         'summary': summary_dict,
         'ledger_items': ledger_items,
-        'can_edit': user.is_superuser or user.is_staff,
+        'can_edit': user.is_superuser,
     }
     
     return render(request, 'asset/user_financial_summary.html', context)
@@ -672,7 +648,7 @@ def financial_reports(request):
         {'key': 'cash_flow', 'label': 'Cash Flow', 'icon': 'bi-cash-stack', 'url_name': 'cash_flow'},
     ]
 
-    if request.user.is_staff or request.user.is_superuser:
+    if request.user.is_superuser:
         tabs.append({'key': 'adjust', 'label': 'Adjust Summary', 'icon': 'bi-sliders', 'url_name': 'admin_adjust'})
 
     active = request.GET.get('tab', tabs[0]['key'])
