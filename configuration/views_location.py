@@ -14,6 +14,10 @@ def _parse_json_body(request):
         return {}
 
 
+def _wants_json(request):
+    return bool(request.GET.get('json')) or 'application/json' in request.headers.get('Accept', '')
+
+
 def get_countries(request):
     """GET: Retrieve all countries
        POST: Create new country (expects JSON or form data)
@@ -43,7 +47,7 @@ def get_countries(request):
     countries = Country.objects.all().order_by('name')
     data = [{"id": c.id, "name": c.name, "shortcut": c.shortcut} for c in countries]
     # If JSON explicitly requested, return JSON, otherwise render HTML page
-    if request.GET.get('json'):
+    if _wants_json(request):
         return JsonResponse(data, safe=False)
 
     return render(request, 'configurations/country_show.html', {'countries': countries})
@@ -76,7 +80,7 @@ def show(request, id=None):
             return JsonResponse({"error": str(e)}, status=500)
 
     # GET: either return JSON when requested, or render HTML
-    if request.GET.get('json'):
+    if _wants_json(request):
         if id is None:
             queryset = Location.objects.all().order_by('-pk')
         else:

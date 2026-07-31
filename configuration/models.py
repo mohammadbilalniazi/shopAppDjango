@@ -99,7 +99,7 @@ class CustomUser(models.Model):
     class Meta:
         verbose_name_plural = "کاربر"
         constraints = [
-            models.CheckConstraint(check=models.Q(role__in=['EMPLOYEE', 'MANAGER', 'ADMIN']), name='valid_user_type'),
+            models.CheckConstraint(condition=models.Q(role__in=['EMPLOYEE', 'MANAGER', 'ADMIN']), name='valid_user_type'),
             models.UniqueConstraint(fields=['id_card'], name='unique_id_card'),
             models.UniqueConstraint(fields=['mobile'], name='unique_mobile'),
         ]

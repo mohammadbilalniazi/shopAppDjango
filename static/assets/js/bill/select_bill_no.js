@@ -28,6 +28,9 @@ async function selectBillNo() {
     }
 }
 
+window.selectBillNo = selectBillNo;
+window.select_bill_no = selectBillNo;
+
 /**
  * Attach change listeners to relevant bill fields.
  */

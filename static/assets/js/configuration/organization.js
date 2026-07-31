@@ -8,7 +8,7 @@ async function show_rcvr_org(id="all")
 
 async function locations()
 {
-const response=await call_shirkat('/configuration/location/','GET',null);
+const response=await call_shirkat('/configuration/location/?json=1','GET',null);
 
 // {'type':'select','id':'id_location','parent':null,'already_created':true}
 console.log('response ',response)

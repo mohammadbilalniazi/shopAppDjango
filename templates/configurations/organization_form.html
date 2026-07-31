@@ -234,7 +234,7 @@ function openLocationModal() {
 
 async function loadCountriesForLocationModal() {
     try {
-        const response = await fetch('/configuration/countries/');
+        const response = await fetch('/configuration/countries/?json=1');
         const data = await response.json();
         
         const countrySelect = document.getElementById('modal_location_country_org');
@@ -270,7 +270,7 @@ function closeLocationModal() {
 
 async function show_location() {
     try {
-        const response = await fetch('/configuration/location/');
+        const response = await fetch('/configuration/location/?json=1');
         const data = await response.json();
 
         const locationSelect = document.getElementById('location');
@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Reload countries and select the new one
                             setTimeout(async () => {
                                 try {
-                                    const countriesResponse = await fetch('/configuration/countries/');
+                                    const countriesResponse = await fetch('/configuration/countries/?json=1');
                                     const countries = await countriesResponse.json();
                                     
                                     // Rebuild dropdown
