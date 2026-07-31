@@ -82,6 +82,8 @@ def _build_summary_ledger(selected_org):
             'net_position': net,
             'total_sold': stats['total_sum_selling'],
             'total_purchased': stats['total_sum_purchase'],
+            'total_paid_purchase_bill': stats['payment_sum_purchase'],
+            'total_received_sell_bill': stats['payment_sum_selling'],
             'payment_made': stats['payment_sum_payment'],
             'payment_received': stats['payment_sum_receivement'],
         })

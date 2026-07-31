@@ -450,6 +450,14 @@ def handle_profit_loss(bill_detail,profit,operation='INCREASE'):
     except Exception as e:
         ok=False    
     return ok
+
+
+def _decimal_or_zero(value):
+    if value in (None, "", "null"):
+        return Decimal("0")
+    return Decimal(str(value))
+
+
 @login_required(login_url='/admin')
 @api_view(['POST', 'PUT'])
 def bill_insert(request):
@@ -465,8 +473,8 @@ def bill_insert(request):
     year = date.split("-")[0]
     status = int(data.get("status", 0))
     bill_type = data.get("bill_type")
-    total = float(data.get("total") or 0)
-    payment = float(data.get("total_payment") or 0)
+    total = _decimal_or_zero(data.get("total"))
+    payment = _decimal_or_zero(data.get("total_payment"))
 
     try:
         organization = get_bill_organization_for_user(request, data.get("organization"))
@@ -613,15 +621,15 @@ def bill_insert(request):
         # =============================
         # BILL DETAILS
         # =============================
-        calculated_total = 0
+        calculated_total = Decimal("0")
 
         for i in range(len(products)):
             product = Product.objects.get(id=int(products[i]))
             unit = Unit.objects.get(id=int(units[i]))
-            qty = float(amounts[i])
-            ret = float(returns[i])
+            qty = _decimal_or_zero(amounts[i])
+            ret = _decimal_or_zero(returns[i])
             net_qty = qty - ret
-            price = float(prices[i])
+            price = _decimal_or_zero(prices[i])
 
             detail_data = {
                 "bill": bill,
@@ -646,13 +654,14 @@ def bill_insert(request):
                 "purchased_price",
                 price
             )
+            purchased_price = _decimal_or_zero(purchased_price if purchased_price is not None else price)
 
             if bill.bill_type == "SELLING":
-                profit = (price - purchased_price) * net_qty
+                profit = int((price - purchased_price) * net_qty)
                 handle_profit_loss(detail, profit, "INCREASE")
 
             elif bill.bill_type == "LOSSDEGRADE":
-                handle_profit_loss(detail, price * net_qty, "DECREASE")
+                handle_profit_loss(detail, int(price * net_qty), "DECREASE")
 
             calculated_total += net_qty * price
 

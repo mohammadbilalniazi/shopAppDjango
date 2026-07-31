@@ -2,6 +2,13 @@ from rest_framework import serializers
 from .models import Product,Product_Detail,Stock,Unit
 from .stock_utils import get_stock_for_scope
 from configuration.models import Organization
+from django.db.models import Sum
+
+
+def _sum_or_zero(data, key):
+    return data.get(key) or 0
+
+
 class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model=Product_Detail
@@ -40,6 +47,28 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
             branch = None
         if branch and branch.organization_id != organization.id:
             branch = None
+
+        if branch is None:
+            totals = Stock.objects.filter(
+                product=obj,
+                organization=organization,
+            ).aggregate(
+                current_amount=Sum('current_amount'),
+                selling_amount=Sum('selling_amount'),
+                purchasing_amount=Sum('purchasing_amount'),
+                loss_amount=Sum('loss_amount'),
+            )
+            if any(value is not None for value in totals.values()):
+                self.stock = Stock(
+                    product=obj,
+                    organization=organization,
+                    current_amount=_sum_or_zero(totals, 'current_amount'),
+                    selling_amount=_sum_or_zero(totals, 'selling_amount'),
+                    purchasing_amount=_sum_or_zero(totals, 'purchasing_amount'),
+                    loss_amount=_sum_or_zero(totals, 'loss_amount'),
+                )
+                self._stock_product_id = obj.id
+                return self.stock
 
         self.stock = get_stock_for_scope(
             product=obj,

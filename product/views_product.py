@@ -13,24 +13,36 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from common.branch_utils import get_valid_branch_for_organization
 from .stock_utils import get_stock_for_scope
+
+
+def _product_scope_filter(organizations):
+    return (
+        Q(product_detail__organization__in=organizations) |
+        Q(stock__organization__in=organizations)
+    )
     
 def show_html(request,id=None):
     context={}
     self_organization, user_orgs = find_userorganization(request)
+    selected_organization = None
+    if not request.user.is_superuser:
+        selected_organization = self_organization or user_orgs.first()
 
     if id==None or id=="all":
         if request.user.is_superuser:
             query=Product.objects.all()
+        elif selected_organization is not None:
+            query=Product.objects.filter(
+                _product_scope_filter([selected_organization])
+            ).distinct()
         else:
-            if self_organization is not None:
-                query=Product.objects.filter(product_detail__organization=self_organization)
-            else:
-                query=Product.objects.filter(product_detail__organization__in=user_orgs)
+            query=Product.objects.none()
     else:
         query=Product.objects.filter(id=int(id))
 
     context['products']=query.order_by("-pk")
     context['organizations']=user_orgs
+    context['selected_organization']=selected_organization
     context['products_length']=query.count()
     return render(request,'products/products.html',context)
 
@@ -237,18 +249,36 @@ def show(request):
         organization_id = None
     
     self_organization, user_orgs = find_userorganization(request, organization_id)
-    
+    selected_organization = None
+
     if organization_id is None:
-        query_set=Product.objects.order_by('-pk')
+        if request.user.is_superuser:
+            query_set=Product.objects.order_by('-pk')
+        else:
+            selected_organization = self_organization or user_orgs.first()
+            if selected_organization is not None:
+                query_set=Product.objects.filter(
+                    _product_scope_filter([selected_organization])
+                ).distinct().order_by('-pk')
+            else:
+                query_set=Product.objects.none()
     else:
         if self_organization is not None:
-            query_set=Product.objects.filter(product_detail__organization=self_organization)
+            selected_organization = self_organization
+            query_set=Product.objects.filter(
+                _product_scope_filter([selected_organization])
+            ).distinct()
         else:
-            query_set=Product.objects.filter(product_detail__organization__in=user_orgs)
+            query_set=Product.objects.filter(
+                _product_scope_filter(user_orgs)
+            ).distinct()
     if item_name: 
         query_set=query_set.filter(item_name__icontains=item_name)
 
-    context={'organization':self_organization.id if hasattr(self_organization,'id') else None,'request':request}
+    context={
+        'organization': selected_organization.id if hasattr(selected_organization, 'id') else None,
+        'request': request,
+    }
     is_paginate=int(request.data.get("is_paginate",0))
     if  is_paginate==1:
         paginator=PageNumberPagination()

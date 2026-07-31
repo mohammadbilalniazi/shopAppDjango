@@ -319,6 +319,8 @@
           <th class="col-org" style="text-align:left">Organization</th>
           <th>Total Sold</th>
           <th>Total Purchased</th>
+          <th>Total Payed Purchase Bill</th>
+          <th>Total Received During Sell Bill</th>
           <th>Payments Made</th>
           <th>Payments Received</th>
           <th>Net Balance</th>
@@ -337,6 +339,8 @@
           </td>
           <td>{{ row.total_sold|floatformat:2 }}</td>
           <td>{{ row.total_purchased|floatformat:2 }}</td>
+          <td>{{ row.total_paid_purchase_bill|floatformat:2 }}</td>
+          <td>{{ row.total_received_sell_bill|floatformat:2 }}</td>
           <td>{{ row.payment_made|floatformat:2 }}</td>
           <td>{{ row.payment_received|floatformat:2 }}</td>
           <td>

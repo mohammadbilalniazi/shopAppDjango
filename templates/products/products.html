@@ -311,7 +311,7 @@
                 <select name="organization" id="organization" class="organization-select">
                     <option value="">Select Organization</option>
                     {% for org in organizations %}
-                        <option value="{{ org.id }}">{{ org.name }}</option>
+                        <option value="{{ org.id }}" {% if selected_organization and selected_organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
                     {% endfor %}
                 </select>
             </div>
