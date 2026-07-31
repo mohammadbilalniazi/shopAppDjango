@@ -324,7 +324,7 @@ input[name="date"]:focus {
                                         <div class="item-select-group">
                                             <select class="item_name form-control" name="item_name">
                                                 {% for row in products %}
-                                                <option value="{{ row.id }}" {% if detail.item_name.id == row.id %}selected{% endif %}>{{ row.item_name }}</option>
+                                                <option value="{{ row.id }}" {% if detail.product.id == row.id %}selected{% endif %}>{{ row.item_name }}</option>
                                                 {% endfor %}
                                             </select>
                                             <button type="button" class="btn btn-success btn-sm item-add-product-btn" onclick="openProductModal()" title="{% trans 'Add new item' %}">

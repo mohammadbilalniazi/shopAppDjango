@@ -16,6 +16,7 @@ from product.models import Product, Stock
 from bill.models import Bill, Bill_detail
 from asset.models import OrganizationAsset, AssetWholeBillSummary
 from expenditure.models import Expense
+from common.organization import find_userorganization
 
 
 def is_admin_user(user):
@@ -31,44 +32,76 @@ def custom_admin_dashboard(request):
     Replaces Django's default /admin/ page
     Only accessible to admin users
     """
-    # Get statistics for dashboard
+    # Get statistics for dashboard. Superusers see the whole system; staff users
+    # see only the organizations assigned to them, with owned organizations
+    # taking precedence inside find_userorganization().
     today = timezone.now().date()
-    last_30_days = today - timedelta(days=30)
+    last_30_days = timezone.now() - timedelta(days=30)
+
+    if request.user.is_superuser:
+        dashboard_organizations = Organization.objects.all()
+    else:
+        _, dashboard_organizations = find_userorganization(request)
+
+    organization_filter = Q(organization__in=dashboard_organizations)
+    product_filter = (
+        Q(product_detail__organization__in=dashboard_organizations) |
+        Q(stock__organization__in=dashboard_organizations)
+    )
+    org_user_filter = Q(organization__in=dashboard_organizations)
     
     # User Statistics
-    total_users = User.objects.count()
-    active_users = User.objects.filter(is_active=True).count()
-    admin_users = User.objects.filter(Q(is_superuser=True) | Q(is_staff=True)).count()
-    recent_users = User.objects.filter(date_joined__gte=last_30_days).count()
+    if request.user.is_superuser:
+        total_users = User.objects.count()
+        active_users = User.objects.filter(is_active=True).count()
+        admin_users = User.objects.filter(Q(is_superuser=True) | Q(is_staff=True)).count()
+        recent_users = User.objects.filter(date_joined__gte=last_30_days).count()
+    else:
+        scoped_org_users = OrganizationUser.objects.filter(org_user_filter, is_active=True)
+        total_users = scoped_org_users.values('user').distinct().count()
+        active_users = scoped_org_users.filter(user__is_active=True).values('user').distinct().count()
+        admin_users = scoped_org_users.filter(
+            Q(role__in=['admin', 'superuser', 'owner']) |
+            Q(user__is_superuser=True) |
+            Q(user__is_staff=True)
+        ).values('user').distinct().count()
+        recent_users = scoped_org_users.filter(
+            user__date_joined__gte=last_30_days
+        ).values('user').distinct().count()
     
     # Organization Statistics
-    total_organizations = Organization.objects.count()
-    total_branches = Branch.objects.count()
-    total_org_users = OrganizationUser.objects.count()
+    total_organizations = dashboard_organizations.count()
+    total_branches = Branch.objects.filter(organization__in=dashboard_organizations).count()
+    total_org_users = OrganizationUser.objects.filter(org_user_filter, is_active=True).count()
     
     # Product Statistics
-    total_products = Product.objects.count()
+    total_products = Product.objects.filter(product_filter).distinct().count()
     # Product model doesn't have is_active field, so we count products with stock instead
-    active_products = Stock.objects.values('product').distinct().count()
-    total_stock_value = Stock.objects.aggregate(
+    active_products = Stock.objects.filter(organization_filter).values('product').distinct().count()
+    total_stock_value = Stock.objects.filter(organization_filter).aggregate(
         total=Sum('current_amount')
     )['total'] or 0
     
     # Bill Statistics
-    total_bills = Bill.objects.count()
+    total_bills = Bill.objects.filter(organization_filter).count()
     # Bill.date is a CharField in Shamsi format (YYYY-MM-DD), so we use string matching
     from common.date import current_shamsi_date
     current_shamsi = current_shamsi_date()  # Format: YYYY-MM-DD
     current_shamsi_month = current_shamsi[:7]  # Format: YYYY-MM
     
-    bills_today = Bill.objects.filter(date=current_shamsi).count()
-    bills_this_month = Bill.objects.filter(date__startswith=current_shamsi_month).count()
+    bills_today = Bill.objects.filter(organization_filter, date=current_shamsi).count()
+    bills_this_month = Bill.objects.filter(
+        organization_filter,
+        date__startswith=current_shamsi_month
+    ).count()
     
     # Financial Statistics - USE CACHED DATA for performance
     # Use AssetWholeBillSummary instead of querying bills directly
     
     # Get aggregated revenue (SELLING)
-    revenue_summary = AssetWholeBillSummary.objects.filter(
+    summary_queryset = AssetWholeBillSummary.objects.filter(organization_filter)
+
+    revenue_summary = summary_queryset.filter(
         bill_type='SELLING'
     ).aggregate(
         total=Sum('total'),
@@ -78,7 +111,7 @@ def custom_admin_dashboard(request):
     total_profit_from_sales = revenue_summary['profit'] or 0
     
     # Get aggregated purchases
-    purchase_summary = AssetWholeBillSummary.objects.filter(
+    purchase_summary = summary_queryset.filter(
         bill_type='PURCHASE'
     ).aggregate(
         total=Sum('total')
@@ -86,7 +119,7 @@ def custom_admin_dashboard(request):
     total_purchases = purchase_summary['total'] or 0
     
     # Get aggregated expenses
-    expense_summary = AssetWholeBillSummary.objects.filter(
+    expense_summary = summary_queryset.filter(
         bill_type='EXPENSE'
     ).aggregate(
         total=Sum('total')
@@ -94,7 +127,7 @@ def custom_admin_dashboard(request):
     total_Expense = expense_summary['total'] or 0
     
     # Get aggregated losses
-    loss_summary = AssetWholeBillSummary.objects.filter(
+    loss_summary = summary_queryset.filter(
         bill_type='LOSSDEGRADE'
     ).aggregate(
         total=Sum('total')
@@ -102,22 +135,23 @@ def custom_admin_dashboard(request):
     total_losses = loss_summary['total'] or 0
     
     # Calculate total expenses (purchases + expenses + losses)
-    total_expenses = total_purchases + total_Expense + total_losses
+    total_expenditure = total_Expense
+    total_expenses = total_purchases + total_expenditure + total_losses
     
     # Recent Activities
     # Bill model has 'organization' not 'bill_creator_org'
     # bill_rcvr_org is in Bill_Receiver2 model
-    recent_bills = Bill.objects.select_related(
+    recent_bills = Bill.objects.filter(organization_filter).select_related(
         'organization'
     ).order_by('-date', '-id')[:10]
     
-    recent_products = Product.objects.select_related(
+    recent_products = Product.objects.filter(product_filter).select_related(
         'category'
-    ).order_by('-id')[:10]
+    ).distinct().order_by('-id')[:10]
     
     recent_org_users = OrganizationUser.objects.select_related(
         'user', 'organization'
-    ).order_by('-id')[:10]
+    ).filter(org_user_filter, is_active=True).order_by('-id')[:10]
     
     # Quick Actions for Admin
     quick_actions = [
@@ -211,7 +245,8 @@ def custom_admin_dashboard(request):
         'total_revenue': total_revenue,
         'total_expenses': total_expenses,
         'total_Expense': total_Expense,
-        'net_profit': total_revenue - total_expenses - total_Expense,
+        'total_expenditure': total_expenditure,
+        'net_profit': total_revenue - total_expenses,
         
         # Recent Activities
         'recent_bills': recent_bills,

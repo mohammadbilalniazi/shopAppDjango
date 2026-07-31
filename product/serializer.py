@@ -38,6 +38,8 @@ class ProductSerializer(serializers.ModelSerializer): #serializers.ModelSerializ
             branch = obj.product_detail.branch if obj.product_detail else None
         except Product_Detail.DoesNotExist:
             branch = None
+        if branch and branch.organization_id != organization.id:
+            branch = None
 
         self.stock = get_stock_for_scope(
             product=obj,

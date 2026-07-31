@@ -14,6 +14,8 @@ def get_stock_for_scope(product, organization, branch=None, create=True, default
     legacy database rejects branch-specific inserts.
     """
     defaults = defaults or {}
+    if branch is not None and organization is not None and branch.organization_id != organization.id:
+        branch = None
 
     stock = Stock.objects.filter(
         product=product,
