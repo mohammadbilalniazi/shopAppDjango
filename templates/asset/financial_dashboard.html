@@ -114,6 +114,9 @@
     <div class="org-selector" style="margin-bottom: 30px; font-weight: 800;">
         <label><strong>Select Organization:</strong></label>
         <form method="GET">
+            {% if request.GET.embed %}
+            <input type="hidden" name="embed" value="1">
+            {% endif %}
             <select name="organization" id="organization" class="organization-select">
                 <option value="">Select Organization</option>
                 {% for org in user_organizations %}

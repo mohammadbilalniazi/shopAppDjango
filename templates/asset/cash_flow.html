@@ -168,7 +168,7 @@
     <div class="row mb-4 no-print">
         <div class="col-md-6">
             <label for="orgSelect" class="form-label fw-bold">Select Organization:</label>
-            <select id="orgSelect" class="form-select" onchange="location.href='?organization=' + this.value">
+            <select id="orgSelect" class="form-select" onchange="location.href='?organization=' + this.value{% if request.GET.embed %} + '&embed=1'{% endif %}">
                 {% for org in organizations %}
                 <option value="{{ org.id }}" {% if org.id == selected_organization.id %}selected{% endif %}>
                     {{ org.name }}

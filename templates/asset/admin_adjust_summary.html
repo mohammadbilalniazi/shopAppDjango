@@ -155,6 +155,9 @@
     <div class="org-filter">
         <label><strong>Filter by Organization:</strong></label>
         <form method="GET" style="display: inline-flex; gap: 12px; align-items: center;">
+            {% if request.GET.embed %}
+            <input type="hidden" name="embed" value="1">
+            {% endif %}
             <select name="organization" id="organization" class="organization-select">
                 {% if is_superuser %}
                     <option value="all" {% if selected_org_id == 'all' or not selected_organization %}selected{% endif %}>

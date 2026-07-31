@@ -121,6 +121,9 @@
   <!-- ── Filter form ─────────────────────────────────── -->
   <div class="filter-card">
     <form method="GET" id="ledger-filter-form">
+      {% if request.GET.embed %}
+      <input type="hidden" name="embed" value="1">
+      {% endif %}
       <div class="row g-3 align-items-end">
 
         <div class="col-12 col-md-5">
@@ -332,7 +335,7 @@
         <tr>
           <td class="col-org" style="color:#6c757d">{{ forloop.counter }}</td>
           <td class="col-org">
-            <a href="?organization={{ selected_org.id }}&opposite_org={{ row.organization.id }}"
+            <a href="?organization={{ selected_org.id }}&opposite_org={{ row.organization.id }}{% if request.GET.embed %}&embed=1{% endif %}"
                style="font-weight:600;text-decoration:none;">
               {{ row.organization.name }}
             </a>

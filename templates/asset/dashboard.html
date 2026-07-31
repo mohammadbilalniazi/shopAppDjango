@@ -202,6 +202,9 @@
     <div class="dashboard-header">
         <h1><i class="bi bi-graph-up"></i> Financial Dashboard</h1>
         <form method="GET" id="org-filter-form">
+            {% if request.GET.embed %}
+            <input type="hidden" name="embed" value="1">
+            {% endif %}
             <select name="organization" id="organization" class="organization-select">
                 <option value="">Select Organization</option>
                 {% for org in organizations %}
