@@ -458,6 +458,17 @@ def _decimal_or_zero(value):
     return Decimal(str(value))
 
 
+def _request_list(data, key):
+    if hasattr(data, "getlist"):
+        values = data.getlist(key)
+        if values:
+            return values
+    value = data.get(key, [])
+    if value in (None, ""):
+        return []
+    return value if isinstance(value, list) else [value]
+
+
 @login_required(login_url='/admin')
 @api_view(['POST', 'PUT'])
 def bill_insert(request):
@@ -542,13 +553,13 @@ def bill_insert(request):
     # -----------------------------
     # Detail arrays
     # -----------------------------
-    products = data.get("item_name", [])
-    amounts = data.get("item_amount", [])
-    prices = data.get("item_price", [])
-    units = data.get("unit", [])
+    products = _request_list(data, "item_name")
+    amounts = _request_list(data, "item_amount")
+    prices = _request_list(data, "item_price")
+    units = _request_list(data, "unit")
     # print("units ",units)
-    returns = data.get("return_qty", [])
-    detail_ids = data.get("bill_detail_id", [])
+    returns = _request_list(data, "return_qty")
+    detail_ids = _request_list(data, "bill_detail_id")
 
     # -----------------------------
     # Atomic transaction
@@ -627,7 +638,7 @@ def bill_insert(request):
             product = Product.objects.get(id=int(products[i]))
             unit = Unit.objects.get(id=int(units[i]))
             qty = _decimal_or_zero(amounts[i])
-            ret = _decimal_or_zero(returns[i])
+            ret = _decimal_or_zero(returns[i] if i < len(returns) else 0)
             net_qty = qty - ret
             price = _decimal_or_zero(prices[i])
 
@@ -640,10 +651,11 @@ def bill_insert(request):
                 "return_qty": ret,
             }
 
-            if not detail_ids[i]:
+            detail_id = detail_ids[i] if i < len(detail_ids) else ""
+            if not detail_id:
                 detail = Bill_detail.objects.create(**detail_data)
             else:
-                detail = Bill_detail.objects.get(id=int(detail_ids[i]))
+                detail = Bill_detail.objects.get(id=int(detail_id))
                 for k, v in detail_data.items():
                     setattr(detail, k, v)
                 detail.save()

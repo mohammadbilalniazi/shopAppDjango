@@ -30,16 +30,17 @@ async function get_units() {
  */
 async function get_products(organization = "all", change_price = true) {
     const url = `/products/`;
-    let storedProductData = localStorage.getItem("product_data");
+    const cacheKey = `product_data_${organization || "all"}`;
+    let storedProductData = localStorage.getItem(cacheKey);
 
     if (storedProductData) {
         product_data = JSON.parse(storedProductData);
     } else {
         console.log("Fetching product data...");
-        const postData={'organization_id':organization}
+        const postData={'organization':organization}
         let response = await call_shirkat(url, 'POST',postData);
         product_data = response.data;
-        localStorage.setItem("product_data", JSON.stringify(product_data));
+        localStorage.setItem(cacheKey, JSON.stringify(product_data));
     }
 
     for (const key in product_data) {
@@ -368,19 +369,19 @@ try{
 
     bill_obj={
         
-        "id":bill_id.value,
-        "date":date.value,
-        "organization":organization.value,
+        "id":bill_id ? bill_id.value : "",
+        "date":date ? date.value : "",
+        "organization":organization ? organization.value : "",
         "branch": branch ? branch.value : "",
-        "creator":creator.value,
-        "total":total.value,
-        "total_payment":total_payment.value,
-        "bill_no":bill_no.value,
-        "bill_type":bill_type.value,
-        "is_approved":is_approved.value,
-        "status":status_bill.value,
-        "approval_date":approval_date.value,
-        "approval_user":approval_user.value,
+        "creator":creator ? creator.value : "",
+        "total":total ? total.value : "0",
+        "total_payment":total_payment ? total_payment.value : "0",
+        "bill_no":bill_no ? bill_no.value : "",
+        "bill_type":bill_type ? bill_type.value : "LOSSDEGRADE",
+        "is_approved":is_approved ? is_approved.value : "",
+        "status":status_bill ? status_bill.value : "0",
+        "approval_date":approval_date ? approval_date.value : "",
+        "approval_user":approval_user ? approval_user.value : "",
         
         "item_name":item_name_list,
         "item_price":item_price_list,

@@ -11,11 +11,13 @@ from expenditure import views as expenditure_view
 from asset import views as asset_view
 from bill import views_stripe
 from django.shortcuts import redirect
+from django.views.generic import RedirectView
 
 # Import admin configuration to customize admin interface
 from . import admin_config
 
 urlpatterns = [
+    path('favicon.ico', RedirectView.as_view(url='/static/assets/react/favicon/favicon.ico', permanent=True)),
     path('login/check', views_login.submit),
 
     # Asset Management & Financial Reports

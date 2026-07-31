@@ -345,7 +345,7 @@ def get_profit_loss_statement(organization):
 
     gross_profit = asset_summary.total_revenue - asset_summary.total_cost_of_goods_sold
     total_profit = gross_profit
-    expense_total = asset_summary.total_expenses
+    expense_total = asset_summary.total_expenses + asset_summary.total_losses
     net_profit_after_expense = total_profit - expense_total
     
     return {

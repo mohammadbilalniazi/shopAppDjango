@@ -6,14 +6,24 @@ async function selectBillNo() {
     const billNo = document.getElementById("bill_no");
     const organization = document.getElementById("organization");
     const billRcvrOrg = document.getElementById("bill_rcvr_org");
+    const isLossDegrade = billType && billType.value === "LOSSDEGRADE";
 
-    if (!billType || !billNo || !organization || !billRcvrOrg) {
-        console.error({billType, billNo, organization, billRcvrOrg});
-        console.warn("Required elements not found");
+    if (!billType || !billNo || !organization || (!billRcvrOrg && !isLossDegrade)) {
+        console.warn("Bill number auto-select skipped: required elements not found", {
+            billType,
+            billNo,
+            organization,
+            billRcvrOrg,
+        });
         return;
     }
 
-    const url = `/bill/select_bill_no/${organization.value}/${billRcvrOrg.value}/${billType.value}`;
+    if (!organization.value) return;
+
+    const receiverOrgId = isLossDegrade ? "0" : billRcvrOrg.value;
+    if (!receiverOrgId && !isLossDegrade) return;
+
+    const url = `/bill/select_bill_no/${organization.value}/${receiverOrgId}/${billType.value}`;
 
     try {
         const response = await call_shirkat(url, "GET");
