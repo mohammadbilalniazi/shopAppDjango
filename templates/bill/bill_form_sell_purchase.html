@@ -10,7 +10,6 @@
 <link href="{% static 'assets/css/select2.min.css' %}" rel="stylesheet" />
 <link rel="stylesheet" href="{% static 'assets/css/bill_form_sell_purchase.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
-<link rel="stylesheet" href="{% static 'assets/react/bill-organization-select.css' %}">
 {% if form %}{{ form.media.css }}{% endif %}
 <style>
 .bill-form-header {
@@ -66,6 +65,23 @@ input[name="date"]:focus {
 .submit-actions { background: #f8f9fa; padding: 20px; border-top: 1px solid #e9ecef; border-radius: 0 0 12px 12px; }
 .btn-save { background: linear-gradient(135deg, #28a745, #20863a); border: 0; padding: 10px 32px; font-weight: 600; border-radius: 8px; }
 .btn-add-item { background: linear-gradient(135deg, #417690, #2c5d7a); border: 0; padding: 10px 24px; font-weight: 600; border-radius: 8px; }
+.item-select-group {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    min-width: 240px;
+}
+.item-select-group .item_name,
+.item-select-group .select2-container {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.item-add-product-btn {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-radius: 8px;
+}
 
 /* Receiver organization dropdown + popup button sizing */
 .receiver-org-group {
@@ -124,7 +140,7 @@ input[name="date"]:focus {
                     <!-- Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">{% trans "Organization" %} <span class="text-danger">*</span></label>
-                        <select name="organization" id="organization" class="form-select organization-select" data-react-organization-select="true" required>
+                        <select name="organization" id="organization" class="form-select organization-select" required>
                             <option value="">{% trans "Select Organization" %}</option>
                             {% for org in organizations %}
                                 <option value="{{ org.id }}" {% if organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
@@ -305,11 +321,16 @@ input[name="date"]:focus {
                                 {% for detail in bill_detail_set %}
                                 <tr>
                                     <td>
-                                        <select class="item_name form-control" name="item_name">
-                                            {% for row in products %}
-                                            <option value="{{ row.id }}" {% if detail.item_name.id == row.id %}selected{% endif %}>{{ row.item_name }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        <div class="item-select-group">
+                                            <select class="item_name form-control" name="item_name">
+                                                {% for row in products %}
+                                                <option value="{{ row.id }}" {% if detail.item_name.id == row.id %}selected{% endif %}>{{ row.item_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="button" class="btn btn-success btn-sm item-add-product-btn" onclick="openProductModal()" title="{% trans 'Add new item' %}">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="amount-unit-group">
@@ -579,7 +600,6 @@ input[name="date"]:focus {
 <script src="{% static 'assets/js/common_entities/generate_ihsaya.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_location_modal.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_scope_guard.js' %}"></script>
-<script src="{% static 'assets/react/bill-organization-select.js' %}"></script>
 {% if is_loss_degrade %}
 <script src="{% static 'assets/js/bill/bill_loss_degrade_product.js' %}"></script>
 {% else %}
@@ -603,6 +623,13 @@ input[name="date"]:focus {
         adminAddlinks.forEach(link => {
             console.log('Removing Django admin addlink:', link);
             link.remove();
+        });
+
+        const existingButtons = rcvrOrgSpan.querySelectorAll('#add_org_modal_btn, .receiver-org-add-btn');
+        existingButtons.forEach((button, index) => {
+            if (index > 0) {
+                button.remove();
+            }
         });
         
         // Check if our custom button exists using a unique ID

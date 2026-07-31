@@ -61,8 +61,19 @@ async function get_products(organization = "all", change_price = true) {
  */
 function change_price_field(item_db_id, index, bill_type_field) {
     const item_price = document.getElementsByClassName("item_price")[index];
-    purchasing_price_obj = JSON.parse(localStorage.getItem("purchasing_price_obj"));
-    item_price.value = purchasing_price_obj[parseInt(item_db_id)];
+    if (!item_price) {
+        return;
+    }
+
+    const productId = parseInt(item_db_id, 10);
+    if (!item_db_id || Number.isNaN(productId)) {
+        item_price.value = "";
+        generate_total_amount_bill();
+        return;
+    }
+
+    purchasing_price_obj = JSON.parse(localStorage.getItem("purchasing_price_obj")) || {};
+    item_price.value = purchasing_price_obj[productId] ?? 0;
     generate_total_amount_bill();
 }
 

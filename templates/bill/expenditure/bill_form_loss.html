@@ -11,7 +11,6 @@
 <link rel="stylesheet" type="text/css" href="{% static 'assets/css/fontawesome.min.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'admin/css/responsive.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/toastr.min.css' %}">
-<link rel="stylesheet" href="{% static 'assets/react/bill-organization-select.css' %}">
 <style>
 
         .danger-btn{
@@ -86,7 +85,7 @@
                     </td>
                     <td>     
                         <span style="display:inline;margin:3%">
-                                <select name="organization" id="organization" class="organization-select" data-react-organization-select="true" required>
+                                <select name="organization" id="organization" class="organization-select" required>
                                     <option value="">Select Organization</option>
                                     {% for org in organizations %}
                                         <option value="{{ org.id }}" {% if bill and bill.organization and bill.organization.id == org.id %}selected{% elif organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
@@ -360,7 +359,6 @@
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
 <script src="{% static 'assets/js/common_entities/.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_scope_guard.js' %}"></script>
-<script src="{% static 'assets/react/bill-organization-select.js' %}"></script>
 <script src="{% static 'assets/js/bill/bill_loss_degrade_product.js' %}"></script>
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <script>

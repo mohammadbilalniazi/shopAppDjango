@@ -150,6 +150,10 @@ catch(e)
 async function select_rcvr_orgs(){
     try{
         rcvr_org_span=document.getElementById("rcvr_org_span");
+        var existingSelect=document.getElementById("bill_rcvr_org");
+        if(existingSelect && typeof jQuery !== 'undefined' && jQuery(existingSelect).hasClass('select2-hidden-accessible')){
+            jQuery(existingSelect).select2('destroy');
+        }
         //console.log("rcvr_org_span=",rcvr_org_span)
         rcvr_org_span.innerHTML="";
     }
@@ -161,6 +165,7 @@ async function select_rcvr_orgs(){
     var select_rcvr_org_in_div=document.createElement("select");
     select_rcvr_org_in_div.id='bill_rcvr_org';
     select_rcvr_org_in_div.name='bill_rcvr_org';
+    select_rcvr_org_in_div.className='form-select';
     select_rcvr_org_in_div.required=true;
     rcvr_org_id="all";
     url='/organizations/'+rcvr_org_id+'/';
@@ -181,11 +186,26 @@ async function select_rcvr_orgs(){
             select_rcvr_org_in_div.appendChild(option_in_select);
             // select_item_name_in_div.appendChild(option_in_select2)
         }
-        const plus= create_element("a",null,null,null,null,false,"addlink")
-        plus.href="/admin/configuration/organization/add/"
-        // console.log("plus ",plus);
+        const plus=document.createElement("button");
+        plus.id="add_org_modal_btn";
+        plus.type="button";
+        plus.className="btn btn-success receiver-org-add-btn";
+        plus.title="Add New Organization";
+        plus.innerHTML='<i class="bi bi-plus-lg"></i>';
+        plus.onclick=function(){ openOrganizationModal(); };
+        rcvr_org_span.querySelectorAll('#add_org_modal_btn, .receiver-org-add-btn').forEach(function(button){
+            button.remove();
+        });
         rcvr_org_span.appendChild(select_rcvr_org_in_div);   
         rcvr_org_span.appendChild(plus);   
+        if(typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined'){
+            jQuery(select_rcvr_org_in_div).select2({
+                placeholder: 'Select Receiver Organization',
+                allowClear: false,
+                width: '100%',
+                theme: 'default'
+            });
+        }
         organization=document.getElementById("organization");
         select_rcvr_org_in_div.addEventListener("change", () => {
         select_bill_no();

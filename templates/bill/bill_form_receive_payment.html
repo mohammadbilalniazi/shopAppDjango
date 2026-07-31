@@ -10,7 +10,6 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="{% static 'assets/css/bill_form_receive_payment.css' %}">
 <link rel="stylesheet" href="{% static 'assets/css/unified_forms.css' %}">
-<link rel="stylesheet" href="{% static 'assets/react/bill-organization-select.css' %}">
 {% if form %}{{ form.media.css }}{% endif %}
 <style>
 .bill-section-card {
@@ -112,7 +111,7 @@ input[name="date"]:focus {
                     <!-- Organization -->
                     <div class="col-md-6">
                         <label class="form-label form-label-bold">{% trans "Organization" %} <span class="text-danger">*</span></label>
-                        <select name="organization" id="organization" class="form-select organization-select" data-react-organization-select="true" required>
+                        <select name="organization" id="organization" class="form-select organization-select" required>
                             <option value="">{% trans "Select Organization" %}</option>
                             {% for org in organizations %}
                                 <option value="{{ org.id }}" {% if organization and organization.id == org.id %}selected{% endif %}>{{ org.name }}</option>
@@ -431,7 +430,6 @@ input[name="date"]:focus {
 <script src="{% static 'assets/js/bill/bill_delete.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_location_modal.js' %}"></script>
 <script src="{% static 'assets/js/bill/organization_scope_guard.js' %}"></script>
-<script src="{% static 'assets/react/bill-organization-select.js' %}"></script>
 <script src="{% static 'assets/js/bill/receive_payment_bill.js' %}"></script>
 <script src="{% static 'assets/js/bill/select_bill_no.js' %}"></script>
 <!-- Searchable Selects Module -->
@@ -451,6 +449,13 @@ input[name="date"]:focus {
         adminAddlinks.forEach(link => {
             console.log('Removing Django admin addlink:', link);
             link.remove();
+        });
+
+        const existingButtons = rcvrOrgSpan.querySelectorAll('#add_org_modal_btn, .receiver-org-add-btn');
+        existingButtons.forEach((button, index) => {
+            if (index > 0) {
+                button.remove();
+            }
         });
         
         // Check if our custom button exists using a unique ID

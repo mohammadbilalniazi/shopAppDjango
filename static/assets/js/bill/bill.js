@@ -35,15 +35,18 @@ async function get_products(organization_id = "all", change_price = true) {
     const cacheKey = `product_data_${orgKey}`;
     let storedProductData = localStorage.getItem(cacheKey);
 
-    if (storedProductData) {
-        product_data = JSON.parse(storedProductData);
-    } else {
-        // Backend expects "organization", not "organization_id"
+    try {
+        product_data = storedProductData ? JSON.parse(storedProductData) : [];
+    } catch (error) {
+        product_data = [];
+        localStorage.removeItem(cacheKey);
+    }
+
+    if (!Array.isArray(product_data) || !product_data.length) {
         const postData = { organization: orgKey };
         let response = await call_shirkat(url, 'POST', postData);
         product_data = Array.isArray(response?.data) ? response.data : [];
 
-        // Fallback: if selected org has no data due API-side filtering issues, try all.
         if (!product_data.length && orgKey !== "all") {
             response = await call_shirkat(url, 'POST', { organization: "all" });
             product_data = Array.isArray(response?.data) ? response.data : [];
@@ -70,6 +73,16 @@ async function get_products(organization_id = "all", change_price = true) {
     add_events_to_elements(change_price);
 }
 
+function createAddProductButton(createElement) {
+    return createElement("button", {
+        type: "button",
+        className: "btn btn-success btn-sm item-add-product-btn",
+        title: "Add new item",
+        innerHTML: '<i class="bi bi-plus-lg"></i>',
+        onclick: () => openProductModal()
+    });
+}
+
 /**
  * Changes the price field based on the selected bill type.
  */
@@ -79,12 +92,17 @@ function change_price_field(item_db_id, index, bill_type_field) {
     if (!item_price) {
         return;
     }
+
+    const productId = parseInt(item_db_id, 10);
+    if (!item_db_id || Number.isNaN(productId)) {
+        item_price.value = "";
+        generate_total_amount_bill();
+        return;
+    }
     
     // Load price objects from localStorage
     selling_price_obj = JSON.parse(localStorage.getItem("selling_price_obj")) || {};
     purchasing_price_obj = JSON.parse(localStorage.getItem("purchasing_price_obj")) || {};
-    
-    const productId = parseInt(item_db_id);
     
     if (bill_type_field.value === "SELLING") {
         const sellingPrice = selling_price_obj[productId];
@@ -238,8 +256,11 @@ async function add_row() {
         console.error("Invalid unit_data JSON", e);
     }
 
-    // Build the row - only selectItemName, no search input
-    row.appendChild(createElement("td", {}, [selectItemName]));
+    const itemNameGroup = createElement("div", { className: "item-select-group" }, [
+        selectItemName,
+        createAddProductButton(createElement)
+    ]);
+    row.appendChild(createElement("td", {}, [itemNameGroup]));
     const amountInput = createElement("input", { type: "number", className: "item_amount form-control", step: "any", required: true });
     const amountUnitGroup = createElement("div", { className: "amount-unit-group" }, [amountInput, selectUnit]);
     row.appendChild(createElement("td", {}, [amountUnitGroup]));
@@ -318,6 +339,16 @@ async function init() {
         let response = await call_shirkat(`/units/all/?json=1`, 'GET');
         unit_data = Array.isArray(response.data) ? response.data : [];
         localStorage.setItem("unit_data", JSON.stringify(unit_data));
+
+        const tableBody = document.getElementById("table_body");
+        const billType = document.getElementById("bill_type")?.value;
+        if (
+            tableBody &&
+            tableBody.children.length === 0 &&
+            !["PAYMENT", "RECEIVEMENT", "EXPENSE"].includes(billType)
+        ) {
+            await add_row();
+        }
 
         if (organizationEl) {
             organizationEl.addEventListener("change", async function () {
@@ -507,12 +538,25 @@ catch(e)
 async function select_rcvr_orgs() {
   try {
     const rcvrOrgSpan = getElement("rcvr_org_span");
+    const existingSelect = getElement("bill_rcvr_org");
+    if (existingSelect && typeof jQuery !== 'undefined' && jQuery(existingSelect).hasClass('select2-hidden-accessible')) {
+      jQuery(existingSelect).select2('destroy');
+    }
     rcvrOrgSpan.innerHTML = "";
 
     const selectRcvrOrg = document.createElement("select");
     selectRcvrOrg.id = "bill_rcvr_org";
     selectRcvrOrg.name = "bill_rcvr_org";
+    selectRcvrOrg.className = "form-select";
     selectRcvrOrg.required = true;
+
+    const addOrgButton = document.createElement("button");
+    addOrgButton.id = "add_org_modal_btn";
+    addOrgButton.type = "button";
+    addOrgButton.className = "btn btn-success receiver-org-add-btn";
+    addOrgButton.title = "Add New Organization";
+    addOrgButton.innerHTML = '<i class="bi bi-plus-lg"></i>';
+    addOrgButton.onclick = () => openOrganizationModal();
 
     const selectedOrganizationId = getElement("organization")?.value || "";
     const response = await fetch("/organizations/all/");
@@ -528,7 +572,9 @@ async function select_rcvr_orgs() {
       selectRcvrOrg.appendChild(option);
     });
 
+    rcvrOrgSpan.querySelectorAll('#add_org_modal_btn, .receiver-org-add-btn').forEach(button => button.remove());
     rcvrOrgSpan.appendChild(selectRcvrOrg);
+    rcvrOrgSpan.appendChild(addOrgButton);
 
     // ✅ Initialize Select2 if available
     if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
@@ -795,6 +841,9 @@ function refreshProductDropdowns() {
     localStorage.removeItem('product_data');
     localStorage.removeItem('selling_price_obj');
     localStorage.removeItem('purchasing_price_obj');
+    Object.keys(localStorage)
+        .filter(key => key.startsWith('product_data_'))
+        .forEach(key => localStorage.removeItem(key));
     
     // Get fresh product data
     const organizationSelect = document.getElementById('organization');
