@@ -10,6 +10,18 @@ from bill.models import Bill, Bill_Receiver2
 from product.models import Stock, Product_Detail
 
 
+REPORT_BILL_STATUSES = (0, 1)
+
+
+def _report_bills(organization):
+    """
+    Financial reports include both not-approved and approved bills.
+    In this project status=0 is used for not-approved/draft bills and
+    status=1 for approved bills.
+    """
+    return Bill.objects.filter(organization=organization, status__in=REPORT_BILL_STATUSES)
+
+
 def calculate_inventory_value(organization):
     """
     Calculate total inventory value for an organization.
@@ -201,8 +213,7 @@ def calculate_profit_loss_items(organization):
     intentionally NOT expensed here — that is what makes Net Profit a real
     margin instead of dropping every time stock is bought.
     """
-    selling = Bill.objects.filter(
-        organization=organization,
+    selling = _report_bills(organization).filter(
         bill_type='SELLING'
     ).aggregate(total=Sum('total'), profit=Sum('profit'))
 
@@ -215,15 +226,13 @@ def calculate_profit_loss_items(organization):
     # Cost of Goods Sold = revenue - gross profit
     cogs = revenue - gross_profit
 
-    # Expenses
-    expenses = Bill.objects.filter(
-        organization=organization,
+    # Expense bills store the actual expense amount in payment.
+    expenses = _report_bills(organization).filter(
         bill_type='EXPENSE'
-    ).aggregate(total=Sum('total'))['total'] or Decimal(0)
+    ).aggregate(total=Sum('payment'))['total'] or Decimal(0)
 
     # Losses
-    losses = Bill.objects.filter(
-        organization=organization,
+    losses = _report_bills(organization).filter(
         bill_type='LOSSDEGRADE'
     ).aggregate(total=Sum('total'))['total'] or Decimal(0)
 
@@ -335,6 +344,9 @@ def get_profit_loss_statement(organization):
     asset_summary = update_organization_assets(organization)
 
     gross_profit = asset_summary.total_revenue - asset_summary.total_cost_of_goods_sold
+    total_profit = gross_profit
+    expense_total = asset_summary.total_expenses
+    net_profit_after_expense = total_profit - expense_total
     
     return {
         'revenue': {
@@ -346,11 +358,14 @@ def get_profit_loss_statement(organization):
             'total_cogs': asset_summary.total_cost_of_goods_sold
         },
         'gross_profit': gross_profit,
+        'total_profit': total_profit,
+        'expense_total': expense_total,
         'operating_expenses': {
             'general_expenses': asset_summary.total_expenses,
             'losses_from_damage': asset_summary.total_losses,
             'total_expenses': asset_summary.total_expenses + asset_summary.total_losses
         },
+        'net_profit_after_expense': net_profit_after_expense,
         'net_profit': asset_summary.net_profit,
         'last_updated': asset_summary.last_updated
     }

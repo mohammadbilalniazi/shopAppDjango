@@ -234,6 +234,10 @@
     </div>
 
     {% if profit_loss %}
+    <div class="alert alert-info">
+        Approved and not approved bills are both included in this Profit & Loss statement.
+    </div>
+
     <!-- Key Metrics Summary -->
     <div class="summary-metrics">
         <div class="metric-card revenue">
@@ -244,19 +248,19 @@
         
         <div class="metric-card expenses">
             <div class="metric-label">Total Expenses</div>
-            <div class="metric-value">{{ profit_loss.operating_expenses.total_expenses|floatformat:2 }}</div>
+            <div class="metric-value">{{ profit_loss.expense_total|floatformat:2 }}</div>
             <div class="text-muted small">AFN</div>
         </div>
         
-        <div class="metric-card {% if profit_loss.net_profit >= 0 %}profit{% else %}loss{% endif %}">
-            <div class="metric-label">Net {% if profit_loss.net_profit >= 0 %}Profit{% else %}Loss{% endif %}</div>
-            <div class="metric-value">{{ profit_loss.net_profit|floatformat:2 }}</div>
+        <div class="metric-card {% if profit_loss.net_profit_after_expense >= 0 %}profit{% else %}loss{% endif %}">
+            <div class="metric-label">Net {% if profit_loss.net_profit_after_expense >= 0 %}Profit{% else %}Loss{% endif %}</div>
+            <div class="metric-value">{{ profit_loss.net_profit_after_expense|floatformat:2 }}</div>
             <div class="text-muted small">AFN</div>
         </div>
         
         <div class="metric-card">
-            <div class="metric-label">Gross Profit</div>
-            <div class="metric-value" style="color: #667eea;">{{ profit_loss.gross_profit|floatformat:2 }}</div>
+            <div class="metric-label">Total Profit</div>
+            <div class="metric-value" style="color: #667eea;">{{ profit_loss.total_profit|floatformat:2 }}</div>
             <div class="text-muted small">AFN</div>
         </div>
     </div>
@@ -291,12 +295,12 @@
         </div>
     </div>
 
-    <!-- GROSS PROFIT -->
+    <!-- TOTAL PROFIT -->
     <div class="section-card">
         <div class="line-item subtotal" style="background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);">
-            <span style="font-size: 1.3rem;">GROSS PROFIT</span>
+            <span style="font-size: 1.3rem;">TOTAL PROFIT</span>
             <span class="amount" style="font-size: 1.3rem; color: #667eea;">
-                {{ profit_loss.gross_profit|floatformat:2 }} AFN
+                {{ profit_loss.total_profit|floatformat:2 }} AFN
             </span>
         </div>
     </div>
@@ -317,16 +321,22 @@
         </div>
         
         <div class="line-item total">
-            <span>TOTAL OPERATING EXPENSES</span>
-            <span class="amount">{{ profit_loss.operating_expenses.total_expenses|floatformat:2 }} AFN</span>
+            <span>TOTAL EXPENSE</span>
+            <span class="amount">{{ profit_loss.expense_total|floatformat:2 }} AFN</span>
         </div>
     </div>
 
     <!-- NET PROFIT/LOSS -->
     <div class="section-card">
-        <div class="line-item grand-total {% if profit_loss.net_profit >= 0 %}positive{% else %}negative{% endif %}">
-            <span>NET {% if profit_loss.net_profit >= 0 %}PROFIT{% else %}LOSS{% endif %}</span>
-            <span class="amount">{{ profit_loss.net_profit|floatformat:2 }} AFN</span>
+        <div class="line-item subtotal">
+            <span>Total Profit - Expense</span>
+            <span class="amount">
+                {{ profit_loss.total_profit|floatformat:2 }} - {{ profit_loss.expense_total|floatformat:2 }} AFN
+            </span>
+        </div>
+        <div class="line-item grand-total {% if profit_loss.net_profit_after_expense >= 0 %}positive{% else %}negative{% endif %}">
+            <span>NET {% if profit_loss.net_profit_after_expense >= 0 %}PROFIT{% else %}LOSS{% endif %}</span>
+            <span class="amount">{{ profit_loss.net_profit_after_expense|floatformat:2 }} AFN</span>
         </div>
     </div>
 
@@ -336,21 +346,21 @@
         {% if profit_loss.revenue.total_revenue > 0 %}
         <div class="row mt-4">
             <div class="col-md-4">
-                <h5>Gross Profit Margin</h5>
+                <h5>Total Profit Margin</h5>
                 <p class="fs-3 fw-bold" style="color: #667eea;">
-                    {% widthratio profit_loss.gross_profit profit_loss.revenue.total_revenue 100 %}%
+                    {% widthratio profit_loss.total_profit profit_loss.revenue.total_revenue 100 %}%
                 </p>
             </div>
             <div class="col-md-4">
                 <h5>Net Profit Margin</h5>
-                <p class="fs-3 fw-bold" style="color: {% if profit_loss.net_profit >= 0 %}#2f855a{% else %}#c53030{% endif %};">
-                    {% widthratio profit_loss.net_profit profit_loss.revenue.total_revenue 100 %}%
+                <p class="fs-3 fw-bold" style="color: {% if profit_loss.net_profit_after_expense >= 0 %}#2f855a{% else %}#c53030{% endif %};">
+                    {% widthratio profit_loss.net_profit_after_expense profit_loss.revenue.total_revenue 100 %}%
                 </p>
             </div>
             <div class="col-md-4">
                 <h5>Expense Ratio</h5>
                 <p class="fs-3 fw-bold" style="color: #f45c43;">
-                    {% widthratio profit_loss.operating_expenses.total_expenses profit_loss.revenue.total_revenue 100 %}%
+                    {% widthratio profit_loss.expense_total profit_loss.revenue.total_revenue 100 %}%
                 </p>
             </div>
         </div>
